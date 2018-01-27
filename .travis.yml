@@ -1,0 +1,16 @@
+language: node_js
+node_js: 
+  - "8"
+before_script:
+- npm i -g github-markdown
+
+script: 
+- ghmd *.md
+
+after_success:
+- export SSHPASS=$DEPLOY_PASS
+- sshpass -e ssh  -o stricthostkeychecking=no $DEPLOY_USER@120.76.136.124 "cd ~/travisdemo && git pull"
+
+env:
+  global:
+  - secure: 
