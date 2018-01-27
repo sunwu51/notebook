@@ -6,6 +6,8 @@ before_script:
 script: 
   - rm -rf .git
   - bash ./bootstrap.sh
+  - git config user.name "frank"
+  - git config user.email "sunwu51@126.com"
   - git init
   - git add .
   - git commit -m "update note"
