@@ -5,7 +5,6 @@ before_script:
   - npm i -g github-markdown
 script: 
   - bash ./bootstrap.sh
-after_success:
   - git config user.name "frank"
   - git config user.email "sunwu51@126.com"
   - git add .
