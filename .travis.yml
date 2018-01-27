@@ -4,7 +4,9 @@ node_js:
 before_script:
   - npm i -g github-markdown
 script: 
+  - rm -rf .git
   - bash ./bootstrap.sh
+  - git init
   - git add .
   - git commit -m "update note"
   - git push --force https://$TOKEN@github.com/xiaogenban1993/xiaogenban1993.github.io.git master
