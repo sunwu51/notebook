@@ -8,7 +8,7 @@ script:
   - git config user.name "frank"
   - git config user.email "sunwu51@126.com"
   - git add .
-  - git commt -m 'update note'
+  - git commit -m 'update note'
   - git push --force https://$TOKEN@github.com/xiaogenban1993/xiaogenban1993.github.io.git master
 env:
   global:
