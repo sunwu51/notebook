@@ -2,15 +2,15 @@ language: node_js
 node_js: 
   - "8"
 before_script:
-- npm i -g github-markdown
-
+  - npm i -g github-markdown
 script: 
-- ghmd *.md
-
+  - bash ./bootstrap.sh
 after_success:
-- export SSHPASS=$DEPLOY_PASS
-- sshpass -e ssh  -o stricthostkeychecking=no $DEPLOY_USER@120.76.136.124 "cd ~/travisdemo && git pull"
-
+  - git config user.name "frank"
+  - git config user.email "sunwu51@126.com"
+  - git add .
+  - git commt -m 'update note'
+  - git push --force https://$TOKEN@github.com/xiaogenban1993/xiaogenban1993.github.io.git master
 env:
   global:
-  - secure: 
+    secure: eZbamhXKXbjCYEEd6quzvMxfuIP6QY858qkese3gIN1dwRNJFjVrcVjggcqtN5S7BMfJMeMO7NiUrSi6qLI+zSgHyIUZ9a5ZITAZB9tHEJ31vYxvphEmo+44Pn2tqrZpP+7h4QqWcqZYb+SQ2o6ZxLB1Tlk1AGK+d99fiH9hPb/c5eZ3/eEXqQ8VlYOyiHrnML2OGc1EJOb4Ygvj/jEVwobpCxcc0A8jATeCNT1zu+AAw9rwppObz/r0IZ2L8coxGQSQwXOcLD4/mz7YZFtHn11wX2HnmNFl4vEt5cHgT8ex1mt72n+nibUhwqtikvCEXHnsmRM4sHDxnfI5Z+EmdpN+mWaED70q6luT1yeYXushWYlxOCV3b9dMoxvrjB4/71CVA6dVNveoJLaFgFWhkU5a40rNVCSZO5E2F+9UXZLUkCXy5Y3pdxfvAl1PH/bhux4QXktBcXisrplZ0k9hF25AqjXMKk9KnKP8ad+CtNi6abbJFmfehd5LZ80o4t6urfTJu0dBwXpAzV1ylIdFAo7VoE+E3je1dHryh94y9NQ6CXBmOwYZTTnAzMQxfL72hSvP2SYXX4H1DOIKWNIlLYKEqOF2Yk90MkL0HL0ow+O0dlRu6KysMwovlxa2P6Ip5YkHjaZ+905Hp7hMtPMhkOqovqMMHpRBfRKsrHYZr+k=
