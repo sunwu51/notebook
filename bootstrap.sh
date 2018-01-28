@@ -26,3 +26,5 @@ for i in $arr
 do
   trans $i
 done
+h=`find . -name '*.html'`
+node ./a.js $h
