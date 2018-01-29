@@ -26,5 +26,5 @@ for i in $arr
 do
   trans $i
 done
-h=`find . -name '*.html'`
+h=`find . -name '*.html' | xargs ls -tr`
 node ./a.js $h
