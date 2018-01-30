@@ -162,7 +162,7 @@ status:
 必备，指定当前文件创建的是个什么类型的资源，值可以是Pod,ReplacationController,Deployment,Service等等资源类型。
 
 >metadata  
-必备，元数据指定资源的名字name，命名空间namespace，标签labels等基础信息，labels在指定资源的时候用处很大，一般是必须要写的属性。
+必备，元数据指定资源的名字name，命名空间namespace，标签labels等基础信息，labels在指定资源的时候用处很大，一般pod中是必须要写的属性。
 
 >spec
 "说明书"，一般用来填写一些资源的指定信息。对于不同资源写法不一样，例如pod则填写容器信息containers，rc或deployment则填写副本数replicas，筛选器selector，pod母版template（template中填写pod的metadata和spec）
@@ -170,6 +170,7 @@ status:
 >status  
 当前资源的状态，编写的时候是不需要自己写这一项的。
 
+## 五、常见的资源声明文件
 常见的pod资源声明的yml文件格式如下：
 ```yml
 apiVersion: v1
@@ -189,3 +190,74 @@ spec:
         value: 'WORLD'
 ```
 ![create pod](img/kube6.gif)
+常见的deployment文件：
+```yml
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mydep
+  labels:
+    name: mydep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: zzz
+  template:
+    metadata:
+      labels:
+        name: zzz
+    spec:
+      containers:
+      - image: nginx
+        name: mycon
+        ports:
+        - containerPort: 80
+```
+注：template指定的是pod信息，注意pod的name不能指定，只能继承自deployment。和这句bash效果基本一致（除了容器name在bash下是默认为mydep）
+```
+kubectl run mydep --image=nginx --port=80
+```
+![create deployment](img/kube7.gif)
+常见的RC yml文件
+```yml
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: myrc
+  labels:
+    name: myrc
+spec:
+  replicas: 1
+  selector:
+    name: xxx
+  template:
+    name: pod4myrc
+    metadata:
+      labels:
+        name: xxx
+    spec:
+      containers:
+      - image: nginx
+        name: mycon
+        ports:
+        - containerPort: 80
+```
+注：和dep基本一样除了selector只能等式判断
+
+常见的Service yml文件：
+```yml
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysvc
+spec:
+  ports:
+  - port: 80
+    nodePort: 30001
+  selector:
+    name: zzz
+```
+注:这里的selector是等式的，且只针对pod进行过滤。
+
+
