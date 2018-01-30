@@ -189,7 +189,7 @@ spec:
     - name: HELLO
         value: 'WORLD'
 ```
-![create pod](img/kube6.gif)
+![create pod](img/kube6.gif)  
 常见的deployment文件：
 ```yml
 apiVersion: extensions/v1beta1
@@ -218,7 +218,7 @@ spec:
 ```
 kubectl run mydep --image=nginx --port=80
 ```
-![create deployment](img/kube7.gif)
+![create deployment](img/kube7.gif)  
 常见的RC yml文件
 ```yml
 apiVersion: v1
