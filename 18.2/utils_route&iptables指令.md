@@ -150,3 +150,5 @@ iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8080
 ```
 ![port](img/iptables3.gif)
 
+iptables下，数据包的处理流程  
+![image](img/iptables4.jpg)
