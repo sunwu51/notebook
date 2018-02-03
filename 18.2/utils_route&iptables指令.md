@@ -1,5 +1,5 @@
 # route & iptables 指令
-route规则和iptables规则的添加是经常使用，却也总是记不住的。我们来好好整理下。没耐心的可以直接看最后小结。
+route规则和iptables规则的添加是经常使用，却也总是记不住的。我们来好好整理下。
 # route
 通过route指令查看当前路由规则，列表一般有Destination，Gateway，Genmask，Flags，Metric，Ref，Use Iface例如
 ```
