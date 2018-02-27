@@ -11,7 +11,8 @@ for(int i=0;i<arr.length;i++){
 ```
 简单的改进是添加一个flag表示本次内循环中是否发生了swap，如果发生了则flag=true，而flag为false 的时候直接退出外循环，当前结果已经是最后结果。
 
-本身有序则走一遍n就搞定，本身反序则(n-1)+(n-2)+...1=n(n-1)/2次
+本身有序则走一遍n就搞定，本身反序则(n-1)+(n-2)+...1=n(n-1)/2次  
+![冒泡排序](https://upload.wikimedia.org/wikipedia/commons/3/37/Bubble_sort_animation.gif)
 # 2 选择排序
 遍历找到一个最小值，放到arr[0]，再在后n-1个元素遍历，选出最小放到arr[1]...
 ```
@@ -25,6 +26,7 @@ for(int i=0;i<arr.length;i++){
     }
 }
 ```
+![选择排序](https://upload.wikimedia.org/wikipedia/commons/b/b0/Selection_sort_animation.gif)
 # 3 插入排序
 一个有序的序列，插入一个新值时，先和最后一个比较，如果大则直接放最后，如果小则和倒数第二个比，依次类推。是建立在一种原本是有序，后面插入新值的角度思考的。
 ```javascript
@@ -39,6 +41,7 @@ for (let i = 1; i < arr.length; i++) {
     }
 }
 ```
+![插入排序](https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Insertion-sort-example-300px.gif/220px-Insertion-sort-example-300px.gif)
 # 4 希尔排序
 思想为：首先将数组从中间分开，然后对应位置比较，将较小的放在前半（此时步长设为了len/2）。然后将步长缩短如变为len/4，然后还是对应位置比较，通过插入排序将越小的放在越前面。直到步长缩短为1，此时即等于插入排序。该算法通过前期跳跃性的移动节省了插入排序的交换次数，获的了比插入排序这种简单排序更好的复杂度。这个[视频](https://www.youtube.com/watch?v=CmPA7zE8mx0)可以快速风趣的了解希尔排序。
 ```javascript
@@ -89,6 +92,7 @@ for (var i = len - 1; i > 0; i--) {
 	max_heapify(0, i);
 }
 ```
+![堆排序](https://upload.wikimedia.org/wikipedia/commons/1/1b/Sorting_heapsort_anim.gif)
 # 归并排序
 分治思想，将数组中相邻俩数组成一组，一共len/2组，每组俩数排序。然后将相邻两组合并为一组，因为组内已经排好序了，所以合并的时候有些简化的操作（从a和b组中依次拿出最小的，看谁的更小，作为新组的小值，然后次小...）
 ```javascript
@@ -105,6 +109,7 @@ Array.prototype.merge_sort = function() {
 	return merge(this.slice(0, parseInt(mid)).merge_sort(), this.slice(parseInt(mid)).merge_sort());
 };
 ```
+![归并排序](https://upload.wikimedia.org/wikipedia/commons/c/cc/Merge-sort-example-300px.gif)
 # 快速排序
 同样利用分治的思想，将第一个数取出来作为mid，然后后面的和他比较，大于他的归为一组，其他归为一组。然后第一组一定是所有元素排在第二组所有元素后面的。将第这两组进行同样的操作，一直到最后每组大小为1.
 ```javascript
@@ -123,6 +128,7 @@ Array.prototype.quick_sort = function() {
 	return left.quick_sort().concat(mid.concat(right.quick_sort()));
 };
 ```
+![快速排序](https://upload.wikimedia.org/wikipedia/commons/6/6a/Sorting_quicksort_anim.gif)
 # 复杂度问题
 这里时间复杂度只讨论均值。  
 前三种为简单排序，平均时间复杂度都是O(n2)【n的平方】。shell排序在步长不同的情况下不同  
