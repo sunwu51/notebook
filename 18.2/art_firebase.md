@@ -45,10 +45,12 @@ firebase是谷歌提供的平台服务，这套服务非常强大。他是针对
 ```
 npm install -g firebase-tool
 ```
-然后到我们的静态页面文件夹下进行初始化，注意需要将静态文件放到这个文件夹下的public文件夹下
+然后到我们的静态页面文件夹下进行登录和初始化，注意需要将静态文件放到这个文件夹下的public文件夹下
 ```
+firebase login --no-localhost
 firebase init
 ```
+在`login`的时候会弹出一个连接，在浏览器中打开，得到一个码。将其再复制到shell中。
 在`init`的时候选择Hosting  
 ![image](img/firebase4.jpg)  
 初始化完成，查看当前目录下的文件，应该有一个firebase.json,将其内容进行修改如下：
