@@ -40,6 +40,37 @@ firebase是谷歌提供的平台服务，这套服务非常强大。他是针对
 实时数据库是firebase提供的最主要功能之一，我们从上面的例子发现这是一个类似mongodb的nosql的json数据库，除了基本增删改查，这个数据库还有个“实时性”，每个客户端是socket连接的服务端，可以监听数据的变化进行实时改变。  
 ![image](img/firebase.gif)
 
-其他功能看着也很爽，比如静态页面部署，相当于送你一个cdn服务器。还有Function功能可以做维护，不过可惜的是我运行`firebase login`指令一直出错，这些就都没有尝试。
+# 静态页面托管
+在刚才的DataBase下面有个Hosting选项，这里就是静态页面托管的控制台。根据提示我们需要安装CLI指令客户端
+```
+npm install -g firebase-tool
+```
+然后到我们的静态页面文件夹下进行初始化，注意需要将静态文件放到这个文件夹下的public文件夹下
+```
+firebase init
+```
+在`init`的时候选择Hosting  
+![image](img/firebase4.jpg)  
+初始化完成，查看当前目录下的文件，应该有一个firebase.json,将其内容进行修改如下：
+```json
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}
+```
+确保`./public/index.html`文件夹存在的情况下，进行部署
+```
+firebase deploy
+```
+部署完成后可以在控制台查看  
+![image](img/firebase5.jpg)  
+还可以查看使用情况，免费用户只有1g的空间，并且每周10g的访问量限制，对于一般个人用户应该是绰绰有余的。通过这个域名`https://myfire-f7f48.firebaseapp.com/`我们也可以访问我们的静态资源。  
+![image](img/firebase6.jpg)
 # 小结
 总之，firebase还是非常强大的，我这里只介绍了几十种功能中最简单的一种。感兴趣的可以自己去了解更多。
