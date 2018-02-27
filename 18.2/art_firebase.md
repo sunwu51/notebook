@@ -72,5 +72,9 @@ firebase deploy
 ![image](img/firebase5.jpg)  
 还可以查看使用情况，免费用户只有1g的空间，并且每周10g的访问量限制，对于一般个人用户应该是绰绰有余的。通过这个域名`https://myfire-f7f48.firebaseapp.com/`我们也可以访问我们的静态资源。  
 ![image](img/firebase6.jpg)
+# 文件存储
+在左侧storage这一栏中打开，然后可以直接通过网页，上传文件，同时也提供了各个平台的上传api。点击文件可以查看文件的存储地址gs协议的，以及文件的下载地址http的。
+![image](img/firebase7.jpg)
+
 # 小结
 总之，firebase还是非常强大的，我这里只介绍了几十种功能中最简单的一种。感兴趣的可以自己去了解更多。
