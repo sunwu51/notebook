@@ -45,7 +45,7 @@ firebase是谷歌提供的平台服务，这套服务非常强大。他是针对
 ```
 npm install -g firebase-tool
 ```
-然后到我们的静态页面文件夹下进行登录和初始化，注意需要将静态文件放到这个文件夹下的public文件夹下
+然后到我们的静态页面文件夹下进行登录和初始化，注意需要将静态文件放到这个文件夹下的public文件夹下，如果在下面提到的json文件中指定public目录为`.`，则只需要放置在当前文件夹下即可
 ```
 firebase login --no-localhost
 firebase init
@@ -66,7 +66,7 @@ firebase init
   }
 }
 ```
-确保`./public/index.html`文件夹存在的情况下，进行部署
+确保`./index.html`文件存在的情况下，进行部署
 ```
 firebase deploy
 ```
