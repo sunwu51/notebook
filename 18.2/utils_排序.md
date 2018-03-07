@@ -136,4 +136,5 @@ Array.prototype.quick_sort = function() {
 堆排序时间复杂度`O(nlogn)`，空间复杂度`O(1)`  
 归并时间复杂度`O(nlogn)`,空间`O(n)`  
 快速时间复杂度`O(nlogn)`,空间`O(n)`优化后空间复杂度更低  
+![image](img/sortO.jpg) 
 
