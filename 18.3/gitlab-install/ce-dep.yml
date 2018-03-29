@@ -1,0 +1,121 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gl-ce-dep
+  namespace: wuyao
+  labels:
+    name: gl-ce-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: gl-ce
+  template:
+    metadata:
+      labels:
+        name: gl-ce
+    spec:
+      containers:
+      - name: gl-ce
+        image: sameersbn/gitlab:10.3.3
+        ports:
+            - containerPort: 80
+        env:
+            - name: DB_HOST
+              value: gl-postgres-svc
+            - name: DB_PASS
+              value: password
+            - name: DB_NAME
+              value: gitlabhq_production
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USER
+              value: gitlab
+            - name: REDIS_HOST
+              value: gl-redis-svc
+            - name: REDIS_PORT
+              value: "6379"
+            - name: TZ
+              value: Asia/Kolkata
+            - name: GITLAB_TIMEZONE
+              value: Kolkata
+            - name: GITLAB_HTTPS
+              value: "false"
+            - name: GITLAB_HOST
+              value: gl-ce-svc.wuyao
+            - name: GITLAB_PORT
+              value: "80"
+            - name: GITLAB_SSH_PORT
+              value: "22"
+            - name: GITLAB_SECRETS_DB_KEY_BASE
+              value: long-and-random-alphanumeric-string
+            - name: GITLAB_SECRETS_SECRET_KEY_BASE
+              value: long-and-random-alphanumeric-string
+            - name: GITLAB_SECRETS_OTP_KEY_BASE
+              value: long-and-random-alphanumeric-string
+            - name: GITLAB_NOTIFY_ON_BROKEN_BUILDS
+              value: "true"
+            - name: GITLAB_NOTIFY_PUSHER
+              value: "false"
+            - name: GITLAB_EMAIL
+              value: notifications@example.com
+            - name: GITLAB_EMAIL_REPLY_TO
+              value: noreply@example.com
+            - name: GITLAB_INCOMING_EMAIL_ADDRESS
+              value: reply@example.com
+            - name: GITLAB_BACKUP_SCHEDULE
+              value: daily
+            - name: GITLAB_BACKUP_TIME
+              value: "01:00"
+            - name: SMTP_ENABLED
+              value: "false"
+            - name: SMTP_DOMAIN
+              value: www.example.com
+            - name: SMTP_HOST
+              value: smtp.gmail.com
+            - name: SMTP_PORT
+              value: "587"
+            - name: SMTP_USER
+              value: mailer@example.com
+            - name: SMTP_PASS
+              value: password
+            - name: SMTP_STARTTLS
+              value: "true"
+            - name: SMTP_AUTHENTICATION
+              value: login
+            - name: IMAP_ENABLED
+              value: "false"
+            - name: IMAP_HOST
+              value: imap.gmail.com
+            - name: IMAP_PORT
+              value: "993"
+            - name: IMAP_USER
+              value: mailer@example.com
+            - name: IMAP_PASS
+              value: password
+            - name: IMAP_SSL
+              value: "true"
+            - name: IMAP_STARTTLS
+              value: "false"
+            - name: OAUTH_ENABLED
+              value: "false"
+            - name: OAUTH_BLOCK_AUTO_CREATED_USERS
+              value: "true"
+            - name: OAUTH_AUTO_LINK_LDAP_USER
+              value: "false"
+            - name: OAUTH_AUTO_LINK_SAML_USER
+              value: "false"
+            - name: OAUTH_CAS3_LABEL
+              value: cas3
+            - name: OAUTH_CAS3_DISABLE_SSL_VERIFICATION
+              value: "false"
+            - name: OAUTH_CAS3_LOGIN_URL
+              value: /cas/login
+            - name: OAUTH_CAS3_VALIDATE_URL
+              value: /cas/p3/serviceValidate
+            - name: OAUTH_CAS3_LOGOUT_URL
+              value: /cas/logout
+            - name: OAUTH_SAML_LABEL
+              value: Our SAML Provider
+            - name: OAUTH_SAML_NAME_IDENTIFIER_FORMAT
+              value: "urn:oasis:names:tc:SAML:2.0:nameid-format:transient"

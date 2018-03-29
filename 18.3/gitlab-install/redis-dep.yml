@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gl-redis-dep
+  namespace: wuyao
+  labels:
+    name: gl-redis-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: gl-redis
+  template:
+    metadata:
+      labels:
+        name: gl-redis
+    spec:
+      containers:
+      - image: redis:latest
+        name: redis
+        ports:
+        - containerPort: 6379	
