@@ -1,0 +1,53 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  name: nginx-ingress-lb
+  labels:
+    name: nginx-ingress-lb
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        name: nginx-ingress-lb
+#      annotations:
+#        prometheus.io/port: '80'
+#        prometheus.io/scrape: 'true'
+    spec:
+      terminationGracePeriodSeconds: 60
+      hostNetwork: true
+      containers:
+      - image: gcr.io/google_containers/nginx-ingress-controller:0.8.3
+        name: nginx-ingress-lb
+        readinessProbe:
+          httpGet:
+            path: /healthz    #定义ingress-controller自检的url 和端口
+            port: 80
+            scheme: HTTP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 80
+            scheme: HTTP
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+        ports:
+        - containerPort: 80
+          hostPort: 80
+        - containerPort: 443
+          hostPort: 443
+        env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          - name: KUBERNETES_MASTER
+            value: http://172.25.104.8:8080      #访问master 获取service信息
+        args:
+        - /nginx-ingress-controller
+        - --default-backend-service=default/default-http-backend
+
