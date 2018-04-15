@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gl-postgre-dep
+  namespace: wuyao
+  labels:
+    name: gl-postgre-dep
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: gl-postgres
+  template:
+    metadata:
+      labels:
+        name: gl-postgres
+    spec:
+      containers:
+      - image: sameersbn/postgresql:9.6-2
+        name: postgres
+        env: 
+        - name: DB_USER
+          value: gitlab
+        - name: DB_PASS
+          value: password
+        - name: DB_NAME
+          value: gitlabhq_production
+        - name: DB_EXTENSION
+          value: pg_trgm  
+        ports:
+        - containerPort: 5432

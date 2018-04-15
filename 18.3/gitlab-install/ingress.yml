@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: gl-ingress
+  namespace: wuyao
+spec:
+  rules:
+  - host: a.b.c
+    http:
+      paths:
+      - backend:
+          serviceName: gl-ce-svc
+          servicePort: 80
