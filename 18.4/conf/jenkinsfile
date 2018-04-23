@@ -1,0 +1,72 @@
+timeout(60){
+    node('maven2') {
+        def projectName = 'gaiav2_test'
+        def projectUrl = 'http://git.n.xiaomi.com/huangyang/gaiav2.git'
+        //拉取代码
+        stage("pull code"){
+            if(fileExists('code/.git')){
+                try{
+                    dir('code'){
+                        sh "git pull --all"
+                        sh "git checkout master"
+                    }
+                }catch(e){
+                    sh 'rm -rf code'
+                    sh "git clone --depth=1 ${projectUrl} code"
+                }
+            }else{
+                sh "git clone --depth=1 ${projectUrl} code"
+            }
+            if(!fileExists('code/pom.xml')){
+                echo 'not a maven project'
+            }
+        }
+        //sonarqube
+        stage("sonarqube"){
+            dir('code'){
+                withSonarQubeEnv('SonarQube Server') {
+                    sh "mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent test -Dmaven.test.failure.ignore=true"
+                    sh "mvn org.sonarsource.scanner.maven:sonar-maven-plugin:3.2:sonar -Dsonar.projectName=${projectName}"
+                }
+            }
+        }
+        //coverity
+        stage('coverity'){
+            node('tj-jm-coverity02.kscn') {
+                if(fileExists('code/.git')){
+                    try{
+                        dir('code'){
+                            sh 'git pull --all'
+                            sh 'git checkout master'
+                        }
+                    }catch(e){
+                        sh 'rm -rf code'
+                        sh "git clone --depth=1 ${projectUrl} code"
+                    }
+                }else{
+                    sh "git clone --depth=1 ${projectUrl} code"
+                }
+                dir('code'){
+                    def iDir = 'cov-idir'
+                    def covHome = tool name: 'maven', type: 'maven'
+                    sh "${covHome}/bin/mvn -version"
+                    sh "cov-build --dir ${iDir} ${covHome}/bin/mvn clean package -Dmaven.test.skip"
+                    sh "cov-import-scm --dir ${iDir} --scm git"
+                    sh "cov-analyze --dir ${iDir} --disable-fb --all --webapp-security"
+                    withCredentials([usernamePassword(credentialsId: 'b194ee1a-bf85-45fc-813f-961ebbb264f8', passwordVariable: 'COVERITY_PASSPHRASE', usernameVariable: 'COV_USER')]) {
+                        try {
+                            sh "cov-manage-im --mode streams --add --set name:${projectName} --host tj-jm-coverity01.kscn --port 8080"
+                            sh "cov-manage-im --mode projects --add --set name:${projectName} --insert stream:${projectName} --host tj-jm-coverity01.kscn --port 8080"
+                        } catch (Exception e) {
+                            print e
+                        }
+                        sh "cov-commit-defects --dir ${iDir} --host tj-jm-coverity01.kscn --port 8080 --stream ${projectName}"
+                    }
+                    dir("${iDir}") {
+                        deleteDir()
+                    }
+                }   
+            }
+        }
+    }
+}            
