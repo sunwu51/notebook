@@ -78,5 +78,7 @@ function deal(SOUL,url){
 setInterval(function(){exec(window.location.href)},1000)
 ```
 ![image](img/3.gif)
+# 注意！
+后来发现如果表单倒计时开始抢的时候，会自动刷新一次页面，导致写好的脚本丢失。所以建议在一个旧的表单页面(例如[http://cn.mikecrm.com/zHx5Dh9?iro=1](http://cn.mikecrm.com/zHx5Dh9?iro=1))中运行上面的脚本，并将`window.location.href`改成当天新推的表单的网址。
 
-后来发现如果表单倒计时开始抢的时候，会自动刷新一次页面，导致写好的脚本丢失。所以建议在一个旧的表单中运行上面的脚本，并将`window.location.href`直接改成新表单的网址，可保万无一失。
+小结：在一个旧表单页面F12在console复制上面的脚本。记得修改三个地方：姓名/学号/window.location.href。回车运行，等待表单开始填写，脚本会自动帮忙提交。
