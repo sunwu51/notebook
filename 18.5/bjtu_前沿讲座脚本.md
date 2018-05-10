@@ -78,3 +78,5 @@ function deal(SOUL,url){
 setInterval(function(){exec(window.location.href)},1000)
 ```
 ![image](img/3.gif)
+
+后来发现如果表单倒计时开始抢的时候，会自动刷新一次页面，导致写好的脚本丢失。所以建议在一个旧的表单中运行上面的脚本，并将`window.location.href`直接改成新表单的网址，可保万无一失。
