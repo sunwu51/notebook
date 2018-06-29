@@ -106,3 +106,38 @@ ip或其他域名:81 ==> http://localhost:1880
 proxy_set_header Host $http_host;  
 proxy_set_header x-forwarded-for  $remote_addr;  
 ```
+## 3 Tcp反向代理
+```
+stream {
+    upstream test {
+        server www.baidu.com:80 weight=2;
+        server www.taobao.com:80 weight=2;
+    }
+    server {
+        listen 82;
+        proxy_connect_timeout 5s;
+        proxy_timeout 5s;
+        proxy_pass test;
+    }
+}
+```
+上面的stream配置是和原来配置文件中http平级的地方。设置tcp:82--->www.baidu.com:80 / www.taobao.com:80。权重都是2.
+## 负载均衡
+上面的tcp反向代理中weight部分就是负载均衡的设置了。不过普通的http代理如何负载均衡呢？
+```
+  upstream test 
+    {
+　　　　server 192.168.0.223:8080 weight=4 max_fails=2 fail_timeout=30s;
+    　 server 192.168.0.224:8080 weight=4 max_fails=2 fail_timeout=30s;
+    }
+    server 
+    {
+        listen       80;        #监听端口    
+        server_name  localhost;
+
+        location / {
+            proxy_pass http://test;    #转向test
+        }
+    }
+```
+通过上述配置将请求转到 http://test，test是事先设定好的upstream里面设置了负载均衡。
