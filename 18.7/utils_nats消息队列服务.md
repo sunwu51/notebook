@@ -70,4 +70,4 @@ services:
 ```html
 <script type="text/javascript" src="https://cdn.rawgit.com/isobit/websocket-nats/master/dist/websocket-nats.min.js"></script>
 ```
-此时会有一个全局变量NATS，他的用法和上面nodejs里的几乎一模一样。
+此时会有一个全局变量NATS，他的用法和上面nodejs里的几乎一模一样，只不过这里连的端口改为4223.
