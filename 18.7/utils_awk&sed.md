@@ -1,6 +1,6 @@
 # awk
 通俗讲awk，就是逐行执行一个命令，一般命令包含print。例如：
-```shell
+```bash
 # 打印文件每一行
 awk '{print $0}' x.xml
 
@@ -19,13 +19,13 @@ awk '$1~"cat"{print $2 and $4}' x.xml
 # 注意= ~这些对比字符串的时候记得加上双引号，有时候不加也可以，但最好加上。
 ```
 上面是对文件内容进行检索和打印的，有些时候我们往往需要对之前输出的结果进行操作
-```shell
+```bash
 # 获取当前运行的docker容器id
 docker ps|awk '$1!~"CONTA"{print $1}'
 ```
 # grep
 这里顺带讲下grep,grep是过滤的。例如
-```shell
+```bash
 # 打印123
 echo 123 |grep 12
 
@@ -40,7 +40,7 @@ echo 123abc |grep  "^\d\{2,4\}[a-z]\{3\}"
 grep用的时候一般就用这些。
 # sed
 字符串替换
-```
+```bash
 # 中间支持正则，但不支持\d\w,用[0-9][a-z]之类的替换
 sed 's/要被取代的字串/新的字串/g'
 
