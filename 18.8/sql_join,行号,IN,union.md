@@ -114,3 +114,28 @@ select name,age,clazid,row_number()
 over(partition by clazid order by age) as row_num
 from student  )T where row_num=1
 ```
+注意row_number一般是oracle和postgre才有的内置函数。
+# 3 IN
+一般用法：
+```sql
+select * from student where clazid in (1,2);
+```
+关联子查询：
+sql
+```sql
+select * from student where clazid in (select id from claz where id>2);
+```
+关联子查询需要满足子查询结果只有一列。
+# 4 union
+基本用法 select1 union select2，将两个查询结果拼接起来，注意查询的字段数量和类型需要一致。字段名可以不一样，最后会以select1字段名显示。
+```sql
+select id from student 
+union
+select id from claz
+```
+union默认是去重的，如果不想去重则可以用`union all`
+```sql
+select num,name from student
+union all
+select id,name from claz
+```
