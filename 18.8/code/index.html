@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>测试</title>
+	<link rel="stylesheet" type="text/css" href="css/normalize.css" />
+	<link rel="stylesheet" type="text/css" href="css/demo.css" />
+	<link rel="stylesheet" type="text/css" href="css/component.css" />
+	<link rel="stylesheet" type="text/css" href="css/custom-bars.css" />
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	 crossorigin="anonymous"></script>
+</head>
+
+<body>
+	<div>
+		<div class="flexy-column">
+			<div class="progress-factor flexy-item">
+				<div class="progress-bar">
+					<div id="bar" class="bar has-rotation has-colors red heat-gradient" role="progressbar" aria-valuenow="0" aria-valuemin="0"
+					 aria-valuemax="100">
+						<div class="tooltip heat-gradient-tooltip"></div>
+						<div class="bar-face face-position roof percentage"></div>
+						<div class="bar-face face-position back percentage"></div>
+						<div class="bar-face face-position floor percentage volume-lights"></div>
+						<div class="bar-face face-position left"></div>
+						<div class="bar-face face-position right"></div>
+						<div class="bar-face face-position front percentage volume-lights shine"></div>
+					</div>
+				</div>
+			</div>
+			<div style="text-align: center;margin-top: 50px">
+				<h2 id="filename" style="display:none">123</h2>
+				<input type="file" id="input"><button onclick="up()" id="btn">upload</button>
+			</div>
+		</div>
+		<script src="https://www.gstatic.com/firebasejs/5.4.1/firebase.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-storage.js"></script>
+		<script>
+			// Initialize Firebase
+			var config = {
+				apiKey: "AIzaSyDMoIynHWJFqWtzhKArr2VZpNX_K6V19t8",
+				authDomain: "myfire-f7f48.firebaseapp.com",
+				databaseURL: "https://myfire-f7f48.firebaseio.com",
+				projectId: "myfire-f7f48",
+				storageBucket: "myfire-f7f48.appspot.com",
+				messagingSenderId: "360293798604"
+			};
+			firebase.initializeApp(config);
+		</script>
+
+		<script>
+			// File or Blob named mountains.jpg
+			function up() {
+				$('#filename').hide();
+				var file = document.getElementById('input').files[0];
+				var storageRef = firebase.storage().ref();
+				// Upload file and metadata to the object 'images/mountains.jpg'
+				var uploadTask = storageRef.child('images/' + file.name).put(file);
+				uploadTask.on(firebase.storage.TaskEvent.STATE_CHANGED, // or 'state_changed'
+					function (snapshot) {
+						// Get task progress, including the number of bytes uploaded and the total number of bytes to be uploaded
+						var progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+						console.log('Upload is ' + progress + '% done');
+						if (progress == 100) {
+							document.getElementById('input').value = "";
+							$('#filename').show();
+							document.getElementById('filename').innerText = file.name + "上传完毕!";
+						}
+						var bar = document.getElementById("bar");
+						bar.setAttribute('aria-valuenow', parseInt(progress));
+
+						switch (snapshot.state) {
+							case firebase.storage.TaskState.PAUSED: // or 'paused'
+								console.log('Upload is paused');
+								break;
+							case firebase.storage.TaskState.RUNNING: // or 'running'
+								console.log('Upload is running');
+								break;
+						}
+					}, function (error) {
+
+						// A full list of error codes is available at
+						// https://firebase.google.com/docs/storage/web/handle-errors
+						switch (error.code) {
+							case 'storage/unauthorized':
+								// User doesn't have permission to access the object
+								break;
+
+							case 'storage/canceled':
+								// User canceled the upload
+								break;
+
+
+							case 'storage/unknown':
+								// Unknown error occurred, inspect error.serverResponse
+								break;
+						}
+					}, function () {
+						// Upload completed successfully, now we can get the download URL
+						uploadTask.snapshot.ref.getDownloadURL().then(function (downloadURL) {
+							console.log('File available at', downloadURL);
+						});
+					});
+			}
+
+		</script>
+		<div style="text-align:center;clear:both">
+		</div>
+	</div>
+</body>
+
+</html>

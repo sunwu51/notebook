@@ -1,0 +1,769 @@
+/* Component styles */
+/* line 5, ../scss/component.scss */
+h1 span.heading-3d {
+  font-size: 1em;
+  font-weight: bold;
+  display: inline-block;
+  color: #eaeaea;
+  transform: scale(1.4) translateY(-0.25em) rotateZ(8deg);
+  text-shadow: 0.01em 0.02em 0.01em rgba(150, 150, 150, 0.5), -0.01em -0.01em 0.01em white, 0 0 1em rgba(0, 0, 0, 0.15), 0.05em 0.2em 0.08em rgba(0, 0, 0, 0.3), 0 0.15em 0.35em rgba(0, 0, 0, 0.3), 0 0.6em 1.6em rgba(0, 0, 0, 0.3), 0 0.2em 2.04em white;
+  padding: 0;
+}
+
+/* line 16, ../scss/component.scss */
+.content {
+  padding-top: 0;
+}
+
+/* line 72, ../scss/component.scss */
+.progress-factor {
+  font-size: 5em;
+  padding: 1em .2em 0;
+  flex: 0 1 100%;
+}
+
+/* line 79, ../scss/component.scss */
+.progress-bar {
+  font-size: 1em;
+  text-align: center;
+  width: 100%;
+  height: 1em;
+  perspective: 12em;
+  perspective-origin: 50% 50%;
+}
+
+/* line 91, ../scss/component.scss */
+.bar {
+  font-size: 1em;
+  position: relative;
+  display: inline-block;
+  width: 4em;
+  height: 1em;
+  transition: all 0.5s ease-in-out;
+  transform-style: preserve-3d;
+}
+/* line 105, ../scss/component.scss */
+.bar.regular-width {
+  width: 1em;
+}
+/* line 108, ../scss/component.scss */
+.bar.regular-width[aria-valuenow] .percentage:before {
+  width: 100%;
+}
+/* line 116, ../scss/component.scss */
+.bar.has-rotation {
+  transform: rotateX(60deg);
+}
+/* line 121, ../scss/component.scss */
+.bar .bar-face {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  display: inline-block;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(10, 64, 105, 0.3);
+  backface-visibility: visible;
+  transition: transform 0.5s ease-out;
+}
+/* line 138, ../scss/component.scss */
+.bar .bar-face.face-position {
+  transform-origin: 50% 100%;
+}
+/* line 142, ../scss/component.scss */
+.bar .bar-face.face-position.roof {
+  transform: translateZ(1em);
+  transition-delay: 2s;
+}
+/* line 147, ../scss/component.scss */
+.bar .bar-face.face-position.front {
+  transform: rotateX(-90deg);
+  transition-delay: 0s;
+}
+/* line 152, ../scss/component.scss */
+.bar .bar-face.face-position.right {
+  left: auto;
+  right: -.5em;
+  width: 1em;
+  transform: rotateX(-90deg) rotateY(90deg) translateX(0.5em);
+  transition-delay: 0.5s;
+}
+/* line 160, ../scss/component.scss */
+.bar .bar-face.face-position.back {
+  transform: rotateX(-90deg) rotateY(0deg) translateZ(-1em);
+  transition-delay: 1s;
+}
+/* line 165, ../scss/component.scss */
+.bar .bar-face.face-position.left {
+  width: 1em;
+  transform: rotateX(-90deg) rotateY(-90deg) translateX(-0.5em) translateZ(0.5em);
+  transition-delay: 1.5s;
+}
+/* line 173, ../scss/component.scss */
+.bar .bar-face.percentage:before {
+  content: '';
+  font-size: .25em;
+  line-height: 4em;
+  position: absolute;
+  bottom: 0;
+  width: 0;
+  height: 100%;
+  margin: 0;
+  display: block;
+  box-sizing: border-box;
+  color: rgba(68, 68, 68, 0.8);
+  transition: all 0.5s ease-out;
+}
+/* line 24, ../scss/component.scss */
+.bar.red .bar-face, .bar.red[aria-valuenow='0'] .face-position.right {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+/* line 29, ../scss/component.scss */
+.bar.red .face-position.left, .bar.red[aria-valuenow='100'] .face-position.right {
+  background-color: rgba(236, 0, 113, 0.2);
+}
+/* line 34, ../scss/component.scss */
+.bar.red[aria-valuenow='100'] .face-position.right {
+  transition-delay: 0.5s;
+}
+/* line 38, ../scss/component.scss */
+.bar.red .face-position.floor.volume-lights {
+  box-shadow: 0 -0.2em 1em rgba(0, 0, 0, 0.15), 0 0.2em 0.1em -5px rgba(0, 0, 0, 0.3), 0 -0.75em 1.75em rgba(254, 254, 254, 0.6);
+}
+/* line 45, ../scss/component.scss */
+.bar.red .percentage:before {
+  background-color: rgba(236, 0, 113, 0.5);
+}
+/* line 49, ../scss/component.scss */
+.bar.red .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(236, 0, 113, 0.25);
+}
+/* line 56, ../scss/component.scss */
+.bar.red:not(.has-colors)[aria-valuenow] .face-position {
+  background-color: rgba(68, 68, 68, 0.6);
+}
+/* line 60, ../scss/component.scss */
+.bar.red:not(.has-colors) .percentage:before {
+  background-color: transparent;
+}
+/* line 64, ../scss/component.scss */
+.bar.red:not(.has-colors) .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(236, 0, 113, 0);
+}
+/* line 24, ../scss/component.scss */
+.bar.yellow .bar-face, .bar.yellow[aria-valuenow='0'] .face-position.right {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+/* line 29, ../scss/component.scss */
+.bar.yellow .face-position.left, .bar.yellow[aria-valuenow='100'] .face-position.right {
+  background-color: rgba(241, 196, 15, 0.2);
+}
+/* line 34, ../scss/component.scss */
+.bar.yellow[aria-valuenow='100'] .face-position.right {
+  transition-delay: 0.5s;
+}
+/* line 38, ../scss/component.scss */
+.bar.yellow .face-position.floor.volume-lights {
+  box-shadow: 0 -0.2em 1em rgba(0, 0, 0, 0.15), 0 0.2em 0.1em -5px rgba(0, 0, 0, 0.3), 0 -0.75em 1.75em rgba(254, 254, 254, 0.6);
+}
+/* line 45, ../scss/component.scss */
+.bar.yellow .percentage:before {
+  background-color: rgba(241, 196, 15, 0.5);
+}
+/* line 49, ../scss/component.scss */
+.bar.yellow .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(241, 196, 15, 0.25);
+}
+/* line 56, ../scss/component.scss */
+.bar.yellow:not(.has-colors)[aria-valuenow] .face-position {
+  background-color: rgba(68, 68, 68, 0.6);
+}
+/* line 60, ../scss/component.scss */
+.bar.yellow:not(.has-colors) .percentage:before {
+  background-color: transparent;
+}
+/* line 64, ../scss/component.scss */
+.bar.yellow:not(.has-colors) .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(241, 196, 15, 0);
+}
+/* line 24, ../scss/component.scss */
+.bar.lime .bar-face, .bar.lime[aria-valuenow='0'] .face-position.right {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+/* line 29, ../scss/component.scss */
+.bar.lime .face-position.left, .bar.lime[aria-valuenow='100'] .face-position.right {
+  background-color: rgba(215, 255, 0, 0.2);
+}
+/* line 34, ../scss/component.scss */
+.bar.lime[aria-valuenow='100'] .face-position.right {
+  transition-delay: 0.5s;
+}
+/* line 38, ../scss/component.scss */
+.bar.lime .face-position.floor.volume-lights {
+  box-shadow: 0 -0.2em 1em rgba(0, 0, 0, 0.15), 0 0.2em 0.1em -5px rgba(0, 0, 0, 0.3), 0 -0.75em 1.75em rgba(254, 254, 254, 0.6);
+}
+/* line 45, ../scss/component.scss */
+.bar.lime .percentage:before {
+  background-color: rgba(215, 255, 0, 0.5);
+}
+/* line 49, ../scss/component.scss */
+.bar.lime .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(215, 255, 0, 0.25);
+}
+/* line 56, ../scss/component.scss */
+.bar.lime:not(.has-colors)[aria-valuenow] .face-position {
+  background-color: rgba(68, 68, 68, 0.6);
+}
+/* line 60, ../scss/component.scss */
+.bar.lime:not(.has-colors) .percentage:before {
+  background-color: transparent;
+}
+/* line 64, ../scss/component.scss */
+.bar.lime:not(.has-colors) .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(215, 255, 0, 0);
+}
+/* line 24, ../scss/component.scss */
+.bar.navy .bar-face, .bar.navy[aria-valuenow='0'] .face-position.right {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+/* line 29, ../scss/component.scss */
+.bar.navy .face-position.left, .bar.navy[aria-valuenow='100'] .face-position.right {
+  background-color: rgba(10, 64, 105, 0.2);
+}
+/* line 34, ../scss/component.scss */
+.bar.navy[aria-valuenow='100'] .face-position.right {
+  transition-delay: 0.5s;
+}
+/* line 38, ../scss/component.scss */
+.bar.navy .face-position.floor.volume-lights {
+  box-shadow: 0 -0.2em 1em rgba(0, 0, 0, 0.15), 0 0.2em 0.1em -5px rgba(0, 0, 0, 0.3), 0 -0.75em 1.75em rgba(254, 254, 254, 0.6);
+}
+/* line 45, ../scss/component.scss */
+.bar.navy .percentage:before {
+  background-color: rgba(10, 64, 105, 0.5);
+}
+/* line 49, ../scss/component.scss */
+.bar.navy .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(10, 64, 105, 0.25);
+}
+/* line 56, ../scss/component.scss */
+.bar.navy:not(.has-colors)[aria-valuenow] .face-position {
+  background-color: rgba(68, 68, 68, 0.6);
+}
+/* line 60, ../scss/component.scss */
+.bar.navy:not(.has-colors) .percentage:before {
+  background-color: transparent;
+}
+/* line 64, ../scss/component.scss */
+.bar.navy:not(.has-colors) .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(10, 64, 105, 0);
+}
+/* line 24, ../scss/component.scss */
+.bar.cyan .bar-face, .bar.cyan[aria-valuenow='0'] .face-position.right {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+/* line 29, ../scss/component.scss */
+.bar.cyan .face-position.left, .bar.cyan[aria-valuenow='100'] .face-position.right {
+  background-color: rgba(87, 202, 244, 0.2);
+}
+/* line 34, ../scss/component.scss */
+.bar.cyan[aria-valuenow='100'] .face-position.right {
+  transition-delay: 0.5s;
+}
+/* line 38, ../scss/component.scss */
+.bar.cyan .face-position.floor.volume-lights {
+  box-shadow: 0 -0.2em 1em rgba(0, 0, 0, 0.15), 0 0.2em 0.1em -5px rgba(0, 0, 0, 0.3), 0 -0.75em 1.75em rgba(254, 254, 254, 0.6);
+}
+/* line 45, ../scss/component.scss */
+.bar.cyan .percentage:before {
+  background-color: rgba(87, 202, 244, 0.5);
+}
+/* line 49, ../scss/component.scss */
+.bar.cyan .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(87, 202, 244, 0.25);
+}
+/* line 56, ../scss/component.scss */
+.bar.cyan:not(.has-colors)[aria-valuenow] .face-position {
+  background-color: rgba(68, 68, 68, 0.6);
+}
+/* line 60, ../scss/component.scss */
+.bar.cyan:not(.has-colors) .percentage:before {
+  background-color: transparent;
+}
+/* line 64, ../scss/component.scss */
+.bar.cyan:not(.has-colors) .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(87, 202, 244, 0);
+}
+/* line 24, ../scss/component.scss */
+.bar.dark .bar-face, .bar.dark[aria-valuenow='0'] .face-position.right {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+/* line 29, ../scss/component.scss */
+.bar.dark .face-position.left, .bar.dark[aria-valuenow='100'] .face-position.right {
+  background-color: rgba(68, 68, 68, 0.2);
+}
+/* line 34, ../scss/component.scss */
+.bar.dark[aria-valuenow='100'] .face-position.right {
+  transition-delay: 0.5s;
+}
+/* line 38, ../scss/component.scss */
+.bar.dark .face-position.floor.volume-lights {
+  box-shadow: 0 -0.2em 1em rgba(0, 0, 0, 0.15), 0 0.2em 0.1em -5px rgba(0, 0, 0, 0.3), 0 -0.75em 1.75em rgba(254, 254, 254, 0.6);
+}
+/* line 45, ../scss/component.scss */
+.bar.dark .percentage:before {
+  background-color: rgba(68, 68, 68, 0.5);
+}
+/* line 49, ../scss/component.scss */
+.bar.dark .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(68, 68, 68, 0.25);
+}
+/* line 56, ../scss/component.scss */
+.bar.dark:not(.has-colors)[aria-valuenow] .face-position {
+  background-color: rgba(68, 68, 68, 0.6);
+}
+/* line 60, ../scss/component.scss */
+.bar.dark:not(.has-colors) .percentage:before {
+  background-color: transparent;
+}
+/* line 64, ../scss/component.scss */
+.bar.dark:not(.has-colors) .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(68, 68, 68, 0);
+}
+/* line 24, ../scss/component.scss */
+.bar.orange .bar-face, .bar.orange[aria-valuenow='0'] .face-position.right {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+/* line 29, ../scss/component.scss */
+.bar.orange .face-position.left, .bar.orange[aria-valuenow='100'] .face-position.right {
+  background-color: rgba(255, 105, 0, 0.2);
+}
+/* line 34, ../scss/component.scss */
+.bar.orange[aria-valuenow='100'] .face-position.right {
+  transition-delay: 0.5s;
+}
+/* line 38, ../scss/component.scss */
+.bar.orange .face-position.floor.volume-lights {
+  box-shadow: 0 -0.2em 1em rgba(0, 0, 0, 0.15), 0 0.2em 0.1em -5px rgba(0, 0, 0, 0.3), 0 -0.75em 1.75em rgba(254, 254, 254, 0.6);
+}
+/* line 45, ../scss/component.scss */
+.bar.orange .percentage:before {
+  background-color: rgba(255, 105, 0, 0.5);
+}
+/* line 49, ../scss/component.scss */
+.bar.orange .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(255, 105, 0, 0.25);
+}
+/* line 56, ../scss/component.scss */
+.bar.orange:not(.has-colors)[aria-valuenow] .face-position {
+  background-color: rgba(68, 68, 68, 0.6);
+}
+/* line 60, ../scss/component.scss */
+.bar.orange:not(.has-colors) .percentage:before {
+  background-color: transparent;
+}
+/* line 64, ../scss/component.scss */
+.bar.orange:not(.has-colors) .volume-lights.shine:before {
+  box-shadow: 0 1.6em 3em rgba(255, 105, 0, 0);
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='1'] .percentage:before {
+  width: 1%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='2'] .percentage:before {
+  width: 2%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='3'] .percentage:before {
+  width: 3%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='4'] .percentage:before {
+  width: 4%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='5'] .percentage:before {
+  width: 5%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='6'] .percentage:before {
+  width: 6%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='7'] .percentage:before {
+  width: 7%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='8'] .percentage:before {
+  width: 8%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='9'] .percentage:before {
+  width: 9%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='10'] .percentage:before {
+  width: 10%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='11'] .percentage:before {
+  width: 11%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='12'] .percentage:before {
+  width: 12%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='13'] .percentage:before {
+  width: 13%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='14'] .percentage:before {
+  width: 14%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='15'] .percentage:before {
+  width: 15%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='16'] .percentage:before {
+  width: 16%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='17'] .percentage:before {
+  width: 17%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='18'] .percentage:before {
+  width: 18%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='19'] .percentage:before {
+  width: 19%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='20'] .percentage:before {
+  width: 20%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='21'] .percentage:before {
+  width: 21%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='22'] .percentage:before {
+  width: 22%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='23'] .percentage:before {
+  width: 23%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='24'] .percentage:before {
+  width: 24%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='25'] .percentage:before {
+  width: 25%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='26'] .percentage:before {
+  width: 26%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='27'] .percentage:before {
+  width: 27%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='28'] .percentage:before {
+  width: 28%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='29'] .percentage:before {
+  width: 29%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='30'] .percentage:before {
+  width: 30%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='31'] .percentage:before {
+  width: 31%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='32'] .percentage:before {
+  width: 32%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='33'] .percentage:before {
+  width: 33%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='34'] .percentage:before {
+  width: 34%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='35'] .percentage:before {
+  width: 35%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='36'] .percentage:before {
+  width: 36%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='37'] .percentage:before {
+  width: 37%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='38'] .percentage:before {
+  width: 38%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='39'] .percentage:before {
+  width: 39%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='40'] .percentage:before {
+  width: 40%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='41'] .percentage:before {
+  width: 41%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='42'] .percentage:before {
+  width: 42%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='43'] .percentage:before {
+  width: 43%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='44'] .percentage:before {
+  width: 44%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='45'] .percentage:before {
+  width: 45%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='46'] .percentage:before {
+  width: 46%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='47'] .percentage:before {
+  width: 47%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='48'] .percentage:before {
+  width: 48%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='49'] .percentage:before {
+  width: 49%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='50'] .percentage:before {
+  width: 50%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='51'] .percentage:before {
+  width: 51%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='52'] .percentage:before {
+  width: 52%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='53'] .percentage:before {
+  width: 53%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='54'] .percentage:before {
+  width: 54%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='55'] .percentage:before {
+  width: 55%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='56'] .percentage:before {
+  width: 56%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='57'] .percentage:before {
+  width: 57%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='58'] .percentage:before {
+  width: 58%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='59'] .percentage:before {
+  width: 59%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='60'] .percentage:before {
+  width: 60%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='61'] .percentage:before {
+  width: 61%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='62'] .percentage:before {
+  width: 62%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='63'] .percentage:before {
+  width: 63%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='64'] .percentage:before {
+  width: 64%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='65'] .percentage:before {
+  width: 65%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='66'] .percentage:before {
+  width: 66%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='67'] .percentage:before {
+  width: 67%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='68'] .percentage:before {
+  width: 68%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='69'] .percentage:before {
+  width: 69%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='70'] .percentage:before {
+  width: 70%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='71'] .percentage:before {
+  width: 71%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='72'] .percentage:before {
+  width: 72%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='73'] .percentage:before {
+  width: 73%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='74'] .percentage:before {
+  width: 74%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='75'] .percentage:before {
+  width: 75%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='76'] .percentage:before {
+  width: 76%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='77'] .percentage:before {
+  width: 77%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='78'] .percentage:before {
+  width: 78%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='79'] .percentage:before {
+  width: 79%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='80'] .percentage:before {
+  width: 80%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='81'] .percentage:before {
+  width: 81%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='82'] .percentage:before {
+  width: 82%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='83'] .percentage:before {
+  width: 83%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='84'] .percentage:before {
+  width: 84%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='85'] .percentage:before {
+  width: 85%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='86'] .percentage:before {
+  width: 86%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='87'] .percentage:before {
+  width: 87%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='88'] .percentage:before {
+  width: 88%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='89'] .percentage:before {
+  width: 89%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='90'] .percentage:before {
+  width: 90%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='91'] .percentage:before {
+  width: 91%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='92'] .percentage:before {
+  width: 92%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='93'] .percentage:before {
+  width: 93%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='94'] .percentage:before {
+  width: 94%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='95'] .percentage:before {
+  width: 95%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='96'] .percentage:before {
+  width: 96%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='97'] .percentage:before {
+  width: 97%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='98'] .percentage:before {
+  width: 98%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='99'] .percentage:before {
+  width: 99%;
+}
+/* line 209, ../scss/component.scss */
+.bar[aria-valuenow='100'] .percentage:before {
+  width: 100%;
+}
