@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        .myc{
+            float:left;
+            width: 48%;
+        }
+    </style>
+</head>
+<body>
+    <script src="https://www.gstatic.com/firebasejs/5.4.1/firebase.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-app.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/5.4.1/firebase-database.js"></script>
+        <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+        <script src="https://cdn.bootcss.com/showdown/1.3.0/showdown.min.js"></script>
+    
+        <script>
+			// Initialize Firebase
+			var config = {
+				apiKey: "AIzaSyDMoIynHWJFqWtzhKArr2VZpNX_K6V19t8",
+				authDomain: "myfire-f7f48.firebaseapp.com",
+				databaseURL: "https://myfire-f7f48.firebaseio.com",
+				projectId: "myfire-f7f48",
+				storageBucket: "myfire-f7f48.appspot.com",
+				messagingSenderId: "360293798604"
+			};
+			firebase.initializeApp(config);
+        </script>
+        <script>
+            var ref = firebase.database().ref('demo/1');
+            // 更新数据库
+            function update(s) {
+                ref.set({
+                    data:s
+                });
+            } 
+
+            function f(){
+                var s = document.getElementById('input').value;
+                update(s);
+            }    
+            // 监听数据库实时更新到p中
+            ref.on('value', function(snapshot) {
+                var s1 = snapshot.val().data
+                if(!document.getElementById('input').value){
+                    document.getElementById('input').value=s1;
+                }
+                var converter = new showdown.Converter(); //初始化转换器
+                var htmlcontent  = converter.makeHtml(s1);
+                document.getElementById('p').innerHTML=htmlcontent;
+            });   
+        </script>
+        <div class='myc' id="p"> </div>
+        <textarea style="height: 800px;" class='myc' id = "input" type="text" oninput="f()"></textarea>
+</body>
+</html>
