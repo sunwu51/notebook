@@ -111,3 +111,5 @@ PS+PS Mark Sweep组合是不指定参数的时候使用的收集器
 
 ## 4.4 FROM区能否new对象？
 一般不可以。但少数情况下：在full gc后还没啥空闲空间的情况下，之后的一个周期也能在from space分配给new的对象用（改了个标志位）。标志位只在fullgc后才能被clear，也就意味着在下次fullgc之前from space都能分配，（也可能下下次）。
+
+参考[http://www.importnew.com/23752.html](http://www.importnew.com/23752.html)
