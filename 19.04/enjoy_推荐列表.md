@@ -25,6 +25,7 @@
 - 1 强烈推荐一个youtuber [Traversy Media](https://www.youtube.com/channel/UC29ju8bIPH5as8OGnQzwJyA)
 - 2 javaer可以关注公众号 程序员小灰、纯洁的微笑
 - 3 我以前做的[学习网站](http://microfrank.top)
+- 4 可以试用半个月的web快速搭建工具[zoho sites](https://sites.zoho.com/index)
 # 五、测试工具
 - 1 [PostMan](https://www.getpostman.com/)模拟http请求。
 - 2 [Jmeter](http://jmeter.apache.org/)压测工具。
@@ -33,16 +34,19 @@
 - 1 [grafana](http://grafana.org/)图表化显示服务的运行状态
 - 2 [Jenkins](https://jenkins.io/) 持续集成的老牌工具
 - 3 [DaoCloud](https://daocloud.io) 基于docker的运维一体化平台
-# 七、开发利器推荐
+# 七、其他工具
+- 1 [Nextcloud](https://nextcloud.com)开源版本的OneDrive
+- 2 [FileBrowser](https://github.com/filebrowser/filebrowser)web版的文件管理器(FTP)
+# 八、开发利器推荐
 - 1 [vsCode](https://code.visualstudio.com/)插件丰富的编辑器，在前端和后端开发者中都很流行。
 - 2 [coder.com](http://coder.com)vscode网页版。
 - 3 [play with docker](https://labs.play-with-docker.com)提供在线docker环境，免费时长为4小时/次。
 - 4 [node-red](https://nodered.org/) IBM为物联网场景开发的，后面发现可以用在各种场景，尤其是原型系统和测试。
 - 5 [now](https://zeit.co/now) 免费好用的serverless平台
-# 八、了解最新的技术
+# 九、了解最新的技术
 - 1 youtuber推荐[Traversy Media](https://www.youtube.com/channel/UC29ju8bIPH5as8OGnQzwJyA)、[freeCodeCamp.org](https://www.youtube.com/channel/UC8butISFwT-Wl7EV0hUK0BQ)、[Fireship ](https://www.youtube.com/channel/UCsBjURrPoezykLs9EqgamOA)
 - 2 阮一峰的[文章](http://www.ruanyifeng.com/blog/)
-# 九、习惯
+# 十、习惯
 - 1 遇到没听过的概念，百度搜索通过博客粗略了解，youtube搜索看他的定位，官网进一步了解，实操一下。
 - 2 很多常见的东西都有理论依据，对于冷门的知识也可以搜到论文，养成看论文的习惯。
 - 3 不要高估记忆力，多总结多记录，最好有自己的博客。
