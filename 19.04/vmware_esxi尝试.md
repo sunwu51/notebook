@@ -20,7 +20,7 @@ ESXI是操作系统因而可以直接在机器上安装，当然如果没有现�
 
 # 使用
 配置完成后就可以使用了，不过不是在这个黑黄页面，而是进入页面上所提示的http地址。浏览器输入网址进入后，可以看到一个和workstation有点像的页面。通过下面的步骤就可以创建一个虚拟机了。
-![image](https://github.com/sunwu51/image/raw/master/1904/es1.jpg)    
+![image](https://github.com/sunwu51/image/raw/master/1904/1.gif)    
 # 小节
 这里我已经创建了两个系统了，一个lede，一个ubuntu。他们都正常工作，不得不说esxi的使用方式还是比较简单的，更深入的探讨，等我租房子以后再仔细探索吧。
 
