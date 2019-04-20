@@ -41,14 +41,18 @@ for(var year in yearSet){
         <label for="tab${index}">20${year}</label>
     
     `;
+    // ks: [18.1,18.2...]
     var ks = yearSet[year];
     var content = ""
     for(var it in ks){
         // <h3><b>18.1</b></h3>
-        var str="<h3><b>"+it+"</b></h3><hr/>\n"
-        var tmp=m[it]
+        var str="   <h3><b>"+ks[it]+"</b></h3><hr/>"
+        var tmp=m[ks[it]]
         for(var i in tmp){
-            str+="<p><a href='"+tmp[i]["href"]+"'>"+tmp[i]["txt"]+"</a></p>\n"
+            str+=
+            `
+            <p><a href='${tmp[i]["href"]}'>${tmp[i]["txt"]}</a></p>
+            `
         }
         content +=str;
     }
@@ -64,6 +68,7 @@ for(var year in yearSet){
     `;
     sectionstr+=content;
 }
+
 
 
 htstr="<div id=\"content\" class=\"container\">\n"+labelstr+sectionstr+"\n</div>"
