@@ -26,8 +26,8 @@ var yearSet = {};
 for(var i=0;i<keys.length;i++){
     // get year and month [18,1]
     var date = keys[i].split('.')
-    if(!yearSet[data[0]])yearSet[data[0]]=[];
-    yearSet[data[0]].push(keys[i])
+    if(!yearSet[date[0]])yearSet[date[0]]=[];
+    yearSet[date[0]].push(keys[i])
 }
 // finally, yearSet = {'18':['18.1','18.2'...],'19':['19.01','19.02'...],...}
 
