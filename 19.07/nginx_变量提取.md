@@ -14,7 +14,7 @@ playwithdocker或者coding中进行端口映射，获得一个域名，该域名
 - 转至： `http://192.168.0.12:xx`
 - xx是具体的端口数
 
-首先需要修改域名xx.nginx.microfrank.top映射到nginx服务器所在的ip，如果只是测试，可以直接修改host文件例如添加一条`127.0.0.1    nginx.5104.microfrank.top`。否则需要在域名管理页面添加记录`*.nginx`映射到自己的nginx服务器。
+首先需要修改域名xx.nginx.microfrank.top映射到nginx服务器所在的ip，如果只是测试，可以直接修改host文件。否则需要在域名管理页面添加记录`*.nginx`映射到自己的nginx服务器。
 
 在`nginx.conf`添加一条server配置（原来的不用动）
 ```ini
