@@ -61,7 +61,7 @@ location /test2{
     }
 }
 ```
-
+![image](https://bolg.obs.cn-north-1.myhuaweicloud.com/1907/openresty2.jpg)
 ## 3.2 修改请求内容
 在到达服务前有时候需要对请求内容进行一些修改，例如去掉一些敏感的请求头，解码某些参数等。
 ```lua
