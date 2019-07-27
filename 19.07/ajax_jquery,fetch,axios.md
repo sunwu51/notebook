@@ -47,7 +47,7 @@ fetch(url,{
          contentType: "application/x-www-form-urlencoded"
     }
     method:"POST",
-    data:"a=12&b=33",
+    body:"a=12&b=33",
 })
 .then(res=>res.json())
 .then(data=>console.log(res))
@@ -58,7 +58,7 @@ fetch(url,{
          contentType: "application/json"
     }
     method:"POST",
-    data:JSON.stringify({a:100}),
+    body:JSON.stringify({a:100}),
 })
 .then(res=>res.json())
 .then(data=>console.log(res))
