@@ -72,6 +72,7 @@ axios({
     method:"POST",
     data:{a:12}
 })
+.then(res=>console.log(res.data))
 // 如果想改成form则需要修改headers和data格式
 axios({
     url:"http://localhost:99?x=1",
@@ -79,6 +80,7 @@ axios({
     headers:{"Content-Type":"application/x-www-form-urlencoded"},
     data:"a=12&b=23"
 })
+.then(res=>console.log(res.data))
 
 ```
 
