@@ -1,0 +1,17 @@
+version: '3'
+services:
+  web:
+    image: nginx
+    ports:
+    - "80:80"
+    volumes:
+    - /html:/usr/share/nginx/html
+    - /conf/nginx.conf:/etc/nginx/nginx.conf
+  php:
+    image: devilbox/php-fpm:5.2-work-0.89
+    volumes:
+    - /html:/var/www/html
+  mysql:
+    image: mysql:5.6
+    environment:
+    - MYSQL_ROOT_PASSWORD=12345
