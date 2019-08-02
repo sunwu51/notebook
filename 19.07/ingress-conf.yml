@@ -1,0 +1,12 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-ng-ingress
+spec:
+  rules:
+  - host: ng.test.com
+    http:
+      paths:
+      - backend:
+          serviceName: test-ng
+          servicePort: 80
