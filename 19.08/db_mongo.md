@@ -22,7 +22,7 @@ db.c1.insert({name:'xiaoming',age:29})
 如果没有c1集合，这句话会先创建c1集合。
 ## 删
 ```javascript
-db.c1.remove({age:29}./*false*/)//默认删除多行
+db.c1.remove({age:29},/*false*/)//默认删除多行
 ```
 删除age字段是29的，可选参数为justOne只删除一条，默认是删除所有符合条件的
 ## 改
@@ -53,6 +53,10 @@ db.c1.find().skip(1).limit(2)
 ```
 ```javascript
 {$or:[{"age":33},{"name": "xiaobai"}],"father":"李刚"}//and or混合
+```
+# 正则
+```js
+{name:{$regex:/^liming[0-9]$/}}
 ```
 ## 大小比较条件
 ```javascript

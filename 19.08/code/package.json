@@ -1,0 +1,22 @@
+{
+  "name": "code",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "pkg main.js --targets=node8-linux-x64",
+    "start": "node main.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "mongodb": "^3.3.0-beta2",
+    "npk": "0.0.4",
+    "pkg": "^4.4.0"
+  },
+  "pkg": {
+    "assets": "public/*"
+  }
+}

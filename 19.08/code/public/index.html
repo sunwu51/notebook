@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>mongo demo</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.19.0/axios.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.8/vue.min.js"></script>
+</head>
+<body>
+    <h1>mongo demo</h1>
+    <div id="app"> 
+        <table class="table table-bordered table-responsive table-striped table-hover table-condensed">
+            <thead>
+            <tr><th>_id</th><th>name</th><th>age</th><th>email</th></tr>
+            </thead>
+            <tbody v-for="item in arr">
+            <tr>
+                <td>{{ item._id }}</td>
+                <td>{{ item.name }}</td>
+                <td>{{ item.age }}</td>
+                <td>{{ item.email }}</td>
+            </tr>
+            </tbody>
+        </table>
+        <label class="label">db.demo.insert(</label>
+        <input  style="width:50%" v-model="insert_data"/>)
+        <button  @click="insert" class ="btn btn-success">插入</button>
+        <hr/>
+        <label class="label">db.demo.delete(</label>
+        <input  style="width:50%"  v-model="del_condition"/>)
+        <button class ="btn btn-danger" @click="del">删除</button>
+        <hr/>
+        <label class="label">db.demo.update(</label>
+        <input  style="width:22%" v-model="update_condition"/>,
+        <input  style="width:22%" v-model="update_data"/>)        
+        <button @click="update" class ="btn btn-warning">更新</button>
+        <hr/>
+        <label class="label">db.demo.updateone(</label>
+        <input  style="width:22%" v-model="updateone_condition"/>,
+        <input  style="width:22%" v-model="updateone_data"/>)        
+        <button @click="updateone"class ="btn btn-warning">更新1条</button>
+        <hr/>
+        <label class="label">db.demo.find(</label>
+        <input  id="find-condition" style="width:22%" v-model="find_condition"/>
+        <button id="update-btn" class ="btn btn-info" @click="getSome">查询</button>
+        <table id="t2" class="table table-bordered table-responsive table-striped table-hover table-condensed">
+                <thead>
+                <tr><th>_id</th><th>name</th><th>age</th><th>email</th></tr>
+                </thead>
+                <tbody v-for="item in arr2">
+                        <tr>
+                            <td>{{ item._id }}</td>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.age }}</td>
+                            <td>{{ item.email }}</td>
+                        </tr>
+                </tbody>
+        </table>
+    </div>
+   <script>
+        var a = new Vue({
+            el: '#app',
+            data: {
+                timer:'',
+                arr:[],
+                arr2:[],
+                insert_data:"{             }",
+                del_condition:"{             }",
+                update_condition:"{             }",
+                update_data:"{             }",
+                updateone_condition:"{             }",
+                updateone_data:"{             }",
+                find_condition:"{             }",
+            },
+            methods: {
+                getSome(){
+                    var that = this
+                    var condition={};
+                    try{
+                        var condition = JSON.parse(this.find_condition)
+                        axios.post('/some',{condition}).then(function({data}){
+                            console.log(data)
+                            that.arr2 = data
+                        })
+                    }catch(e){
+                        alert("json格式错误")
+                    } 
+                },
+                getAll() {
+                    var that=this
+                    axios.get('/all').then(function({data}){
+                        // console.log(data)
+                        that.arr = data
+                    })
+                },
+                insert(){
+                    var that = this
+                    try{
+                        var data = JSON.parse(this.insert_data)
+                        axios.post('/insert',{data}).then(function({data}){
+                            if(data.status==0){
+                                alert("插入成功")
+                            }
+                        })
+                    }catch(e){
+                        alert("json格式错误")
+                    } 
+                },
+                del(){
+                    var that = this
+                    try{
+                        var condition = JSON.parse(this.del_condition)
+                        axios.post('/del',{condition}).then(function({data}){
+                            if(data.status==0){
+                                alert("删除成功")
+                            }
+                        })
+                    }catch(e){
+                        alert("json格式错误")
+                    } 
+                },
+                update(){
+                    var that = this
+                    try{
+                        var condition = JSON.parse(this.update_condition)
+                        var data = JSON.parse(this.update_data)
+                        axios.post('/update',{condition,data}).then(function({data}){
+                            if(data.status==0){
+                                alert("更新成功")
+                            }
+                        })
+                    }catch(e){
+                        alert("json格式错误")
+                    } 
+                },
+                updateone(){
+                    var that = this
+                    try{
+                        var condition = JSON.parse(this.updateone_condition)
+                        var data = JSON.parse(this.updateone_data)
+                        axios.post('/updateone',{condition,data}).then(function({data}){
+                            if(data.status==0){
+                                alert("更新成功")
+                            }
+                        })
+                    }catch(e){
+                        alert("json格式错误")
+                    } 
+                },
+            },
+            mounted() {
+                this.getAll();
+                this.timer = setInterval(this.getAll, 1000);
+            },
+            beforeDestroy() {
+                clearInterval(this.timer);
+            }
+        })
+    </script>
+</body>
+</html>
