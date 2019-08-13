@@ -102,12 +102,19 @@ app.post('/del',(req,res)=>{
     res.send({status:0});
 })
 app.post('/update',(req,res)=>{
-    update(req.body.condition,req.body.data);
-    res.send({status:0});
+    try{
+        update(req.body.condition,req.body.data);
+    }
+    catch(e){
+       
+    } res.send({status:0});
 })
 app.post('/updateone',(req,res)=>{
-    updateOne(req.body.condition,req.body.data);
-    res.send({status:0});
+    try{
+        updateOne(req.body.condition,req.body.data);
+    }catch(e){
+        
+    }res.send({status:0});
 })
 
-app.listen(5000)
+app.listen(process.env.PORT || 5000)
