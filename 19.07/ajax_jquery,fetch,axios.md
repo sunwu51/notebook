@@ -45,7 +45,7 @@ $.ajax({
 fetch(url,{
     headers:{
          contentType: "application/x-www-form-urlencoded"
-    }
+    },
     method:"POST",
     body:"a=12&b=33",
 })
@@ -56,7 +56,7 @@ fetch(url,{
 fetch(url,{
     headers:{
          contentType: "application/json"
-    }
+    },
     method:"POST",
     body:JSON.stringify({a:100}),
 })
