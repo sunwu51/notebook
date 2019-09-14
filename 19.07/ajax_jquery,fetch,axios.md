@@ -44,8 +44,8 @@ $.ajax({
 // fetch的post表单数据用法
 fetch(url,{
     headers:{
-         contentType: "application/x-www-form-urlencoded"
-    }
+         'content-type': "application/x-www-form-urlencoded"
+    },
     method:"POST",
     body:"a=12&b=33",
 })
@@ -55,8 +55,8 @@ fetch(url,{
 // fetch的post json数据用法
 fetch(url,{
     headers:{
-         contentType: "application/json"
-    }
+         'content-type': "application/json"
+    },
     method:"POST",
     body:JSON.stringify({a:100}),
 })
