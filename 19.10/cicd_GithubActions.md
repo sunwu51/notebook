@@ -100,7 +100,7 @@ jobs:
         node_version: 8
     - run: |
         npm install
-	npm run test
+        npm run test
 ```
 
 ## 4 使用docker jobs.container
@@ -144,7 +144,7 @@ jobs:
        ports:
        - 6379/tcp
      steps:
-	- run: curl localhost:8080
+     - run: curl localhost:8080
 ```
 # 深度探究
 ## ① 并不简单的ubuntu-latest
