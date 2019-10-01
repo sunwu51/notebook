@@ -38,9 +38,9 @@ on: [push]
 on:
   push:
     branches:
-	- master
-	paths:
-	- src/*
+    - master
+    paths:
+    - src/*
 
 # 指定定时触发任务，目前支持cron表达式
 on:
@@ -56,13 +56,13 @@ jobs:
   # 每个job至少有runs-on和steps两个元素，env是可选项格式是元素形式
   job1:
     runs-on: ubuntu-latest
-	env:
-	  A: aaa
-	  B: bbb
-	# steps是具体步骤，每一步都作为一个数组元素
-	steps:
-	  - run: echo hello
-	  - run: echo hello2
+    env:
+      A: aaa
+      B: bbb
+    # steps是具体步骤，每一步都作为一个数组元素
+    steps:
+    - run: echo hello
+    - run: echo hello2
 ```
 目前runs-on支持8个系统版本，[参考链接](https://help.github.com/en/articles/workflow-syntax-for-github-actions#jobsjob_idruns-on)
 
@@ -77,7 +77,7 @@ steps:
 - name: 这是描述性的文字 # 可以指定name属性
   run: |          # 使用|可指定多行字符串
     echo hi
-	echo hi2
+    echo hi2
 
 # uses可以指定特定的代码仓库定好的流程
 - uses: actions/checkout@v1  #这是官方写好的下载代码并cd进去的流程
@@ -93,14 +93,14 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-	steps:
-	- uses: actions/checkout@v1
+    steps:
+    - uses: actions/checkout@v1
     - uses: actions/setup-node@v1
       with:
         node_version: 8
-	- run: |
-	    npm install
-		npm run test
+    - run: |
+        npm install
+	npm run test
 ```
 
 ## 4 使用docker jobs.container
@@ -113,14 +113,14 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-	container:
+    container:
       image: node:8
-	steps:
-	- uses: actions/checkout@v1
+    steps:
+    - uses: actions/checkout@v1
     - uses: actions/setup-node@v1
       with:
         node_version: 8
-	- run: |
+    - run: |
         node -v 
 ```
 container中可以指定prots、volumes、env，甚至可以通过options参数指定任意任意`docker run`参数，[参考](https://docs.docker.com/engine/reference/commandline/create/#options)
@@ -132,18 +132,18 @@ on: [push]
 jobs:
   job1:
     runs-on: ubuntu-latest
-	services:
-  	  nginx:
-        image: nginx
+    services:
+      nginx:
+      image: nginx
         ports:
         - 8080:80
         env:
           NGINX_PORT: 80
-	  redis:
-		image: redis
-		ports:
-		  - 6379/tcp
-	steps:
+       redis:
+       image: redis
+       ports:
+       - 6379/tcp
+     steps:
 	- run: curl localhost:8080
 ```
 # 深度探究
