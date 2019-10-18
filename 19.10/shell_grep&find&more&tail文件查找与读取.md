@@ -29,13 +29,17 @@ find / -size +1024M -print0|xargs -0 du -m|sort -nr
 ```bash
 # 只查找当前目录
 grep "xxx" .
-# 同时查找子目录
-grep -r "xxx" *
+# 同时查找子目录，并显示行号
+grep -nr "xxx" *
 ```
 查找1.txt文件中含有xxx字样的一行，及这一行前面2行和后面10行
 ```bash
 # A after; B before
-grep -A 10 -B 2 -r "xxx" 1.txt 
+grep -A 10 -B 2 -rn "xxx" 1.txt 
+```
+如果只想看出现了几次
+```sh
+grep "xxx" 1.log|wc -l
 ```
 # 磁盘、文件大小
 df查看磁盘使用情况
@@ -54,3 +58,24 @@ du -k
 # 如果文件太多显示出来不容易看，限制深度，如只查看一级文件/目录大小
 du -d 1
 ```
+# 读文件：more less head tail cat 
+cat最简单直接读取全文，适用于小文件。
+```sh
+# -n显示行号
+cat -n file
+```
+head和tail分别从头和尾读取文件
+```sh
+# 从头/尾读取x行
+tail/head -n x file
+# 阻塞式持续读取尾部
+tail -f file
+```
+more和less很像，是比较强大的读取工具。一般linux都会有more，但有时没有less这里只介绍more了
+```bash
+# more后 回车是下一行，空格是下一页，b是上一页，q是推出
+more file
+# -4是每页显示4行，+5是从第5行开始
+more -4 +5 file
+```
+
