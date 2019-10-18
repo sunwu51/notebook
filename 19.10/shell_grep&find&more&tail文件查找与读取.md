@@ -15,7 +15,8 @@ find . -cmin -1
 find . -ctime -1
 # 注意：
 # time是天，min是分
-# c是create创建，a是attach读，m是modified写
+# c是change包括权限修改，a是access读，m是modified写不包括权限修改
+# -1是<=1 1x以内；+1是>1 1x以前； 1是=1 1x的时候
 ```
 find常与xargs联合使用，如查找所有大于1024M的文件，并且按照从大到小顺序打印文件大小和文件名
 ```sh
