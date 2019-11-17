@@ -1,5 +1,5 @@
 # spring security + jwt
-代码地址:[]()
+代码地址:[https://github.com/sunwu51/jwt-springsecurity](https://github.com/sunwu51/jwt-springsecurity)
 # 先不加jwt
 直接security的使用方式，主要的步骤是注入`WebSecurityConfigurerAdapter`对象，并重写configure方法，configure中又需要`userDetailsService`接口类，所以需要在写个类实现这个接口。
 
