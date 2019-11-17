@@ -84,6 +84,23 @@ app.get("/del",(req,res)=>{
 ```
 添加上面代码后，重新提交git改动，并push代码，然后部署后效果如下  
 ![image](https://github.com/sunwu51/image/raw/master/1904/hero4.gif)  
+# docker方式部署
+heroku支持docker方式来部署，需要当前机器安装好docker。其原理为本地build，然后上传到heroku的一个镜像仓库。然后将容器发布（运行）。
+
+主要步骤为：先在web创建APP，本地创建文件夹，初始化git，然后remote绑定到APP。
+```bash
+# 登录镜像仓库
+heroku container:login
+```
+然后再当前目录下写代码，和Dockerfile。注意一定要有dockerfile。
+```bash
+# 这条指令=docker build + docker push
+heroku container:push web
+# 注意web关键字不能改成别的
+heroku container:release web
+```
+
+
 # 小结
 heroku工作方式如下，nodejs中默认执行npm install和npm start，其他项目要自己去了解下。  
 ![image](https://github.com/sunwu51/image/raw/master/1904/hero.jpg)  
