@@ -178,3 +178,24 @@ static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 - log4j-slf4j-impl:与log4j2联合使用，用于使当前项目的log4j实现slf标准
 - log4j-over-slf4j:与剔除log4j联合使用，替换log4j，使log4j实现slf。用于让单独用log4j的依赖能遵循slf，进而统一日志配置。
 - log4j-to-slf4j:与剔除log4j2联合使用，替换log4j2，使log4j2实现slf。用于让单独用log4j2的依赖能遵循slf，进而统一日志配置。
+# 原理
+slf4j是门面，大的设计模式是门面系统，而logback是直接实现了slf4j-api中的接口，是通过接口实现的方式完成了门面的实现。
+
+而log4j和log4j2没有直接实现接口，所以需要个适配器。slf4j-log4j12和log4j-slf4j-impl是使用了`适配器模式`，将原本不能实现slf4j的变得也能实现这个标准了。
+
+![image](https://bolg.obs.cn-north-1.myhuaweicloud.com/1911/concrete-bindings.png)
+
+添加了适配器后，就能使用slf4j的接口来使用log4j了。
+
+另一个更加棘手的问题是，项目的依赖中独立使用了log4j/log4j2，这时候就需要log4j-over-slf4j/log4j-to-slf4j。
+以log4j-over-slf4j为例，他实际上是重写了log4j所有的类，将原来的info、debug等等方法委托给slf4j执行了，上面我们将log4j用不存在版本的方式彻底剔除了log4j中的类，使依赖加载的类被偷梁换柱为log4j-over-slf4j中的logger，这个logger中方法又委托给slf4j，slf4j向下找binding找到仅存的logback。
+
+![image](https://bolg.obs.cn-north-1.myhuaweicloud.com/1911/legacy.png)
+
+不存在版本的方式剔除log4j是一种暴力方式，其实目的是让原来的log4j不要先加载就行，可以在pom中将log4j-over-slf4j写在log4j前面就行，log4j写存在的版本就行（因为也不会加载）。
+
+疑惑：pom中不写log4j会有问题吗？
+
+回答：可能会有问题。maven决定了依赖的加载顺序，假如用了log4j的依赖叫A。不写log4j在pom中就必须保证log4j-over-slf4j写在A前面。
+
+
