@@ -181,14 +181,25 @@ static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 # 原理
 slf4j是门面，大的设计模式是门面系统，而logback是直接实现了slf4j-api中的接口，是通过接口实现的方式完成了门面的实现。
 
-而log4j和log4j2没有直接实现接口，所以需要个适配器。slf4j-log4j12和log4j-slf4j-impl是使用了`适配器模式`，将原本不能实现slf4j的变得也能实现这个标准了。
-
+而log4j和log4j2没有直接实现接口，所以需要个适配器。slf4j-log4j12和log4j-slf4j-impl就是`适配器`，将原本不能实现slf4j的变得也能实现这个标准了。添加了适配器后，就能使用slf4j的接口来使用log4j了。
 ![image](https://bolg.obs.cn-north-1.myhuaweicloud.com/1911/concrete-bindings.png)
 
-添加了适配器后，就能使用slf4j的接口来使用log4j了。
-
-另一个更加棘手的问题是，项目的依赖中独立使用了log4j/log4j2，这时候就需要log4j-over-slf4j/log4j-to-slf4j。
+项目的依赖中独立使用了log4j/log4j2，注意是依赖中，这时候想要统一到slf4j上来，就需要log4j-over-slf4j/log4j-to-slf4j。
 以log4j-over-slf4j为例，他实际上是重写了log4j所有的类，将原来的info、debug等等方法委托给slf4j执行了，上面我们将log4j用不存在版本的方式彻底剔除了log4j中的类，使依赖加载的类被偷梁换柱为log4j-over-slf4j中的logger，这个logger中方法又委托给slf4j，slf4j向下找binding找到仅存的logback。
+
+下面是log4j和log4j-over-slf4j重写的logger类,他们形式上一样包括包名，这里就放一张图了
+
+![image](https://bolg.obs.cn-north-1.myhuaweicloud.com/1911/loga.png)
+
+然后都是继承Category这个类，实际上主要的方法实现都在这里，下面分别是log4j包和log4j-over-slf4j包中的Category：
+
+![image](https://bolg.obs.cn-north-1.myhuaweicloud.com/1911/logb.png)
+
+![image](https://bolg.obs.cn-north-1.myhuaweicloud.com/1911/logc.png)
+
+从图中可以看出log4j就是自己在写日志，而后者则委托给了slf4j。
+
+这是slf官网的图。
 
 ![image](https://bolg.obs.cn-north-1.myhuaweicloud.com/1911/legacy.png)
 
