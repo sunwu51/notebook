@@ -1,0 +1,34 @@
+#cmain>p{
+    color: green;
+}
+#cmain p{
+    color: yellow;
+}
+
+
+/* .root #p{
+    color:red
+} */
+
+
+
+
+/* 
+div #cmain p{
+    color: #203879;
+}
+
+#main p{
+    color:blue
+}
+
+p{
+    color:green
+}
+div p{
+    color:red
+}
+p{
+    color:green
+} */
+
