@@ -47,6 +47,15 @@ div{
   @include c; //这里会把c原封不动挪到这里来。注！！！c不是个class，也不会被编译成class
   color:green;
 }
+//mixin还可以传入参数
+@mixin c($c){
+  color:$c;
+  font-size: 10px;
+}
+.d{
+  @include c(red); 
+  color:green;
+}
 
 // 4 函数指令
 @function get-width($n) {
