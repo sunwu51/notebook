@@ -52,7 +52,7 @@ RUN echo $A > 1.txt
 CMD cat 1.txt
 ```
 
-区别：ENV必须指定value，ARG可以不指定此时需要通过外部docker run --build-arg xx=xx指令传入。ARG是构建时参数，只能在Dockerfile中生效，运行时则不存在，ENV是永久影响镜像。看个例子：运行时无法输出10，因为运行时ARG不存在，所以输出的是环境变量$A。
+区别：ENV是运行时，ARG是构件时。ARG通过外部`docker build --build-arg A=1 --build-arg B=2`指令覆盖。ENV通过`docker run -e A=1 -e B=2`覆盖。ARG是构建时参数，只能在Dockerfile中生效，运行时则不存在，ENV是永久影响镜像。看个例子：运行时无法输出10，因为运行时ARG不存在，所以输出的是环境变量$A。
 ```Dockerfile
 ARG A=10
 CMD echo $A
