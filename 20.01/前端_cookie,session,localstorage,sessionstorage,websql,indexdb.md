@@ -181,7 +181,7 @@ indexdb的api较为复杂，于是就有一批封装了indexdb的库涌现了出
       <script>
           //
           // Define your database
-          //
+          //这里的name和shoeSize只是索引列，并不是schema
           var db = new Dexie("friend_database");
           db.version(1).stores({
               friends: 'name,shoeSize'
@@ -200,4 +200,8 @@ indexdb的api较为复杂，于是就有一批封装了indexdb的库涌现了出
       </script>
   </head>
 </html>
+```
+```js
+// 高级查找
+await db.frends.where('age').above(16).toArray()
 ```
