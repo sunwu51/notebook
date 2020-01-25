@@ -77,7 +77,10 @@ np.var(b)      # 方差
 np.std(b)      # 标准差
 np.sin(b)      # 每个元素求sin
 np.linalg.det(b) # 求b的行列式
-np.matmul(a,b) # 两矩阵相乘mxn * nxp = mxp
+np.matmul(a,b) # 两矩阵相乘
+b.T            # 转置
+np.transpose(1,0,2) # 多维转置，可以重新调整维度顺序
+np.dot(a,b)    # 两矩阵相乘
 
 # 基本的加减乘除幂次方，是对每个元素都进行一次这个操作，并返回个新的数组
 x1 = b + 1
@@ -86,7 +89,10 @@ x3 = b ** 2 # 平方
 
 # 同shape的两数组运算
 x4 = x1 + x2
-x5 = x1 @ x2 # @等价于 np.sum(x1 * x2) 是一个数
+# 不同shape数组运算
+x5 = x1 @ x2  # 两矩阵相乘
+
+# 介绍了3个 (* 不算，这个是对位相乘)相乘的函数@ dot matmul，二维下一致，高纬度区别可以自己查
 ```
 
 # 其他细节
