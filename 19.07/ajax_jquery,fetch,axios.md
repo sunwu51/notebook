@@ -2,41 +2,41 @@
 ```js
 // 基本用法无参数get请求
 $.ajax({
-	url:"demo_test.txt",
-	success:function(result){
-		console.log(result);
+    url:"demo_test.txt",
+    success:function(result){
+        console.log(result);
     }
 }
 // 需指定方法则增加method字段
 $.ajax({
     url:"demo_test.txt",
     method:"POST",
-	success:function(result){
-		console.log(result);
+    success:function(result){
+	console.log(result);
     }
 }
 // 有参数，则增加data字段，有请求头则增加headers字段，有错误处理增加error字段
+// 默认是按照表单提交post方法，data中虽然是json但是提交时转成表单
 $.ajax({
-	url:"demo_test.txt",
-    headers:{a:"dsafdsafsad"},
-	data:JSON.stringify({a:10}),
-	success:function(result){
-		console.log(result);
-	},
-	error:function(xhr,status,error){
-		console.log(error);
-	}
+    url:"demo_test.txt",
+    data:{a:10},
+    success:function(result){
+    	console.log(result);
+    },
+    error:function(xhr,status,error){
+    	console.log(error);
+    }
 });
 // data在post下是表单格式，在get下是querystring格式
 // 通过以下方法指定为json格式[json格式本质就是body里是json字符串，头里是application/json]
 $.ajax({
-	url:"demo_test.txt",
+    url:"demo_test.txt",
     headers:{ contentType: "application/json"},
-	method:"POST",
-	data:JSON.stringify({a:10}),
-	success:function(result){
-		console.log(result);
-	}
+    method:"POST",
+    data:JSON.stringify({a:10}),
+    success:function(result){
+	console.log(result);
+    }
 });
 ```
 # fetch
