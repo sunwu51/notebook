@@ -40,6 +40,9 @@ b.itemsize
 
 # 数组总元素个数
 b.size
+
+# 空值
+np.nan
 ```
 # 选取&赋值
 ```py
@@ -66,6 +69,9 @@ print(b > 3)
 # 筛选出>3的这些元素,结果如下
 print(b[b>3])
 [4,5,6,7,8,9]
+
+# 筛选出>3的这些元素的下标，返回结果是个tuple，tuple元素个数是数组行数。每个元素是个numpy数组。
+print(np.where(b>3))
 
 # 选定斜线，包含俩节点b[0,0],b[1,1]
 print(b[[0,1],[0,1]])
@@ -108,11 +114,17 @@ x4 = x1 + x2
 # 不同shape数组运算
 x5 = x1 @ x2  # 两矩阵相乘
 
+# 对每行/列进行apply运算axis=1是按照一行一个元素带入函数，=0则是一列一个元素
+np.apply_along_axis(lambda x:print(x),arr=b,axis=1)
+
 # 介绍了3个 (* 不算，这个是对位相乘)相乘的函数@ dot matmul，二维下一致，高纬度区别可以自己查
 ```
 
 # 其他细节
 ```py
+# 判断是否为空
+np.isnan(b)
+
 # 深拷贝
 c = b.copy()
 
@@ -130,4 +142,12 @@ np.genfromtxt('1.txt',delimiter=',')
 
 # 改变一个array类型
 b.astype('int32')
+
+# for遍历每一行,row是numpy数组类型
+## 下面等价
+x = b[:,1]
+x = np.array([row[1] for row in b])
+## 解决复杂场景：例如判断哪一行含有nan
+x = np.array([np.any(np.isnan(row)) for row in b])
+## 再如：数组每个元素是list或者tuple需要双重遍历
 ```
