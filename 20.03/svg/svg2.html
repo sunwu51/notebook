@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.2.6/gsap.min.js"></script>
+    <style>
+        .line{
+            stroke: black;
+            stroke-width: 4;
+            stroke-miterlimit: 10;
+            stroke-dasharray: 10;
+        }
+    </style>
+</head>
+<body>
+    <svg  viewBox='0 0 100 100'>
+        <g  class='line'>
+            <line class='line-one' x1=25 y1=22 x2=75 y2=22 fill='none'/>
+            <line class='line-two' x1=25 y1=32 x2=75 y2=32 fill='none'/>
+            <line class='line-three' x1=25 y1=42 x2=75 y2=42 fill='none'/>
+        </g>
+    </svg>
+    <svg width='500px' height='100px' 
+        viewBox='0 0 2000 1000'></svg>
+</body>
+<script>
+    
+    gsap.set('.line line',{transformOrigin:"center"})
+    gsap.set('.line .line-three',{transformOrigin:"0,0"})
+
+    document.querySelector('.line').addEventListener('mouseenter',e=>{
+        const t1 = gsap.timeline();
+        t1.to(".line-one",{duration: 1, X:-10, opacity:0.1, strokeDashoffset:9},0)
+            .to(".line-two",{duration: 1, scale: 1.5},0.5)
+            .to(".line-three",{duration: 1, rotate: 90},"+=10")
+            .to(".line-one",{duration: 1, x:0,opacity:1,strokeDashoffset:0},1)
+            .to(".line-two",{duration: 1, scale: 1},1.5)
+            .to(".line-three",{duration: 1, rotate:0},2)
+    })
+</script>
+</html>

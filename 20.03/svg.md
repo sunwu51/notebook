@@ -164,5 +164,6 @@ direction取值有两种normal、alternate，后者会对称的反向动画一�
 - 3 基于自身中心做旋转： transform-box:fill-box; transform-origin:center; transform:rotate(100);
 ## 6.2 利用框架绘制svg
 animejs有几个svg的例子，不过比较简单。都是基于路径的https://animejs.com/documentation/#motionPath。
+gsap也有针对svg的动画，这个稍微好用点，放到当前目录下svg/svg2.html下了，可以查看。
 
 

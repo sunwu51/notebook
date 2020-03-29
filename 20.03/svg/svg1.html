@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .line{
+            stroke: black;
+            stroke-width: 4;
+            stroke-miterlimit: 10;
+        }
+        .line:hover .line-one,
+        .line:hover .line-two,
+        .line:hover .line-three{
+            transform-box: fill-box;
+            transform-origin: center;
+            animation: duang 1s ease infinite;
+        }
+        .line:hover .line-one{
+            animation-delay: 0s;
+        }
+        .line:hover .line-two{
+            animation-delay: 50ms;
+        }
+        .line:hover .line-three{
+            animation-delay: 100ms;
+        }
+        @keyframes duang {
+            0%{transform: scale(1);}
+            50%{transform: scale(1.5);}
+            100%{transform: scale(1);}
+        }
+    </style>
+</head>
+<body>
+    <svg  viewBox='0 0 100 100'>
+        <g  class='line'>
+            <line class='line-one' x1=25 y1=22 x2=75 y2=22 fill='none'/>
+            <line class='line-two' x1=25 y1=32 x2=75 y2=32 fill='none'/>
+            <line class='line-three' x1=25 y1=42 x2=75 y2=42 fill='none'/>
+        </g>
+    </svg>
+</body>
+</html>
