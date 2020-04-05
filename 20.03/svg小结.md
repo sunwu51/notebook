@@ -72,3 +72,10 @@ delay除了设置为固定的时间数值，还有一些高级写法：
 - yoyo和上面类似也是对称，但是必须配合repeat使用，完成多次执行间的补间动画的，最后一次不会补
 - xy相对移动，rotate/scale相对旋转/缩放 opacity颜色 strokeDashoffset等等(驼峰转大写)
 - attr可以设置一些不支持的css属性例如：attr:{cx:10,cy:10} 默认只支持xy，cxcy就可以这样写。
+
+旋转和缩放中心，在gsap中和原生svg也不一样，后者是transform-origin和transform-box来设置的。而gsap默认中心时图形的(0,50%)点，可以通过下面的方式进行重设，注意啦，重设时候的center默认就是当前元素的center而不是整个svg的center。
+```js
+gsap.set('.line line',{transformOrigin:"center"})
+
+gsap.set('.line .line-three',{transformOrigin:"right buttom"})
+```
