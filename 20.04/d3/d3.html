@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+</head>
+<body>
+    <div id='main'>
+
+    </div>
+    <script>
+        var arr = [1,2,2,3,4,5]
+        var a = {a:10,b:20}
+
+// 定义大小和间隔
+var width = 500
+var height = 500
+var margin = 40
+
+// 画出svg
+var svg = d3.select('div').append('svg')
+    .attr('width','400px')
+    .attr('viewBox',`0 0 ${width} ${height}`)
+    .style('background',"yellow")
+// 画个g标签 距离左上角间隔的距离，后面在g中画图
+var g = svg.append('g')
+    .attr('transform',`translate(${margin},${margin})`)
+
+// 数据
+var data =[{month:'Jan',value:23},{month:'Feb',value:11},{month:'Mar',value:73},{month:'Apr',value:64}];
+
+// 定义x轴和y轴，先定义比例尺
+// y轴比例尺函数，将domain范围等比映射到range范围。这里将domain是从高到低，因为我们要定义的坐标轴是y轴，从下往上增的，和浏览器坐标反着。
+var yScale = d3.scaleLinear()
+        .domain([d3.max(data,it=>it.value), 0])
+        .range([0, height-2*margin]);
+// 将y轴画好
+var y =g.append("g").call(d3.axisLeft(yScale))
+
+
+// x轴因为是固定的文字，所以使用scaleBand这个比例尺，padding指定间距
+var xScale = d3.scaleBand()
+        .domain(data.map(it=>it.month))
+        .range([0, width-2*margin]).padding(0.6);
+// 将x轴画好，注意高度
+var x = g.append("g").call(d3.axisBottom(xScale)).attr('transform',`translate(0,${height-2*margin})`)
+        
+// 最后画矩形,下面是对每个数据画rect的方法。
+// -- attr这行，第二个参数，可以用函数入参为data每个元素，和下标，这里让每个rect的有一定偏移。注意偏移点是矩形左上角的位置。
+g.selectAll('rect')
+    .data(data)
+    .enter()
+    .append('rect')
+    .attr('transform',(it,i)=>`translate( ${ xScale(it.month)},${yScale(it.value)})`)
+    .attr('width',xScale.bandwidth())
+    .attr('height',it=>height-2*margin-yScale(it.value))
+
+g.selectAll('circle')
+    .data(data)
+    .enter()
+    .append('circle')
+    .attr('transform',(it,i)=>`translate( ${ 0.5* xScale.bandwidth()+ xScale(it.month)},${yScale(it.value)})`)
+    .attr('r',10)
+    .attr('fill','red')
+
+    var line = d3.line()
+            .x(it=>xScale(it.month)+ 0.5* xScale.bandwidth())
+            .y(it=>yScale(it.value));
+g.append('path')
+    .attr('d',line(data))
+    .attr('stroke','black')
+    .attr('fill','none')
+</script>
+</body>
+</html>
