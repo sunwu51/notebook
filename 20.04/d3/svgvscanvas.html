@@ -1,0 +1,38 @@
+<style>
+    svg{
+    background: yellow
+}
+canvas{
+    background: yellow
+}
+</style>
+<script src="https://d3js.org/d3.v5.min.js"></script>
+
+<svg id= 's' width='500px' viewBox='0 0 500 300'>
+</svg>
+
+<canvas id='c'  width='500px' height='300px'></canvas>
+
+<script>
+    d3.select('svg').on('mousemove',(d,i)=>{
+        d3.select('svg').append('circle')
+        .attr('cx',d3.event.x).attr('cy',d3.event.y)
+        .attr('r',20).attr('fill','white').attr('stroke','black');
+    })
+
+
+    var canvas = document.getElementById('c');
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'white';
+    ctx.strokeStyle = 'black';
+
+
+    d3.select('#c').on('mousemove',(d,i)=>{
+        ctx.beginPath();
+        ctx.arc(d3.event.offsetX, d3.event.offsetY, 20, 0, 2 * Math.PI);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+    })
+
+</script>
