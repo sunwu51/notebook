@@ -1,0 +1,22 @@
+{
+	"tasks": [
+	  {
+		"type": "shell",
+		"label": "clang.exe build active file",
+		"command": "C:/Program Files/LLVM/bin/clang.exe",
+		"args": [
+		  "-std=c17",
+		  "-Wall",
+		  "-Wextra",
+		  "-g",
+		  "C:/DEV/test.c",
+		  "-o",
+		  "C:/DEV/test.exe"
+		],
+		"options": {
+		  "cwd": "C:/Program Files/LLVM/bin"
+		}
+	  }
+	],
+	"version": "2.0.0"
+  }

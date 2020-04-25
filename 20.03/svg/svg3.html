@@ -1,0 +1,97 @@
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.2.6/gsap.min.js"></script>
+<script src="https://animejs.com/lib/anime.min.js"></script>
+
+<style>
+    g{
+        stroke: blue;
+        stroke-width: 10;
+    }
+    /* #a{
+        stroke-dasharray: 990.4478149414062;
+        stroke-dashoffset: 990.4478149414062;
+        animation: ma 3s ease-out 0s forwards;
+    }
+    #b{
+        stroke-dasharray:1214.69677734375;
+        stroke-dashoffset: 1214.69677734375;
+        animation: mb 3s ease-out 1s forwards;
+    }
+    #c{
+        stroke-dasharray:960.562744140625;
+        stroke-dashoffset: 960.562744140625;
+        animation: mc 2s ease-out 2s forwards;
+    }
+    @keyframes ma {
+        0%{ stroke-dashoffset: 990.4478149414062}
+        100% {stroke-dashoffset: 0}
+    }
+    @keyframes mb {
+        0%{ stroke-dashoffset: 1214.69677734375}
+        100% {stroke-dashoffset: 0}
+    }
+    @keyframes mc {
+        0%{ stroke-dashoffset: 960.562744140625}
+        100% {stroke-dashoffset: 0}
+    } */
+</style>
+<svg width="2803" height="224" viewBox="0 0 2803 224" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g fill='red'>
+        <path id='a' d="M134.828 166.562H49.0469L29.7812 220H1.9375L80.125 15.25H103.75L182.078 220H154.375L134.828 166.562ZM57.2031 144.344H126.812L91.9375 48.5781L57.2031 144.344Z"/>
+        <path id='b' d="M209.641 220V15.25H276.578C298.797 15.25 315.484 19.8438 326.641 29.0312C337.891 38.2188 343.516 51.8125 343.516 69.8125C343.516 79.375 340.797 87.8594 335.359 95.2656C329.922 102.578 322.516 108.25 313.141 112.281C324.203 115.375 332.922 121.281 339.297 130C345.766 138.625 349 148.938 349 160.938C349 179.312 343.047 193.75 331.141 204.25C319.234 214.75 302.406 220 280.656 220H209.641ZM236.641 124.234V197.922H281.219C293.781 197.922 303.672 194.688 310.891 188.219C318.203 181.656 321.859 172.656 321.859 161.219C321.859 136.562 308.453 124.234 281.641 124.234H236.641ZM236.641 102.578H277.422C289.234 102.578 298.656 99.625 305.688 93.7188C312.812 87.8125 316.375 79.7969 316.375 69.6719C316.375 58.4219 313.094 50.2656 306.531 45.2031C299.969 40.0469 289.984 37.4688 276.578 37.4688H236.641V102.578Z"/>
+        <path id='c' d="M539.688 155.031C537.156 176.688 529.141 193.422 515.641 205.234C502.234 216.953 484.375 222.812 462.062 222.812C437.875 222.812 418.469 214.141 403.844 196.797C389.312 179.453 382.047 156.25 382.047 127.188V107.5C382.047 88.4688 385.422 71.7344 392.172 57.2969C399.016 42.8594 408.672 31.7969 421.141 24.1094C433.609 16.3281 448.047 12.4375 464.453 12.4375C486.203 12.4375 503.641 18.5312 516.766 30.7188C529.891 42.8125 537.531 59.5938 539.688 81.0625H512.547C510.203 64.75 505.094 52.9375 497.219 45.625C489.438 38.3125 478.516 34.6562 464.453 34.6562C447.203 34.6562 433.656 41.0312 423.812 53.7812C414.062 66.5312 409.188 84.6719 409.188 108.203V128.031C409.188 150.25 413.828 167.922 423.109 181.047C432.391 194.172 445.375 200.734 462.062 200.734C477.062 200.734 488.547 197.359 496.516 190.609C504.578 183.766 509.922 171.906 512.547 155.031H539.688Z"/>
+    </g>
+</svg>
+<script>
+    var len = []
+    d3.selectAll('path').nodes().forEach(it=>{
+        len.push(it.getTotalLength());
+        it.setAttribute('stroke-dasharray',it.getTotalLength());
+        it.setAttribute('stroke-dashoffset',it.getTotalLength());
+    });
+    
+    d3.selectAll('#a').transition().duration(3000).delay(0).attr('stroke-dashoffset',0)
+    d3.selectAll('#b').transition().duration(3000).delay(500).attr('stroke-dashoffset',0)
+    d3.selectAll('#c').transition().duration(3000).delay(1000).attr('stroke-dashoffset',0)
+    d3.selectAll('g').transition().duration(500).delay(4000).attr('fill','white')
+
+
+    // d3.select('#a').transition().duration(3000).attr('stroke-dashoffset',0)
+
+    // var len =[]
+    // len.push(document.getElementById("a").getTotalLength())
+    // len.push(document.getElementById("b").getTotalLength())
+    // len.push(document.getElementById("c").getTotalLength())
+    // gsap.set('#a',{strokeDasharray: len[0],strokeDashoffset: -len[0]})
+    // gsap.set('#b',{strokeDasharray: len[1],strokeDashoffset: -len[1]})
+    // gsap.set('#c',{strokeDasharray: len[2],strokeDashoffset: -len[2]})
+    // gsap.timeline()
+    // .to('#a',{strokeDashoffset: 0,duration:3},0)
+    // .to('#b',{strokeDashoffset: 0,duration:3},1)
+    // .to('#c',{strokeDashoffset: 0,duration:3},2)
+    // .to('g',{fill:'yellow'})
+    
+    // anime.set('#a',{strokeDasharray: len[0],strokeDashoffset: len[0]})
+    // anime.set('#b',{strokeDasharray: len[1],strokeDashoffset: len[1]})
+    // anime.set('#c',{strokeDasharray: len[2],strokeDashoffset: len[2]})
+    // anime.timeline().add({
+    //     targets: '#a',
+    //     strokeDashoffset: 0,
+    //     duration: 3000,
+    //     easing: 'easeInOutQuad'
+    // }).add({
+    //     targets: '#b',
+    //     strokeDashoffset: 0,
+    //     duration: 3000,
+    //     easing: 'easeInOutQuad'
+    // },'-=2000').add({
+    //     targets: '#c',
+    //     strokeDashoffset: 0,
+    //     duration: 3000,
+    //     easing: 'easeInOutQuad'
+    // },'-=2000').add({
+    //     targets: "g",
+    //     fill:'none',
+    //     duration:3000
+    // });
+</script>
