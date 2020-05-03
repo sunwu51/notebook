@@ -71,8 +71,29 @@ kubectl apply -f contour/examples/contour/
 ![image](https://i.imgur.com/L8pWaxS.gif)
 
 这里发现其实自己本地玩稍微有点麻烦，还得配置hosts文件，又得配置端口的，很烦。其实也可以稍微简化下，比如在master机器创建个nginx服务或者iptables规则，将80收到的数据包转发到31784。然后去配置通配符域名。
+
+创建nginx服务：
+```
+docker run --restart always -d -p 80:80 nginx
+```
+进入这个容器修改/etc/nginx/conf.d/default.conf
+```
+server {
+    listen       80;
+    server_name  localhost;
+
+    location / {
+        proxy_set_header  Host  $host;
+        proxy_set_header  X-real-ip $remote_addr;
+        proxy_set_header  X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_pass http://192.168.0.13:31784;
+    }
+}
+```
+然后在域名里进行通配符配置
 ![image](https://i.imgur.com/TFz6vfQ.png)
 
-![image]()
+修改服务的ingress入口域名为符合上面条件的  
+![image](https://i.imgur.com/J1yAJJ1.png)
 
-![image]()
+![image](https://i.imgur.com/pDd5LSo.png)
