@@ -96,4 +96,4 @@ server {
 修改服务的ingress入口域名为符合上面条件的  
 ![image](https://i.imgur.com/J1yAJJ1.png)
 
-![image](https://i.imgur.com/pDd5LSo.png)
+![image](https://i.imgur.com/dfCvb2a.png)
