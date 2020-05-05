@@ -96,3 +96,8 @@ public class PromFilter extends OncePerRequestFilter {
 }
 ```
 demo工程放到了当前目录下/prom-test下了，可以自己参考。prom除了counter计数还有更灵活的gauge、timer。
+# 2 grafana
+```
+ docker run -d --name=grafana -p 3000:3000 grafana/grafana
+```
+配置数据源为prometheus，然后配置为当前电脑ip:9090.就可以了。后面打dashboard随便加。
