@@ -95,4 +95,4 @@ public class PromFilter extends OncePerRequestFilter {
     }
 }
 ```
-demo工程放到了当前目录下/prom-test下了，可以自己参考。
+demo工程放到了当前目录下/prom-test下了，可以自己参考。prom除了counter计数还有更灵活的gauge、timer。
