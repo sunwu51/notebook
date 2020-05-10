@@ -76,7 +76,7 @@ Connection conn = DriverManager.getConnection("jdbc:mysql://127.0.0.1:3306/mysql
 > 简单描述下这一行代码的过程：用到了DriverManager类，所以会加载这个类和运行静态代码块，所以会加载SPI配置的Driver到List中，而mysql是配了的。然后调getConnection方法，这个方法会遍历List挨个尝试，成功了就返回。
 
 
-第二 为了能加载那些没用spi的jar包，从jvm启动配置中去拿`sql.Driver`这个配置来进行加载，直接Class.forName加载这些类。
+第二 为了能加载那些没用spi的jar包(兼容老包)，从jvm启动配置中去拿`sql.Driver`这个配置来进行加载，直接Class.forName加载这些类。
 
 ![image](https://i.imgur.com/bK3yDIm.png)
 
