@@ -1,3 +1,5 @@
+下载sonic-pi导入下面谱子，有些滑音，不太会用这个软件处理，稍显生硬
+```
 play :C
 sleep 0.5
 play :C
@@ -1066,3 +1068,4 @@ play :D5
 sleep 0.75
 play :C5,release: 3
 sleep 3
+```
