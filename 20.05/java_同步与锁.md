@@ -111,3 +111,13 @@ mutex互斥量是操作系统提供的锁[参考](https://blog.csdn.net/qq_39736
 将两者融合的解决方案就出来了：CAS进行锁的获取，如果获取到了就不用进内核态。如果获取不到则自旋n次，如果n次之后还获取不到则futex系统调用让出cpu资源，等待被唤醒。
 
 
+# 6 参考文献
+- https://github.com/farmerjohngit/myblog/issues/12
+- https://blog.csdn.net/GYHYCX/article/details/106084621
+- https://tech.meituan.com/2018/11/15/java-lock.html
+- https://blog.csdn.net/u010318270/article/details/89558090
+- https://www.cnblogs.com/zhangchaoyang/articles/2302085.html
+- https://www.cnblogs.com/yougewe/p/9751501.html
+- https://blog.csdn.net/qq_29373285/article/details/85964460
+- https://www.zhihu.com/question/55075763
+- https://blog.csdn.net/lengxiao1993/article/details/81568130
