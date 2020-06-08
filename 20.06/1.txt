@@ -1,0 +1,11 @@
+ System.out.println("a" == "a"); // true
+
+System.out.println("a" == new String("a"));// false
+
+Integer x1 = 1, y1 =1;
+System.out.println(x1 == y1); // true
+
+Integer x2 = 128, y2 = 128;
+System.out.println(x2 == y2); // false
+
+System.out.println(new Integer(1) == new Integer(1)); //false
