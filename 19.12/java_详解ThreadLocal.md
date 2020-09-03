@@ -37,14 +37,12 @@ static class Entry extends WeakReference<ThreadLocal<?>> {
     }
 }
 ```
-`key`弱引用了`entry`,也就是说entry如果没有被其他对象强引的话，下次gc就被删掉了。这个有啥用呢？
+`entry`弱引用了`key`,也就是说key如果没有被其他对象强引的话，下次gc就被删掉了。这个有啥用呢？
 
-我们思考什么时候不被其他强引用，首先entry是被map的entry[]属性强引用的，map是被thread强引用的，所以thread没结束的话，这个弱引用形同虚设。而一旦thread销毁，而往往ThreadLocal是一个全局变量，如果此时不设置为弱引用，那么entry或者说value就一直存在不被gc，导致内存泄漏。
-
-弱引用保证了线程销毁的时候，threadlocalmap中的entry对象和entry中的value清理掉（value一般唯一被entry引用）。
+参考20.09中ThreadLocal的讲解吧，这里之前写错了。
 
 # 4 内存结构
-ThreadLocalMap是采用了数组的存储结构，每个元素就是entry本身，而不是链表红黑树。这是因为链表或树，上下节点有指针强引用，进而导致一个entry是被另一个entry强引用的。假设全局下强引用了一个entry，这将会导致这个entry和他所在的链表的后面所有元素都无法被清除了。
+ThreadLocalMap是采用了数组的存储结构，每个元素就是entry本身，而不是链表红黑树。
 
 虽然上述情况很少出现，但是array却很好的避免了这一点。
 
