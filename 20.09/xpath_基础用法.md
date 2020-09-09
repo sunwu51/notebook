@@ -34,6 +34,7 @@ xml路径语法，xml是常见的一种序列化方式，html页面就是一种x
 - lower-case 小写,//*[contains(lower-case(@name),'fra')]
 - starts-with/ends-with //*[starts-with(text(),'Fra')]
 - node 所有节点，/a/node() 等价于 /a/*
+- child::node() 子节点。
 - parent::node() 父节点 等价于..
 - ancestor::node() 所有祖节点，父，祖父...
 - count 求表达式选出的节点数 count(//app)
