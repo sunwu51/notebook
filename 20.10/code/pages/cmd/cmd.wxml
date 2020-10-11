@@ -1,0 +1,18 @@
+<!--pages/cmd/cmd.wxml-->
+<view class="title">{{details.name}}指令</view>
+
+<view class="main">
+  <view class="usage">
+    <label>用法：</label><text>{{details.usage}}</text>
+  </view>
+  <view class="line"></view>
+
+
+  <view>
+    <view class='params'wx:for="{{details.params}}" wx:for-item="it">
+        <view>{{it.param}}</view>
+        <view class="content">{{it.content}}</view>
+        <view class="line"></view>
+      </view>
+  </view>
+</view>

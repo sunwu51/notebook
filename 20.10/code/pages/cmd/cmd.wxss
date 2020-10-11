@@ -1,0 +1,26 @@
+/* pages/cmd/cmd.wxss */
+.title{
+  color: chocolate;
+  font-size: 40rpx;
+  width: 100%;
+  text-align: center;
+}
+.main{
+  width: 100%;
+  
+}
+
+.usage{
+  font-size: 30rpx;
+  color:#1e8067;
+  margin-bottom: 50rpx;
+  padding-left: 10rpx;
+}
+.content{
+  padding-left: 100rpx
+}
+.params{
+  padding-left: 10rpx;
+  background-color: #efefef;
+  line-height: 1.5;
+}

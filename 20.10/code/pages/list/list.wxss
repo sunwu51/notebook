@@ -1,0 +1,31 @@
+/* pages/list/list.wxss */
+.title{
+  color: blueviolet;
+  font-size: 55rpx;
+  width: 100%;
+  text-align: center;
+}
+.main{
+  width: 100%;
+  display: flex;
+}
+.item{
+  width: 50%;
+  justify-content: center;
+  padding-left: 30rpx;
+}
+.item view:nth-child(5n){
+  color:#004e59;
+}
+.item view:nth-child(5n+1){
+  color:#00706c;
+}
+.item view:nth-child(5n+2){
+  color:#edda9d;
+}
+.item view:nth-child(5n+3){
+  color:#f58c47;
+}
+.item view:nth-child(5n+4){
+  color:#f06e3e;
+}

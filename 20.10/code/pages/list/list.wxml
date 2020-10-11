@@ -1,0 +1,15 @@
+<!--pages/list/list.wxml-->
+<view class="title">Linux 命令行大全</view>
+
+<view class="main">
+  <view class = 'item' >
+    <view wx:for="{{list}}" wx:for-item="it" wx:if="{{index%2==0}}">
+      <navigator url="/pages/cmd/cmd?cmd={{it}}">{{it}}</navigator>
+    </view>
+  </view>
+  <view class = 'item' >
+    <view wx:for="{{list}}" wx:for-item="it" wx:if="{{index%2==1}}">
+      <navigator url="/pages/cmd/cmd?cmd={{it}}">{{it}}</navigator>
+    </view>
+  </view>
+</view>
