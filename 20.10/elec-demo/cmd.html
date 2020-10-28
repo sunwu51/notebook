@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://d3js.org/d3.v6.js"></script>
+</head>
+<body>
+    <div id='main'></div>
+    <script>
+        const ipc = require('electron').ipcRenderer;
+        ipc.on('cmd',(_,cmd)=>{
+            console.log(cmd)
+            d3.json('https://service-qgovedpp-1253342658.bj.apigw.tencentcs.com/release/cmd?type=1&name='+cmd)
+              .then(data=>{
+                    console.log(data)
+                    var main = d3.select('#main');
+                    main.append('h1').text(data.name)
+                    main.append('h3').text(data.usage)
+                    var table = main.append('table').style('width','100%');
+                    data.params.forEach(p=>{
+                        var tr = table.append('tr')
+                        tr.append('td').style('width','20%').text(p.param)
+                        tr.append('td').style('width','80%').text(p.content)
+                    })
+              })
+            
+        })
+        
+    </script>
+</body>
+</html>

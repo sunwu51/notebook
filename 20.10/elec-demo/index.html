@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        table{
+            width: 100%;
+        }
+        td{
+            width: 33%;
+        }
+    </style>
+    <script src="https://d3js.org/d3.v6.js"></script>
+</head>
+<body>
+    <script>
+        const ipc = require('electron').ipcRenderer
+        function click(e){
+            // e.preventDefault()
+            var cmd = e.target.innerText;
+            ipc.send('show',cmd)
+        }
+    </script>
+    <h1 onclick="click">Linux命令行大全</h1>
+    <table>
+    
+    </table>
+    <script>
+        d3.json('https://service-qgovedpp-1253342658.bj.apigw.tencentcs.com/release/cmd?type=2').then(function(data){
+            var t = [];
+            for(var i=0;i<data.length;i=i+3){
+                var arr = [data[i]];
+                if(data[i+1])arr.push(data[i+1]);
+                if(data[i+2])arr.push(data[i+2]);
+                t.push(arr);
+            }
+            t.forEach(item=>{
+                var tr = d3.select('table').append('tr')
+                tr.append('td').append('a').attr('href',"#").on('click',click).text(item[0])
+                tr.append('td').append('a').attr('href',"#").on('click',click).text(item[1])
+                tr.append('td').append('a').attr('href',"#").on('click',click).text(item[2])
+            })
+
+            
+
+        })
+
+        
+    </script>
+</body>
+</html>
