@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.2.6/gsap.min.js"></script>
+</head>
+<body>
+    <svg id="svg" width="800px" heigth="400px" viewBox="0 0 100 100">
+        <image preserveAspectRatio="none" x="0" y="0" width="100" height="100" xlink:href="img/1.jpg"></image>
+    </svg>
+    <svg width="800px" heigth="400px" viewBox="0 0 100 100">
+       <rect id="car" x="50" y="50" width="10" height="15"></rect>
+    <script>
+        var data1 = [
+            [47,79],
+            [47,75],
+            [47,70],
+            [47,66],
+            [47,61],
+            [47,57],
+            [47,52],
+            [47,48],
+            [47,43],
+            [47,39]
+        ];
+        var data2 = [
+            [46,79],
+            [46,72],
+            [47,66],
+            [46,59],
+            [43,52],
+            [40,47],
+            [36,44],
+            [32,42],
+            [28,42],
+            [25,41]
+        ]
+        var data3 =[
+            [48,80],
+            [48,75],
+            [48,71],
+            [48,67],
+            [47,62],
+            [47,57],
+            [47,53],
+            [47,48],
+            [46,44],
+            [46,40]
+        ]
+        var data4 = [
+            [47,79],
+            [47,75],
+            [47,70],
+            [47,66],
+            [46,61],
+            [46,57],
+            [46,52],
+            [46,48],
+            [46,43],
+            [46,39],
+        ]
+        var data5 =[
+        [52,79],
+        [52,75],
+        [52,70],
+        [52,61],
+        [52,57],
+        [52,52],
+        [52,66],
+        [52,48],
+        [52,43],
+        [52,39],
+        ]
+        var data6=[
+            [36,71],
+            [39,68],
+            [41,66],
+            [44,62],
+            [46,58],
+            [48,55],
+            [50,51],
+            [50,42],
+            [50,37],
+            [50,46],
+        ]
+        var data7=[
+            [47,78],
+            [47,72],
+            [47,65],
+            [47,58],
+            [47,52],
+            [47,45],
+            [47,38],
+            [47,33],
+            [51,35],
+            [55,36],
+            <!-- [58,82],
+            [62,77],
+            [66,71],
+            [70,66],
+            [75,62],
+            [79,60],
+            [83,57],
+            [87,56],
+            [91,55],
+            [95,54] -->
+        ]
+        var data =data7;
+        d3.select('image').attr('xlink:href','img/7.jpg')
+
+        data.forEach(it=>{
+            d3.select('#svg').append('circle').attr('cx',it[0]).attr('cy',it[1]).attr('r',1).attr('fill','red')
+        })
+        
+
+        d3.select('#car').on('click',()=>{
+            gsap.to('#car',{x:-20,y:-20,rotate:-90,duration:1})
+        })
+    </script>
+</body>
+</html>
