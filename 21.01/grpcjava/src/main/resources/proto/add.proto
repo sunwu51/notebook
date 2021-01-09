@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package mygrpc;
+option java_package = "a.b.c";
+option java_outer_classname = "AddServiceProto";
+option java_multiple_files = true;
+
+service AddService{
+    rpc add(AddRequest) returns (AddReply){}
+}
+
+message AddRequest{
+    int32 a = 1;
+    int32 b = 2;
+}
+
+message AddReply{
+    int32 res = 1;
+}
