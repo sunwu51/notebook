@@ -11,3 +11,6 @@ BootLoader是加载OS到内存的，一开始也是放到磁盘的第一个主�
 ![image](https://i.imgur.com/MewrsXk.png)
 # 2 过程
 打开电源-->主板中内置的BIOS系统启动-->BIOS检测各种外设-->Boootloader装载OS-->OS启动完成
+
+# 3 中断异常系统调用
+系统调用来自程序主动发起的请求，异常则是来自程序的不良信号，中断来自外设。
