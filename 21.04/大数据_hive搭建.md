@@ -28,6 +28,7 @@ $HADOOP_HOME/bin/hadoop fs -chmod 777   /user/hive/warehouse
 # 4 启动
 ```
 $HIVE_HOME/bin/schematool -dbType derby -initSchema
+$HIVE_HOME/bin/hiveserver2
 $HIVE_HOME/bin/beeline -u jdbc:hive2://localhost:10000
 ```
 # 5 可能采坑
