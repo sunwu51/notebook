@@ -1,0 +1,8 @@
+<div id="root"></div>
+<script type="module">
+  import $ from 'https://unpkg.com/jquery-es';
+  import _ from 'https://unpkg.com/lodash-es'
+  import * as d3 from 'https://unpkg.com/d3?module'
+  d3.select("#root").style('color', 'red')
+  $('#root').text('I am jquery and here is lodash ' + _.join([1,2,3]))
+</script>
