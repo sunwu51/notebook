@@ -5,7 +5,7 @@ selenium则是历史悠久，工业规范，多语言支持，尤其是支持Pyt
 
 # 安装与运行
 ```
-npm i -S cypress
+npm i --save cypress
 npx cypress open
 ```
 ![image](https://i.imgur.com/t63e6tA.gif)
@@ -31,6 +31,19 @@ npx cypress open
 - type('xx') 输入文字
 
 `cy.get.contains`用于辅助锁定dom元素。
+
+# 核心秘诀
+- Cypress.$等于jquery的$，是内嵌了jQuery。但是不要visit之后上来就用，因为页面还没加载出来。
+- cy的函数基本都是异步的，在context第一行定义一个`getText`的异步函数，然后在visit之后先getText一下。
+- 本目录下cypress项目`cypress/integration/1-getting-started/youdao.spec.js`展示了如何进行爬虫，非常实用。
+```js
+let jq = Cypress.$;
+let getText = async (node) => {
+  return await new Promise((t,c) => {
+    node.invoke('text').then(t)
+  })
+}
+```
 ```js
 /// <reference types="cypress" />
 
@@ -45,7 +58,7 @@ npx cypress open
 // please read our getting started guide:
 // https://on.cypress.io/introduction-to-cypress
 
-describe('example to-do app', () => {
+context('example to-do app', () => {
   beforeEach(() => {
     // Cypress starts out with a blank slate for each test
     // so we must tell it to visit our website with the `cy.visit()` command.
