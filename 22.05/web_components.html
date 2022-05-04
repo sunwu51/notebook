@@ -1,0 +1,49 @@
+<script>
+  class myC extends HTMLElement {
+    constructor(){
+        super();
+        this.attachShadow({mode: 'open'});
+        var p = document.createElement('p');
+        p.innerText ="1235435435435435435435";
+        this.shadowRoot.appendChild(p);
+    }
+  }
+  window.customElements.define('my-c', myC)
+</script>
+<div>
+  <my-c></my-c>
+</div>
+
+<div class="template-place"></div>
+<template id="my-template">
+    <h1>template content</h1>
+</template>
+<script>
+    let template = document.getElementById('my-template')
+    document.querySelector('.template-place').appendChild(template.content)
+</script>
+
+<script type="module">
+  import {LitElement, html} from 'https://cdn.skypack.dev/lit-element';
+
+  class MyElement extends LitElement {
+    static properties = {
+      person: {type: Object},
+    };
+
+    constructor() {
+      super();
+      this.person = {name: 'World', age: 0};
+    }
+
+    render() {
+      console.log(this.person)
+      return html`
+      <h1>Hello, ${this.person.age} years old ${this.person.name}</h1>
+      `;
+    }
+  }
+  customElements.define('my-element', MyElement);
+  var json = JSON.stringify({name: "张三", age: 11})
+</script>
+<my-element person='{"name":"张三","age":11}'></my-element>
