@@ -148,6 +148,10 @@ dom中的attribute必须是数字、字符或者bool值，这使得如果传输j
 - `connectedCallback`创建shadow并挂载完成了时会调用，可以用来添加事件注册，比如整个组件的对外的focus、click等事件。
 - `disconnectedCallback`从dom中删除的时候调用，可以用来删除事件的注册。防止内存泄漏。
 - `attributeChangedCallback`属性发生变化的时候调用，该方法默认逻辑就是properties发生变化就会re-rend。`You rarely need to implement this callback.`
+
+# slot与template
+`<slot></slot>`标签用在render的html里，用于表示里面的其他元素，和this.children功能类似。
+`<template></template>`标签用于声明一个模板的dom，不会被渲染，但是可以通过该dom的.content方法获取内部的html文本，作用没有slot大。
 # 好用的组件库的使用方法
 像react有antd等组件库一样，webcomponent现在也有一些组件库，将来肯定越来越多，希望antd也能出一版webcomponent版本的组件库。
 
