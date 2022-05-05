@@ -45,5 +45,23 @@
   }
   customElements.define('my-element', MyElement);
   var json = JSON.stringify({name: "张三", age: 11})
+
+  class MyElement2 extends LitElement {
+    static properties = {
+      person: {type: Object},
+    };
+
+    constructor() {
+      super();
+      this.person = {name: 'World', age: 0};
+    }
+
+    render() {
+      return html`
+      <my-element .person='${this.person}'></my-element>
+      `;
+    }
+  }
+  customElements.define('my-element2', MyElement2);
 </script>
-<my-element person='{"name":"张三","age":11}'></my-element>
+<my-element2 person='{"name":"张三","age":11}'></my-element2>

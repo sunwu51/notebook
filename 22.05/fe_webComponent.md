@@ -110,7 +110,9 @@ const myDiv = document.getElementById('myDiv');
 myDiv.foo = 'bar';
 ```
 
-dom中的attribute必须是数字、字符或者bool值，这使得如果传输json对象或者数组数据的时候受阻，lit的解决方案是：传`JSON.stringify(*)`内部自动会将attribute转换为property，并且如果是json字符串的会转回js对象/数组，根据properties的声明。
+dom中的attribute必须是数字、字符或者bool值，这使得如果传输json对象或者数组数据的时候受阻，lit的解决方案是：
+- 传`JSON.stringify(*)`内部自动会将attribute转换为property，并且如果是json字符串的会转回js对象/数组，根据properties的声明。
+- 如果是在另一个元素中，也可以使用在属性前面加个`.`，例如`.person=${this.obj}`，`.onClick=${this.func}`
 
 还是上面hello word的例子，如果穿的是对象，则可以声明为Object类型，并传递jsonstring即可，此时会做自动的转为json对象操作。
 ```js
