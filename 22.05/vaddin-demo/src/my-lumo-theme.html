@@ -1,0 +1,84 @@
+<custom-style>
+  <style>
+
+html {
+  --lumo-font-family: "Segoe UI", Candara, "Bitstream Vera Sans", "DejaVu Sans", "Bitstream Vera Sans", "Trebuchet MS", Verdana, "Verdana Ref", sans-serif;
+  --lumo-border-radius: 0.75em;
+  --lumo-shade-5pct: rgba(26, 26, 26, 0.05);
+  --lumo-shade-10pct: rgba(26, 26, 26, 0.1);
+  --lumo-shade-20pct: rgba(26, 26, 26, 0.2);
+  --lumo-shade-30pct: rgba(26, 26, 26, 0.3);
+  --lumo-shade-40pct: rgba(26, 26, 26, 0.4);
+  --lumo-shade-50pct: rgba(26, 26, 26, 0.5);
+  --lumo-shade-60pct: rgba(26, 26, 26, 0.6);
+  --lumo-shade-70pct: rgba(26, 26, 26, 0.7);
+  --lumo-shade-80pct: rgba(26, 26, 26, 0.8);
+  --lumo-shade-90pct: rgba(26, 26, 26, 0.9);
+  --lumo-primary-text-color: rgb(235, 89, 5);
+  --lumo-primary-color-50pct: rgba(235, 89, 5, 0.5);
+  --lumo-primary-color-10pct: rgba(235, 89, 5, 0.1);
+  --lumo-error-text-color: rgb(231, 24, 24);
+  --lumo-error-color-50pct: rgba(231, 24, 24, 0.5);
+  --lumo-error-color-10pct: rgba(231, 24, 24, 0.1);
+  --lumo-success-text-color: rgb(62, 229, 170);
+  --lumo-success-color-50pct: rgba(62, 229, 170, 0.5);
+  --lumo-success-color-10pct: rgba(62, 229, 170, 0.1);
+  --lumo-shade: hsl(0, 0%, 10%);
+  --lumo-primary-color: hsl(22, 96%, 47%);
+  --lumo-error-color: hsl(0, 81%, 50%);
+  --lumo-success-color: hsl(159, 76%, 57%);
+  --lumo-success-contrast-color: hsl(159, 29%, 10%);
+}
+
+[theme~="dark"] {
+  --lumo-tint-5pct: rgba(147, 148, 143, 0.05);
+  --lumo-tint-10pct: rgba(147, 148, 143, 0.1);
+  --lumo-tint-20pct: rgba(147, 148, 143, 0.2);
+  --lumo-tint-30pct: rgba(147, 148, 143, 0.3);
+  --lumo-tint-40pct: rgba(147, 148, 143, 0.4);
+  --lumo-tint-50pct: rgba(147, 148, 143, 0.5);
+  --lumo-tint-60pct: rgba(147, 148, 143, 0.6);
+  --lumo-tint-70pct: rgba(147, 148, 143, 0.7);
+  --lumo-tint-80pct: rgba(147, 148, 143, 0.8);
+  --lumo-tint-90pct: rgba(147, 148, 143, 0.9);
+  --lumo-shade-5pct: rgba(144, 137, 122, 0.05);
+  --lumo-shade-10pct: rgba(144, 137, 122, 0.1);
+  --lumo-shade-20pct: rgba(144, 137, 122, 0.2);
+  --lumo-shade-30pct: rgba(144, 137, 122, 0.3);
+  --lumo-shade-40pct: rgba(144, 137, 122, 0.4);
+  --lumo-shade-50pct: rgba(144, 137, 122, 0.5);
+  --lumo-shade-60pct: rgba(144, 137, 122, 0.6);
+  --lumo-shade-70pct: rgba(144, 137, 122, 0.7);
+  --lumo-shade-80pct: rgba(144, 137, 122, 0.8);
+  --lumo-shade-90pct: rgba(144, 137, 122, 0.9);
+  --lumo-primary-text-color: rgb(230, 207, 147);
+  --lumo-primary-color-50pct: rgba(200, 177, 121, 0.5);
+  --lumo-primary-color-10pct: rgba(200, 177, 121, 0.1);
+  --lumo-error-text-color: rgb(237, 127, 151);
+  --lumo-error-color-50pct: rgba(237, 127, 151, 0.5);
+  --lumo-error-color-10pct: rgba(237, 127, 151, 0.1);
+  --lumo-success-text-color: rgb(84, 222, 110);
+  --lumo-success-color-50pct: rgba(84, 222, 110, 0.5);
+  --lumo-success-color-10pct: rgba(84, 222, 110, 0.1);
+  --lumo-base-color: #2D2C29;
+  --lumo-tint: #93948f0f;
+  --lumo-shade: hsl(42, 9%, 52%);
+  --lumo-primary-color: #c8b179;
+  --lumo-primary-contrast-color: #2D2C29;
+  --lumo-error-color: #ED7F97;
+  --lumo-error-contrast-color: #2D2C29;
+  --lumo-success-color: #54DE6E;
+  --lumo-success-contrast-color: #2D2C29;
+  --lumo-header-text-color: #E6BE5F;
+}
+
+  </style>
+</custom-style>
+
+
+<dom-module id="text-field-style" theme-for="vaadin-text-field">
+  <template>
+    <style>[part="input-field"]{box-shadow:inset 0 0 0 1px var(--lumo-contrast-30pct);background-color:var(--lumo-base-color);}:host([invalid]) [part="input-field"]{box-shadow:inset 0 0 0 1px var(--lumo-error-color);}
+    </style>
+  </template>
+</dom-module>

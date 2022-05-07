@@ -1,0 +1,21 @@
+{
+  "name": "vaddin-demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "vite": "^2.9.8"
+  },
+  "dependencies": {
+    "@vaadin/app-layout": "^23.0.7",
+    "@vaadin/vaadin-core": "^23.0.8",
+    "lit": "^2.2.3",
+    "wired-elements": "^3.0.0-rc.6"
+  }
+}
