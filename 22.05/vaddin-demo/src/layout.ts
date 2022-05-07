@@ -1,5 +1,5 @@
 import { LitElement, html, css, PropertyDeclarations } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { customElement, property, state } from "lit/decorators.js";
 // import { applyTheme } from 'Frontend/generated/theme';
 import "./vaadin.js";
 import avatar from './biliavatar.jpg';
@@ -15,6 +15,9 @@ export class Layout extends LitElement {
 
   @property()
   pathes = [];
+
+  @state()
+  navs = []
  
   static get styles() {
     return css`
