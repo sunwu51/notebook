@@ -5,34 +5,91 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.4.4/d3.min.js" integrity="sha512-hnFpvCiJ8Fr1lYLqcw6wLgFUOEZ89kWCkO+cEekwcWPIPKyknKV1eZmSSG3UxXfsSuf+z/SgmiYB1zFOg3l2UQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 </head>
 <style>
+    #container{
+        height: 700px;
+        border: solid 1px black;
+    }
     .flex{
         display: flex;
     }
-    .flex-row-nowrap {
-        flex-flow: row nowrap;
-    }
-    .flex-column-nowrap {
-        flex-flow: column nowrap;
-    }
-    .flex-row-wrap {
-        flex-flow: row wrap;
-    }
-    .flex-column-wrap {
-        flex-flow: column wrap;
-    }
     .item{
+        margin: 10px;
+        background-color: aqua;
+    }
+    .item:nth-of-type(4n+1){
         width: 200px;
         height: 200px;
-        background-color: aqua;
+    }
+    .item:nth-of-type(4n+2){
+        width: 210px;
+        height: 210px;
+    }
+    .item:nth-of-type(4n+3){
+        width: 180px;
+        height: 180px;
+    }
+    .item:nth-of-type(4n+4){
+        width: 220px;
     }
 </style>
 <body>
-    <div class="flex flex-row-nowrap">
-        <div class="item">item1</div>
-        <div class="item">item2</div>
-        <div class="item">item3</div>
+    <div>
+        <label>direcion</label>
+        <select id="direction" onchange="update()">
+            <option value="row">row</option>
+            <option value="column">column</option>
+        </select>
+        <label>wrap</label>
+        <select id="wrap" onchange="update()">
+            <option value="nowrap">nowrap</option>
+            <option value="wrap">wrap</option>
+        </select>
+        <label>justify-content</label>
+        <select id="justify-content" onchange="update()">
+            <option value="start">start</option>
+            <option value="end">end</option>
+            <option value="center">center</option>
+            <option value="space-between">space-between</option>
+            <option value="space-around">space-around</option>
+            <option value="space-evenly">space-evenly</option>
+        </select>
+        <label>align-items</label>
+        <select id="align-items" onchange="update()">
+            <option value="stretch">stretch</option>
+            <option value="start">start</option>
+            <option value="end">end</option>
+            <option value="center">center</option>
+            <option value="baseline">baseline</option>
+        </select>
+        <label>align-content</label>
+        <select id="align-content" onchange="update()">
+            <option value="stretch">stretch</option>
+            <option value="start">start</option>
+            <option value="end">end</option>
+            <option value="center">center</option>
+            <option value="space-between">space-between</option>
+            <option value="space-around">space-around</option>
+        </select>
+    </div>
+    <div id="container" class="flex">
+        <div class="item">item1: 200x200</div>
+        <div class="item">item2: 210x210</div>
+        <div class="item">item3: 180x180</div>
+        <div class="item">item4: 220xauto</div>
     </div>
 </body>
+<script>
+    function update() {
+        var container = d3.select('#container');
+        container.style('flex-direction', d3.select('#direction').property('value'))
+        container.style('flex-wrap', d3.select('#wrap').property('value'))
+        container.style('justify-content', d3.select('#justify-content').property('value'))
+        container.style('align-items', d3.select('#align-items').property('value'))
+        container.style('align-content', d3.select('#align-content').property('value'))
+    }
+</script>
+
 </html>
