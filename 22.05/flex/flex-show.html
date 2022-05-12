@@ -56,6 +56,7 @@
             <option value="space-around">space-around</option>
             <option value="space-evenly">space-evenly</option>
         </select>
+        <br/>
         <label>align-items</label>
         <select id="align-items" onchange="update()">
             <option value="stretch">stretch</option>
@@ -73,12 +74,37 @@
             <option value="space-between">space-between</option>
             <option value="space-around">space-around</option>
         </select>
+        <br/>
+        <label>grow</label>
+        <select id="grow" onchange="update()">
+            <option value="0 0 0 0">0 0 0 0</option>
+            <option value="1 1 1 1">1 1 1 1</option>
+            <option value="0 1 1 1">0 1 1 1</option>
+            <option value="1 2 1 1">1 2 1 1</option>
+            <option value="0 2 1 1">0 2 1 1</option>
+        </select>
+        <label>shrink</label>
+        <select id="shrink" onchange="update()">
+            <option value="0 0 0 0">0 0 0 0</option>
+            <option value="1 1 1 1">1 1 1 1</option>
+            <option value="0 1 1 1">0 1 1 1</option>
+            <option value="1 2 1 1">1 2 1 1</option>
+            <option value="0 2 1 1">0 2 1 1</option>
+        </select>
+        <label>basis</label>
+        <select id="basis" onchange="update()">
+            <option value="auto auto auto auto">auto</option>
+            <option value="0 0 0 0">0</option>
+            <option value="100px 100px 100px 100px">100px</option>
+            <option value="200px 200px 200px 200px">200px</option>
+            <option value="0 200px 100px 100px">0 200px 100px 100px</option>
+        </select>
     </div>
     <div id="container" class="flex">
-        <div class="item">item1: 200x200</div>
-        <div class="item">item2: 210x210</div>
-        <div class="item">item3: 180x180</div>
-        <div class="item">item4: 220xauto</div>
+        <div class="item">item1: <p>200x200</p></div>
+        <div class="item">item2: <p>210x210</p></div>
+        <div class="item">item3: <p>180x180</div>
+        <div class="item">item4: <p>220xauto</p></div>
     </div>
 </body>
 <script>
@@ -89,7 +115,27 @@
         container.style('justify-content', d3.select('#justify-content').property('value'))
         container.style('align-items', d3.select('#align-items').property('value'))
         container.style('align-content', d3.select('#align-content').property('value'))
+        var grows = d3.select('#grow').property('value').split(' ')
+        var shrinks = d3.select('#shrink').property('value').split(' ')
+        var basiss = d3.select('#basis').property('value').split(' ')
+        for(var i=0; i<4; i++){
+            d3.select(`.item:nth-of-type(4n+${i+1})`).style('flex-grow', grows[i])
+            d3.select(`.item:nth-of-type(4n+${i+1})`).style('flex-shrink', shrinks[i])
+            d3.select(`.item:nth-of-type(4n+${i+1})`).style('flex-basis', basiss[i])
+        }
+        
+        showWidthAndHeight()
     }
-</script>
 
+    function showWidthAndHeight(){
+        d3.selectAll('.item').each(function(d,i){
+            var cur = d3.select(this);
+            var width = cur.property('scrollWidth');
+            var height = cur.property('scrollHeight');
+            cur.select('p').text(`${width}x${height}`)
+        })
+    }
+    showWidthAndHeight()
+    window.addEventListener('resize', showWidthAndHeight)
+</script>
 </html>
