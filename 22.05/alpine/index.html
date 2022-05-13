@@ -15,8 +15,41 @@
     </div>
 
     <div x-data="{content: ''}">
-        <input x-model="content"/>
-        <h1 :x-text="content"></h1>
+        <input x-model="content" placeholder="输入颜色"/>
+        <span><h1 x-text="content" :style="{ color: content }" style="border: solid 1px black;"></h1></span>
+    </div>
+
+    <!-- 加载完成，注册1s后展示template -->
+    <div x-data="{arr: [], open: false}" x-init="setTimeout(()=>open=true, 1000)">
+        <!-- 点击按钮，1s后改变数组，使x-for渲染 -->
+        <button  @click="setTimeout(()=>arr= [...arr,'hello'], 1000)">async</button>
+        <div x-effect="console.log(arr)"></div>
+        <template x-if="open">
+            <!-- 注意template只能有一个根dom -->
+            <div>
+                <h1>数据展示：</h1>
+                <template x-for="num in arr">
+                    <h3 x-text="num"></h3>
+                </template>
+            </div>
+        </template>
+    </div>
+
+
+    <div x-data @custom-event1.window="console.log($event.detail)"></div>
+    <button x-data @click="$dispatch('custom-event1', 'Hello World!')">aaa</button>
+    
+    <div x-data @custom-event2.window="console.log($event.detail)">
+        <button x-data @click="$dispatch('custom-event2', 'Hello World!')">aaa</button>
+    </div>
+
+    <div x-data @custom-event3="console.log($event.detail)">
+        <button x-data @click="$dispatch('custom-event3', 'Hello World!')">aaa</button>
+    </div>
+
+    <div x-data="{txt:0}" x-init="$watch('txt', v=>console.log(v))">
+        <button @click="txt+=1" x-ref="ref1">click1</button>
+        <button @click="console.log($el.textContent, $refs.ref1.textContent)">click2</button>
     </div>
 </body>
 </html>
