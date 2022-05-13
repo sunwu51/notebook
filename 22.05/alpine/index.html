@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="//unpkg.com/alpinejs" defer></script>
+ 
+    <div x-data="{ open: false, text: 'content' }">
+        <button @click="open = !open">toggle</button>
+        <div x-show="open" x-text="text" x-transition></div> 
+    </div>
+
+    <div x-data="{content: ''}">
+        <input x-model="content"/>
+        <h1 :x-text="content"></h1>
+    </div>
+</body>
+</html>
