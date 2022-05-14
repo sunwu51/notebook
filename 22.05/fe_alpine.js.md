@@ -98,4 +98,15 @@ x-data中open和text可以在dom内其他指令中使用，相当于这个作用
 </div>
 ```
 
-# 
+# 小结
+常见用法：
+- x-data使得当前dom变身为一个alpine组件，在这里赋初值。
+- x-init可以使用`await fetch`来获取初始化之后的数据。
+- @click等事件也可以使用`await fetch`来和服务端交互。
+- x-for x-text等可以做数据的展示。
+
+特点：
+alpine的特点是主要依赖写在dom上的属性，而不是在script标签中定义逻辑。
+
+这种方式显然缺少灵活性，但是常见功能都有较好的封装，可以将复杂的函数定义放到script标签中。
+
