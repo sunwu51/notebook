@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"
+    />
+    <script src="//unpkg.com/alpinejs" defer></script>
+
+</head>
+<body>
+    <div x-data="{cs: ''}" >
+        <h1 :class="cs">An animated element</h1>
+        <button @click="cs=='animate__animated animate__bounce'? cs='' : cs='animate__animated animate__bounce'">click</button>
+    </div>
+</body>
+</html>
