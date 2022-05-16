@@ -9,6 +9,6 @@
 <h1 class="animate__animated animate__bounce">hello</h1>
 ```
 
-[官网](https://animate.style/)鼠标点击右侧效果即可查看，因为是css样式，所以默认就是html加载放动画，为了能在点击事件之后放动画，那就需要css来控制动态的给dom追加和删除class样式。[样例](./animate/index.html)
+[官网](https://animate.style/)鼠标点击右侧效果即可查看，因为是css样式，所以默认就是html加载放动画，为了能在点击事件之后放动画，那就需要css来控制动态的给dom追加和删除class样式，注意动画css效果，只会触发一次，如果要再次触发，需要先删除样式，然后再次追加。[样例](./animate/index.html)
 
 ![image](https://i.imgur.com/hq0thRl.png)
