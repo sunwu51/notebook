@@ -168,7 +168,8 @@ io.close(file)
 # 案例
 猜数游戏
 ```lua
-num = math.ceil(math.random(1,100))
+math.randomseed(os.time())
+num = math.ceil(math.random() and math.random(1,100))
 -- print(num)
 
 while(1) 
