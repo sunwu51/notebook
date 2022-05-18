@@ -43,10 +43,11 @@ str:upper() --下面方法只可以直接用`变量:methd(第二个参数开始)
 string.upper(str)
 string.lower(str)
 string.char(0x30,0x31) --ascii数字转字符串
-string.gsub(str, 'a', 'A') --replace所有a为A
+string.gsub(str, 'a', 'A') --replace所有a为A，a是正则
 string.find(str, 'Bc', 1) --返回含有的字符串下标开始和结束，这里返回2 3，注意返回俩数，最后一个参数可以不写，默认是0，从第几个字符开始搜索
 string.find("a123f", "%d+") --返回2 4 %d是数字而不是\d，转义也是有%,例如%.就是.的转义。
 string.match("a123f", "%d+") --返回123
+string.match("a123f", "%d(%d)(%d)") --返回2 3括号内的组会分别作为多返回值返回
 
 string.reverse(str) -- 翻转
 string.format('num is %d', 4) --与printf类似
@@ -117,4 +118,50 @@ math常用方法`math.random()`[0,1)之间的随机数。`math.ceil(x)`返回不
 require('hello') --运行当前文件下的hello.lua文件，并返回运行后的值，文件可以直接return值，注意不带lua后缀
 require('lib.hello') -- ./lib/hello.lua文件
 require('lib.hello') -- 多次require只运行一次，就会缓存结果。这也是为了防止a引b，a引c，b引c，c防止运行两次导致非预期结果
+```
+
+协程，lua的协程共用一个主线程。
+```lua
+t1 = coroutine.create(function()
+    print(1)
+    end
+) -- 创建协程，并不开始执行
+
+coroutine.resume(t1) -- 开始或继续运行协程
+
+
+
+t2 = coroutine.create(function()
+    print(1)
+    local a, b,c = coroutine.yield(1, 2, 3)
+    print(a, b, c) -- 4 5 6
+    end
+) -- yield挂起并返回给resume函数
+print(coroutine.resume(t1)) -- 1 2 3
+coroutine.resume(t1, 4, 5, 6) -- 继续执行，并传入参数
+```
+sleep没有内置sleep函数，需要调用os，执行shell语句
+```lua
+function sleep(n) -- shell sleep n秒
+   os.execute("sleep " .. n)
+end
+```
+![image](https://i.imgur.com/TLLEzQD.png)
+读写文件
+```lua
+-- 也可以io.open文件后read，但是常用下面的逐行操作
+for line in io.lines('filename') do
+    print(line)
+end
+
+-- 传统的写和读
+file = io.open('./text.txt', 'a') --a追加 w重写
+io.output(file)
+io.write('hahaha\n')
+io.close(file)
+
+file = io.open('./text.txt', 'r')
+io.input(file)
+print(io.read())
+io.close(file)
 ```
