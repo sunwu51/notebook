@@ -165,3 +165,23 @@ io.input(file)
 print(io.read())
 io.close(file)
 ```
+# 案例
+猜数游戏
+```lua
+num = math.ceil(math.random(1,100))
+-- print(num)
+
+while(1) 
+do
+    line = io.read("*l")
+    my_num = tonumber(line)
+    if my_num == num then
+        print('you win')
+    break
+    elseif my_num > num then
+        print('too big')
+    else
+        print('too small')
+    end
+end
+```
