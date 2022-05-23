@@ -62,10 +62,11 @@ transform-origin: 0 50% 10px;
 .rect{
     transform-box: fill-box;
     transform-origin: 0 0;
-    animation: mymov 1s;  /*animation 指定动画名和持续时间*/ 
+    animation: mymov 1s forwards;  /*animation 指定动画名和持续时间，结束后保持*/ 
 }
 @keyframes mymov{ /*动画通过关键帧来声明，可以直接声明100%的样式，0%默认对应的就是静态css效果*/
     100%{
+        /* 这里可以指定任何css样式，例如width，backgroud等 */
         transform: rotate(45deg); 
     }
 }
@@ -79,6 +80,8 @@ animation: animation-name animation-duration animation-timing-function animation
 - delay: 延时执行，如1s，默认是0s，注意不是0，必须是0s，后面说为啥。
 - iteration-count: 动画重复次数，infinity是无限循环
 - direction: 动画方向normal正向，reverse反向，alternate正向然后反向回来，如果设置了次数一个来回算两次。
-- 后面俩基本用不上。
+- animation-fill-mode: forwards使动画结束后样式保留，而不是复原。backwards复原。
 
 为啥delay不能是0必须是0s，因为css是可以写部分参数的，只要顺序对就行。如果delay允许写0，也就是纯数字，那就和repeat纯数字混淆导致无法解析了。比如mov 1s 0就不知道0是delay0s还是repeat0次了，所以delay不能是0，必须写0s，这样mov 1s 0就能确定是0次repeat。
+# transition
+transition是一个非常简单的css属性，例如可以写 transition: 2s。这样如果这个元素，css样式有任何变化，都会变成2s的渐变效果，例如颜色变化，或者坐标变化，都会变成动画效果。配合hover非常简单而且实用。
