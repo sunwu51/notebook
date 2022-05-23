@@ -85,3 +85,7 @@ animation: animation-name animation-duration animation-timing-function animation
 为啥delay不能是0必须是0s，因为css是可以写部分参数的，只要顺序对就行。如果delay允许写0，也就是纯数字，那就和repeat纯数字混淆导致无法解析了。比如mov 1s 0就不知道0是delay0s还是repeat0次了，所以delay不能是0，必须写0s，这样mov 1s 0就能确定是0次repeat。
 # transition
 transition是一个非常简单的css属性，例如可以写 transition: 2s。这样如果这个元素，css样式有任何变化，都会变成2s的渐变效果，例如颜色变化，或者坐标变化，都会变成动画效果。配合hover非常简单而且实用。
+
+transition与关键帧不要一起实用，transition是更简单的思路实现常用的动画效果，配置了transition后，只需要直接修改dom的样式，就能自动实现动画渐变效果。
+
+而keyframes则是更精细的去控制，不同的时间的动画样式效果。
