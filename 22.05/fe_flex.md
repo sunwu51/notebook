@@ -30,7 +30,7 @@ flex详细配置如下，第一个值是默认值(flext-start可简写为start)
 
 ![image](https://i.imgur.com/zzZ5Dyw.png)
 
-2 justify-content是主方向的排列方式，start就是紧凑的从开始方向排列，end反之，center就是居中排列，space-between是第一个和最后一个元素靠边中间的均匀分布，另外两个的解释则如下
+2 justify-content是主方向的(列的)排列方式，start就是紧凑的从开始方向排列，end反之，center就是居中排列，space-between是第一个和最后一个元素靠边中间的均匀分布，另外两个的解释则如下。还有个justify-items是这一列的内部元素的左右排列。
 
 ![image](https://i.imgur.com/3ofXZzM.png)
 
