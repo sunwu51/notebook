@@ -37,19 +37,19 @@ baidu.com就是一级域名，zhidao.baidu.com就是二级域名。如果自己�
 加下来下载[openresty](http://openresty.org/cn/download.html)，修改nginx.config文件
 ```nginx
 location / {
-	default_type text/html;
-	set $proxy "";
+    default_type text/html;
+    set $proxy "";
     rewrite_by_lua '
-		local h = ngx.var.host
-		local dot = h:find("%.")
-		local prefix = h:sub(1,dot-1)
-		if prefix == "a" then
-			ngx.var.proxy="127.0.0.1:3000"
-		else
-			ngx.var.proxy="127.0.0.1:5500"
-		end
+	local h = ngx.var.host
+	local dot = h:find("%.")
+	local prefix = h:sub(1,dot-1)
+	if prefix == "a" then
+	    ngx.var.proxy="127.0.0.1:3000"
+	else
+	    ngx.var.proxy="127.0.0.1:5500"
+	end
     ';
-	proxy_pass http://$proxy$uri;
+    proxy_pass http://$proxy$uri;
 ```
 注意lua和nginx语法，其中ngx.var可以获取或者设置nginx配置文件上下文的$xxx变量，非常实用。
 
