@@ -8,12 +8,12 @@ baidu.com就是一级域名，zhidao.baidu.com就是二级域名。如果自己�
 # 如何实现动态代理
 以play with docker为例，通过特定的前缀写法就可以将自己的实例的上的端口的服务暴露出来。
 
-![image](image.png)
 
 这首先需要配置通配符的二级域名`*.一级域名`指向一个总的nginx服务器。这里我们用dns-proxy来模拟dns服务器，假装自己买了frank.com这个域名，并配置`*.frank.com`指向`localhost`
 
 创建config.json如下，下载对应平台的二进制[工具文件](https://github.com/sunwu51/dns-proxy/releases/tag/v1.1.0)到同一目录。
 ```json
+{
   "port": 53,
   "host": "127.0.0.1",
   "logging": "dnsproxy:query,dnsproxy:info",
