@@ -34,6 +34,36 @@ listen 81就是监听的端口是81，下面的location则是匹配url用的。
 
 `location = /50x.html`就是指定了url就是/50x.html的时候返回的文件内容。
 
+匹配级别
+```
+最高级别=   location =/a/b，完全等于/a/b的一定是走这。 
+
+次高级别^~  location ^~/a，以/a开头的并且不满足任何=条件的一定是走这，例如/a/c或者/abc。
+
+第三高级别~与衍生 location "~/\w{3}$" ~后面是正则，例如/dfe不匹配1、2级优先级。衍生符号包括~*不区分大小写正则，!~正则不匹配的才走，!~*不分大小写的正则不匹配的才走这。注意因为使用了大括号，所以加了引号。
+
+最低级别无特殊符号   location /cde 也是以这个为开头的，只不过优先级比^~低，可以匹配`/cde`,`/cdef`,`/cde/f`。
+```
+
+location例子
+```
+location =/a/b {
+	echo "=/a/b";
+}
+location ^~/a {
+    echo "^~/a";
+}
+location "~/\w{3}$" {
+	echo "~/\w{3}dollar";
+}
+location /def {
+	echo "/def";
+}	
+```
+- /a/b匹配1
+- /a/c /ac /abc匹配2
+- /bcd /def 匹配3
+- /defg /def/g 匹配4
 ## 2 反向代理
 url的跳转是我们经常用到的，在这种代理的配置中会有很多种情况，让我们来看看。
 ### 2.1 关于/
