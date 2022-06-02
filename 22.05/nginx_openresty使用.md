@@ -161,5 +161,62 @@ location /mysql {
 }
 ```
 ![image](https://i.imgur.com/dI3J9jU.png)
+# 自定义dns服务器
+需要自己下载dns-server的库，这是openresty默认不带的，默认带的是client库。windows不支持udp监听，需要linux
+```
+stream{
+    lua_package_path "/usr/local/openresty/lib/?.lua;;";
+    server {
+        listen 53 udp;
+        set $proxy 0;
+        content_by_lua_block {
+            local server = require 'resty.dns.server'
+            local sock, err = ngx.req.socket()
+            local req, err = sock:receive()
+            local dns = server:new()
+            local request, err = dns:decode_request(req)
+            local query = request.questions[1]
+            ngx.log(ngx.INFO, "qname: ", query.qname, " qtype: ", query.qtype)
+            local name = query.qname
+            local localhost = "20.20.20.20" -- 这里可以替换为redis读取，此处写死了做demo
+            if query.qtype == server.TYPE_A and name:find("%.tt$") then -- 处理.tt结尾的域名
+                local err = dns:create_a_answer(query.qname, 600, localhost)
+                local resp = dns:encode_response()
+                local ok, err = sock:send(resp)
+            else                                            -- 其他域名 走谷歌解析 8.8.8.8
+                local resolver = require "resty.dns.resolver"
+                local r, err = resolver:new{
+                    nameservers = {"8.8.8.8", {"8.8.4.4", 53} },
+                    retrans = 5,  -- 5 retransmissions on receive timeout
+                    timeout = 2000,  -- 2 sec
+                    no_random = true, -- always start with first nameserver
+                }
+                local answers, err, tries = r:query(name, nil, {})
+	              local f = nil
+                for i, ans in ipairs(answers) do
+                    ngx.log(ngx.INFO, ans.name, " ", ans.address or ans.cname,
+                        " type:", ans.type, " class:", ans.class,
+                        " ttl:", ans.ttl)
+                    if ans.type == server.TYPE_A  then
+                        f = 1
+                        local err = dns:create_a_answer(ans.name, 600, ans.address)
+                    elseif ans.type == server.TYPE_CNAME then
+                        f = 1
+                        local err = dns:create_cname_answer(ans.name, 600, ans.cname)
+                    end
+                end
+                if not f then
+                    local err = dns:create_a_answer(query.qname, 600, nil)
+                    local resp = dns:encode_response()
+                    local ok, err = sock:send(resp)
+                else
+                    local resp = dns:encode_response()
+                    local ok, err = sock:send(resp)
+                end
+            end
+        }
+    }
+}
+```
 # 小结
 ngx模块是最常用的模块了，如果不是需要额外的中间件的话，这个模块就够用了，除了github文档，也可以参考[这个文档](https://openresty-reference.readthedocs.io/en/latest/Lua_Nginx_API/)
