@@ -10,6 +10,7 @@ openresty就是在nginx上预装了很多c和lua的模块，使得nginx更加强
 - http 配置http相关的服务，http全局中可以配置每个server默认的配置，例如default_type等，server可以配置多个。
 ```conf
 worker_processes  1;
+error_log  logs/error.log info; #日志输出级别调为info，默认是error
 
 events {
   worker_connections  1024;
@@ -48,7 +49,7 @@ location / {
 	content_by_lua_block {
     ngx.say("hello lua")
     ngx.say("hello lua")
-    ngx.log(ngx.INFO, "打印日志")
+    ngx.log(ngx.INFO, "打印日志") -- 需要调整日志输出级别为info才行
     ngx.log(ngx.ERR, "打印错误日志")
   }
 }
