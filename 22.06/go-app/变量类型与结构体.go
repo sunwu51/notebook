@@ -3,10 +3,37 @@ package main
 import (
 	"fmt"
 )
+func f1() *int {
+	u1:= 1
+	u2:= 2
+	u3:= 3
+	
+	println(&u1, &u2, &u3)
+	return &u2
+}
+func main(){
+  u:=f1()
+	u2:=f1()
+	fmt.Printf("%p, %p", u, u2)
 
+}
 
+func main2() {
+  u0:= &User{age:0, name:"0"}
+  u1:= User{age:1, name:"1"}
+  u2 := u1
+  u2.age = 3
 
-func main() {
+  fmt.Printf("u0.age %d u0 %p\n", u0.age, u0)
+  fmt.Printf("u1.age %d u1 %p\n", u1.age, &u1)
+	u3 := new(User)
+  fmt.Printf("u3.age %d u3 %p\n", u3.age, &u3)
+	var i1 int32 =1
+	var i2 *int32 = new(int32)
+	fmt.Printf("i1 %p, i2 %p\n", &i1, i2)
+
+	i:=1
+	fmt.Printf("i %p\n", &i)
 
 	// 变量 完整语法 var $name $type
 	var a int // int=int计算机位数一般是int64
