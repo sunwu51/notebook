@@ -92,7 +92,7 @@ golang sdk中没有set的实现，需要自己用map来实现set，或者用gith
 struct声明如下，每个字段之间不需要用逗号隔开。字段首字母的大小写决定了访问的私有还是共有
 ```go
 type User struct{
-    name string
+    name string `这是标签可以写可以不写，反射中可获取`
     age int
 }
 ```
@@ -145,8 +145,13 @@ func f(h *Hello) {
     h.SayHello()
 }
 ```
-万能的`interface{}`类型，所有的数据类型都实现了他，所以作为参数入参，可以接受任意类型的参数。一般会配合类型的断言来使用
+万能的`interface{}`类型，所有的数据类型都实现了他，所以作为参数入参，可以接受任意类型的参数。一般会配合类型的断言来使用，或者使用反射
 ```go
+import (
+    "fmt"
+    "reflect"
+)
+
 func f(arg interface{}) {
     v, ok := arg.(string)
     if !ok {
@@ -154,5 +159,12 @@ func f(arg interface{}) {
     } else {
         ...
     }
+    // 反射
+    tp := reflect.TypeOf(arg)
+    for i :=0; i<tp.NumField(); i++ {
+        fieldValue := tp.Field(i).Interface()
+    }
+    //... 
 }
 ```
+
