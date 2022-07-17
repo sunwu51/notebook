@@ -88,3 +88,71 @@ for k, v := range map`。
 注意map与slice一样是引用类型，所以是指针复制，因为使用的make关键字创建的。
 
 golang sdk中没有set的实现，需要自己用map来实现set，或者用github上提供的第三方set库。
+# struct
+struct声明如下，每个字段之间不需要用逗号隔开。字段首字母的大小写决定了访问的私有还是共有
+```go
+type User struct{
+    name string
+    age int
+}
+```
+声明的时候可以赋字段初值，否则是默认值
+```go
+u1 := User{name: "a", age: 1}
+u2 := User{"a", 1}
+
+var u3 User
+u3.name = "a"
+u3.age = 1
+```
+结构体是值类型，如果需要转为指针可以直接在声明的时候&。只有指针类型的数据，才有可能在逃逸的时候在堆上申请空间。
+```go
+u1 := &User{name: "a", age: 1}
+```
+
+对结构体追加方法，对写操作用指针类型，读操作用普通类型或指针类型均可，建议都指针类型。
+```go
+func (this *User) SetName(name string) {
+    this.name = name
+}
+```
+继承
+```go
+type VipUser struct {
+    User
+    vipNum int
+}
+```
+# interface
+接口的声明，只要结构体实现了接口中的方法，那么就是实现了接口，不需要显示的声明，是一种轻量的无侵入的实现方式。
+```go
+type Hello interface{
+    SayHello()
+    GetName() string
+}
+
+func (this *User) SayHello(){
+    fmt.Println("hello")
+}
+
+func (this *User) GetName() string{
+    return this.name
+}
+```
+接口也是一种类型，可以作为变量类型，参数类型，返回值类型。
+```go
+func f(h *Hello) {
+    h.SayHello()
+}
+```
+万能的`interface{}`类型，所有的数据类型都实现了他，所以作为参数入参，可以接受任意类型的参数。一般会配合类型的断言来使用
+```go
+func f(arg interface{}) {
+    v, ok := arg.(string)
+    if !ok {
+        ...
+    } else {
+        ...
+    }
+}
+```
