@@ -12,7 +12,7 @@ export default function Effecter() {
   // console.log(count)
 
   useEffect(()=>{
-    let n = setTimeout(()=>console.log(`模拟服务端请求到${count}的数据`), 1000);
+    // let n = setTimeout(()=>console.log(`模拟服务端请求到${count}的数据`), 1000);
     // return ()=>clearTimeout(n)
   })
 

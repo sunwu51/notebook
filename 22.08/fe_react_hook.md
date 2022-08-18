@@ -130,7 +130,7 @@ useEffect(()=>{
 
 小心的在useEffect中使用setXXX，因为很有可能导致无限循环渲染。
 
-# redux中的hook与
+# RTK(redux toolkit)中的hook
 redux有着action dispatch reducer connect store provider等概念，使用起来也是非常麻烦，也提供了hook写法来简化代码。Redux Toolkit是最新的官方推荐的写法，https://redux.js.org/introduction/why-rtk-is-redux-today。我们就直接看最新的写法吧。
 
 redux原来创建action和reducer比较麻烦，action需要使用枚举的方式来定义以防止难以规范和拼写错误等问题，而reducer有要单独再定义。rtk中引入了slice的写法，同时创建action和reducer，如下就是创建了addOne和add这两种action，和一个处理两种action的reducer，并export出去了。
@@ -208,4 +208,175 @@ root.render(
     <App />
   </Provider>
 )
+```
+thunk的使用，直接用createAsyncThunk函数即可创建thunk。并在slice中使用extraReducer处理thunk类型的action，注意thunk是一种特殊的action。
+```jsx
+import {createSlice,createAsyncThunk} from '@reduxjs/toolkit';
+
+export const fetchTodos = createAsyncThunk("my_thunk", async ()=>{
+    const res = await fetch('https://jsonplaceholder.typicode.com/todos');
+    const json = await res.json();
+    return json;
+})
+
+const slice = createSlice({
+    name : "count_slice",
+    initialState: {count: 0, loadState: "", todos: []},
+    reducers: {
+        addOne(state) {
+            state.count = state.count + 1;
+        },
+        add(state, action) {
+            state.count = state.count + action.payload;
+        }
+    },
+    // thunk形式的reducer用extraReducer字段处理，thunk三种状态分别是加载中，完成和失败了。
+    extraReducers: builder => {
+        builder.addCase(fetchTodos.pending, (state, action) => {
+            state.loadState = "loading"
+        }).addCase(fetchTodos.fulfilled, (state, action)=>{
+            state.loadState = "finish"
+            state.todos = action.payload;
+        }).addCase(fetchTodos.rejected, (state, action)=>{
+            state.loadState = "failed"
+        })
+    }
+});
+```
+触发thunk类型的action，直接dispatch这个thunk。
+```jsx
+dispatch(fetchTodos())
+```
+详细代码
+```jsx
+import React from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchTodos } from './slice';
+
+export default function Thunker() {
+  const dispatch = useDispatch();
+  const todos = useSelector(state=>state.r1.todos);
+  const loadState = useSelector(state=>state.r1.loadState);
+  console.log(loadState)
+  return (
+    <>
+      <button onClick={()=>dispatch(fetchTodos())}>fetch data</button>
+      {
+        loadState=='loading' ? <h1>loading</h1> : (
+          <table>
+            <tr><th>id</th><th>title</th><th>completed</th></tr>
+            {
+              todos.map(it=>(
+                <tr>
+                  <td>{it.id}</td>
+                  <td>{it.title}</td>
+                  <td>{it.completed?'yes':'no'}</td>
+                </tr>
+              ))
+            }
+          </table>
+        )
+      }
+    </>
+  )
+}
+```
+可以看出这个state可以很好的处理加载中这个状态的页面展示。
+
+![image](https://i.imgur.com/8Bg0HXx.gif)
+
+# useQuery
+redux的thunk提供了较好的几个状态的封装，但是对于中小项目引入redux往往提高了开发难度，且降低了代码可读性，React Query是对异步数据变动的很好的封装，可以和原生react hook结合，来高效开发项目。
+```shell
+$ npm i react-query
+```
+只需要两步，即可使用react-query
+```jsx
+// 1 在根组件上配置Provider，这样里面才能用useQuery等增强函数
+import { QueryClient, QueryClientProvider } from 'react-query' 
+....
+root.render(
+  <QueryClientProvider client={new QueryClient()}>
+    <App />
+  </QueryClientProvider>
+);
+// 2 在组件中使用useQuery，hook在组件加载完成后触发
+import { useQuery } from "react-query";
+...
+  const {data, status, isFetching} = useQuery('fetchTodos', async ()=>{
+    console.log("run query")
+    const res = await fetch('https://jsonplaceholder.typicode.com/todos');
+    const json = await res.json();
+    return json;
+  });
+...
+// status有idle loading success error等状态，判断状态是success，然后渲染data。
+// isFetching是bool，与status不同的是status在第一次成功后就一直是success后续如果refetch的话，要靠isfetching判断是否正加载
+```
+注意query每次渲染完都会触发，与useEffect一样。从日志可以看出，组件第一次渲染，status是loading，此时没有运行异步函数，组件加载完成之后，才开始运行异步函数中的查询。查询得到结果后改变了status和data于是重新渲染组件。
+![image](https://i.imgur.com/eSMlxQW.png)
+
+默认的useQuery只在组件初次渲染的时候运行一次，第三参数中可以用enable来制定某些值存在时才触发，第一个参数可以是个数组，第2个及以后参数是异步函数依赖的变量
+```jsx
+const {data, status} = useQuery(
+  ['fetchTodo', id], // 闭包将id注册进去
+  fetchById(id),
+  {enable: !!id} // 当id存在的时候才会第一次触发  
+)
+```
+默认不加载数据点击按钮才加载，就需要将enable设置为false。
+通过`refetch`函数可以强制重新加载，使用`queryClient.invalidateQueries('fetchTodos')`也有同样的效果。
+```jsx
+const  {data, status, refetch, isFetching} = useQuery('fetchTodos', fetchTodos);
+...
+<button onClick={()=>{refetch()}}>fetch data</button>
+<button onClick={()=>{queryClient.invalidateQueries('fetchTodos')}}>fetch data</button>
+```
+我们经常遇到修改了某一行数据，就需要重新加载整个table的场景。那就可以使用mutation
+```jsx
+import { useQuery, useQueryClient,useMutation  } from "react-query";
+...
+const queryClient = useQueryClient();
+  const mutation = useMutation(async ()=>{
+    // 这里是修改数据的ajax，可以使用await关键字
+  }, {
+    onSuccess:() => {
+      // invalidateQueries可以refetch
+      queryClient.invalidateQueries('fetchTodos')
+    }
+  }
+)
+```
+# 自定义hook
+我们可以使用use开头的函数定义自己的hook，例如使用useEffect和useState，我们可以将isOnline这么一个会变化的状态封装成hook，当online状态变动的时候，会触发组件重新渲染，钩子的作用就体现出来了。
+```jsx
+import { useState, useEffect } from 'react';
+
+function useFriendStatus(friendID) {
+  const [isOnline, setIsOnline] = useState(null);
+
+  useEffect(() => {
+    function handleStatusChange(status) {
+      setIsOnline(status.isOnline);
+    }
+
+    ChatAPI.subscribeToFriendStatus(friendID, handleStatusChange);
+    return () => {
+      ChatAPI.unsubscribeFromFriendStatus(friendID, handleStatusChange);
+    };
+  });
+
+  return isOnline;
+}
+
+// 直接使用该函数的返回值即可，这样hook可以自动触发online变动-》组件渲染
+function FriendListItem(props) {
+  const isOnline = useFriendStatus(props.friend.id);
+
+  return (
+    <li style={{ color: isOnline ? 'green' : 'black' }}>
+      {props.friend.name}
+    </li>
+  );
+}
 ```

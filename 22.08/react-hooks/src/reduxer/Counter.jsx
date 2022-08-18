@@ -8,7 +8,7 @@ export default function Counter() {
 
   return (
     <div>
-      <h1 onClick={()=>dispatch(actions.addOne())}>
+      <h1 onClick={()=>dispatch(actions.add(20))}>
         hi {count}
       </h1>      
     </div>
