@@ -349,6 +349,8 @@ const queryClient = useQueryClient();
 ```
 # 自定义hook
 我们可以使用use开头的函数定义自己的hook，例如使用useEffect和useState，我们可以将isOnline这么一个会变化的状态封装成hook，当online状态变动的时候，会触发组件重新渲染，钩子的作用就体现出来了。
+
+下面是官网的一个例子。
 ```jsx
 import { useState, useEffect } from 'react';
 
