@@ -35,12 +35,14 @@ Flux<Integer> ints = Flux.range(1, 4)
 ints.subscribe(i -> System.out.println(i), 
       error -> System.err.println("Error: " + error),
       () -> System.out.println("finish"));
-      /*
-1
-2
-3
-Error: java.lang.RuntimeException: Got to 4
-      */
+Flux<Integer> ints = Flux.range(1, 4) 
+      .map(i -> { 
+        if (i <= 3) return i; 
+        throw new RuntimeException("Got to 4"); 
+      });
+ints.subscribe(i -> System.out.println(i), 
+      error -> System.err.println("Error: " + error),
+      () -> System.out.println("finish"));
 ```
 # 线程模型
 在Flux中默认的中间处理例如map中的函数和最终处理subscribe函数中的表达式，都是在这个语句注册的线程中执行的。

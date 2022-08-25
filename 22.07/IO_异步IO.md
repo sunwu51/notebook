@@ -211,8 +211,44 @@ Nodejs底层就是使用的libev库。
 java的NIO虽然不是异步的，但底层和AIO一样也是基于epoll，通过对NIO的封装可以实现异步。java中AIO的直接使用较少，像Netty等框架其实是基于NIO的，性能上NIO与AIO区别不大因为都基于epoll，代码写法上区别较大，且AIO出现较晚。
 
 # 响应式编程(reactive programming)
-由微软提出，在.net中有`Rx`库，后续在java中第三方组织实现了`RxJava`库，在java9中jdk中实现了响应式流Reactive Streams，主要使用`java.util.concurrent.Flow`类。还有`akka`等实现响应式的库等。org.reactivestreams则是提供了响应式的API规范。
+由微软提出，在.net中有`Rx`库，后续在java中第三方组织实现了`RxJava`库，在java9中jdk中实现了响应式流Reactive Streams，主要使用`java.util.concurrent.Flow`类。还有`akka`等实现响应式的库，`spring`官方出了`project reactor`[官网](https://projectreactor.io/)等。org.reactivestreams则是提供了响应式的API规范。
 
 ![image](https://i.imgur.com/T5bGTOb.png)
 
-但是上述这些库都在`spring`官方出了`project reactor`[官网](https://projectreactor.io/)之后就黯然失色了，因为spring生态实在是太强大。也就成了最主流的java中的响应式编程形式。
+响应式编程的形式借鉴了java8中的stream，像流程图一样处理数据集，并且在此基础上设定了数据的发布者和订阅者。可以提前设置数据到达后的回调函数，如下方的subscribe后面指定的回调函数，这和AIO的形式类似，而发布数据的Flux可以对数据进行stream形式的处理。这个例子中使用的是指定的数据1-4，Flux是非阻塞的，也就是会立马返回，然后注册订阅函数，最后依次发送1-4，并分别触发回调函数。
+```java
+Flux<Integer> ints = Flux.range(1, 4) 
+      .map(i -> { 
+        if (i <= 3) return i; 
+        throw new RuntimeException("Got to 4"); 
+      });
+
+ints.subscribe(i -> System.out.println(i), 
+      error -> System.err.println("Error: " + error),
+      () -> System.out.println("finish"));
+
+/*
+1
+2
+3
+Error: java.lang.RuntimeException: Got to 4
+*/
+```
+实际上WebFlux(Flux、Mono)更多的使用在IO的场景，当Flux注册读取数据，并设置数据回来之后的stream操作（filter map等等），
+
+例如webclient是spring reactor中常用的一个工具，在controller中返回mono，并且上下文中所有的io必须都是异步的（都用mono），如果出现同步的IO可能会导致线程池用完。这跟Mono/flux的实现有关，线程池一共只有cpu核心数个线程，使用epoll等系统调用实现了少数线程处理多路IO的思路，即整个web容器只有n个线程，如果有同步io，导致线程被阻塞，多个请求可能迅速耗尽线程，这是必须要避免的。因而访问其他rest接口，访问db等都需要使用异步io。
+```java
+WebClient webClient = WebClient.create("https://www.baidu.com");
+
+@GetMapping("/baidu")
+@ResponseBody
+public Mono<String> getBaidu(){
+    try {
+        return webClient.get().uri("s?wd={word}", "hello")
+            .retrieve().bodyToMono(String.class);
+    } finally {
+        System.out.println("异步IO，所以这里立即打印，然后才会拿到数据返回给前端");
+    }
+}
+```
+
