@@ -182,3 +182,61 @@ let rr = &*r;
 NLL，使得先使用`&mut`，用完再用`&`，变得合法，即我们可以`(--){--}(--)`（前括号是声明，后括号是结束使用）的来使用引用。
 
 Reborrow，使得先声明了`&mut`，然后又声明`&`，并使用`&`完之后，再去使用`&mut`变得合法。`{()()}`，因为在借用严格规定不能出现交叉，即在借用生命周期中不能出现原借用，所以也能保证安全性。
+# 闭包
+闭包是一种匿名函数，它可以赋值给变量也可以作为参数传递给其它函数，不同于函数的是，它允许捕获调用者作用域中的值，例如：
+```rs
+fn main() {
+   let x = 1;
+   let sum = |y| x + y;
+
+   assert_eq!(3, sum(2));
+}
+```
+闭包的写法是`|入参: 类型| -> 返回值类型 {内容}`不过闭包有自动的类型推导，所以入参和返回值的类型大多数时候可以不写。闭包是一个实际的变量对象，例如上面的sum。那闭包的类型呢？实际上每一个闭包都有属于自己的类型，即使一模一样的签名。所以闭包没法用类型来约束，只能用trait。
+```rs
+fn run_closure(f: impl Fn(u32) -> u32, x: u32) {
+    f(x);
+}
+```
+这里就用到了Fn这个trait，实际上闭包相关的trait有三种：FnOnce、FnMut和Fn。Fn实现了FnMut，FnMut实现了FnOnce。
+
+FnOnce只能调用一次，调用第一次后，闭包的生命周期结束。下面调用两次f报错。
+```rs
+fn run_closure(f: impl FnOnce() -> u32) {
+    f();
+    f();
+}
+```
+FnMut就可以调用多次了，并且`FnMut是可以修改上下文中捕获的变量的`。例如下面闭包就改变了上下文中x的值，所以change_x不是只实现了FnOnce的，而是实现了FnMut和FnOnce。所以他可以被`FnOnce`或者`FnMut`的trait来约束，
+```rs
+// 这两种函数写法都是正确的，但是Fn是不行的，因为change_x没有实现Fn。
+fn run_closure(f: impl FnOnce()) {
+    f();
+}
+fn run_closure(mut f: impl FnMut()) {
+    f();
+}
+
+fn main() {
+    let x = 1;
+    let change_x = || x = x + 1;
+    run_closure(change_x);
+    println!("{}", x)
+}
+```
+所有闭包都实现了`FnOnce`，改上下文变量的自动实现`FnMut + FnOnce`，不改的自动实现`Fn + FnMut + FnOnce`。有人对于Fn包含FnMut表示不解，不应该是反过来吗，怎么只读的还包含读写呢？这是因为这样的包含关系才能使只读的Fn范畴更严格，不会把可写的FnMut作为参数，传入了Fn约束里了。反之只读的Fn可以作为FnMut类型的参数传入。
+
+`move`关键字，写在闭包的`|参数|`前面，可以实现把当前上下文的变量以转移所有权到闭包中。经常用于线程/异步的场景，因为无法知道闭包执行的时候变量是否还能正常的存活到这个时候，干脆直接把所有权扔给闭包里面了。
+```rs
+fn main() {
+    let mut x = String::from("1");
+    let mut change_x = || x =  String::from("222"); // 注意FnMut一般需要mut声明变量。
+    change_x();
+    println!("{}", x);// 打印222
+}
+```
+如果添加了move关键字：`let mut change_x = move || x =  String::from("222");`则上述代码报错，因为x所有权已经进到闭包里面了，当前作用域已经无法再使用x了。
+```
+180 |     println!("{}", x)
+    |                    ^ value borrowed here after move
+```
