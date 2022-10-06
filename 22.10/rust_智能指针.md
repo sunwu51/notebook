@@ -134,4 +134,40 @@ error[E0594]: cannot assign to data in an `Rc`
 289 |     l3.val = "333";
     |     ^^^^^^^^^^^^^^ cannot assign
 ```
-这时候就出现了使用`ReCell`.
+这时候就出现了使用`RefCell`，一般ReCell就是配合Rc使用的，Rc套RefCell，cell是细胞单元的意思，refcell就是一个细胞里放了一个ref的意思，有borrow和borrow_mut两个最常用的方法，返回值是`Ref`和`RefMut`类型，可以像引用一样的使用返回值。
+```rs
+struct ListNode<T: Debug> {
+    val: T,
+    next: Option<Rc<RefCell<ListNode<T>>>>,
+}
+// 嵌套很多层： Option是为了表示Null节点，Rc是为了固定大小且多个节点可以对数据有所有权，RefCell是使Rc内容是具有动态可变性(其实就是可以改Rc内的值)，ListNode就是下一个节点的真正内容。
+
+fn main(){
+    let mut l1 = ListNode{val: "1", next: None};
+    let mut l2 = ListNode{val: "2", next: None};
+    let mut l3 = ListNode{val: "3", next: None};
+    l2.next = Option::from(Rc::new(RefCell::new(l3)));
+    l1.next = Option::from(Rc::new(RefCell::new(l2)));
+
+    // l3.val = "333"; l3已经被Rc持有了，已经无效了
+    
+    // l2是Ref类型
+    let l2 = l1.next.as_ref().expect("l1 no child").borrow(); // as_ref很重要，因为不as_ref那l1的所有权就通过next转移了。后续就没法用l1了。
+
+    // l3是RefMut<ListNode>类型，但是要修改L3还是要声明为mut
+    let mut l3 = l2.next.as_ref().expect("l2 no child").borrow_mut();
+    l3.val = "333";
+    // drop很重要，l3是第三个ListNode的可变引用，后面的print函数挨着打印的时候，到第三个节点也会对齐进行引用，此时同一上下文就有可变引用和不可变引用同时存在，触发panic，Ref drop后是销毁当前Ref而不会干掉内部的数据。
+    drop(l3);
+    print_list(&l1);
+}
+```
+解释下，为啥`l1.next`会转移l1的所有权，使得l1不能再用了。因为`next`是l1结构体的一部分，他赋值给新的变量，其实就意味着l1的部分所有权被转出了。partial move也是move，不能再用了，通过`as_ref`来解决这个问题，并且`l1.next.as_ref()`，要打包出现，不能先next赋值给一个变量了，再as_ref，那变量就已经持有所有权了。
+```
+borrow of partially moved value: `l1`
+partial move occurs because `l1.next` 。。。
+```
+# todo
+`Rc`面对循环引用无限计数，需要有`Weak`弱引用，不进行计数，也不持有所有权。
+
+`RefCell`还有个不存Ref而是存T的版本`Cell`。他们都是线程不安全的，需要线程安全还需要`Mutex`和`RwLock`。
