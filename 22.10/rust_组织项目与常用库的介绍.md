@@ -449,6 +449,7 @@ let filter2 = warp::post()
 filter的返回，上面见到的`map`函数，参数是过滤器中取到的一些参数的值，而返回值，上面的例子都是返回了一个`String`，其实返回的类型肯定也不能全是String类型，其实需要该闭包的返回值实现warp中的`Reply` trait。String实现了该trait，String的header中的contenttype是`text/plain`。
 ```rs
 use warp::reply::*;
+use warp::{http::Uri, Filter};
 
 warp::path!("r")
   .map(||{
@@ -468,8 +469,49 @@ warp::path!("r")
     with_header(
       with_status(html(r"<h1>hi</h1>"), StatusCode::BAD_REQUEST),
       "my-h", "my-v")
+
+    // 6 跳转
+    warp::redirect(Uri::from_static("/v2"))
   })
 ```
 
 warp的serve函数只能接一个root filter，如果我们有多个路径需要被监听和处理，那可以将多个filter用`or`拼出一个root filter。
+
+跨域：在filter最后加`.with(warp::cors())`
+
+文件：`let filter3 = warp::fs::dir("example");` 映射该文件夹，文件夹相对路径是项目根目录
+
+到这里基本的用法已经了解差不多了，然而实际上我们一个web服务可能需要进行外部io，例如我们可能用前面的mysql或者reqwest进行其他的io请求。因为warp用了tokio框架所以最好其他的io我们也基于tokio，例如在warp中使用reqwest。
+
+上面的请求处理都是在map的闭包中进行，而且都是同步的快速处理，如果map闭包中直接使用异步的reqwest肯定是无法使用的，因为最基本的await关键字就无法在非async函数中使用。`then`与`and_then`，then一听就是之后再怎么样，是异步的，map的函数我们也可以用then来代替
+```rs
+warp::path!("p3" / u32)
+      .map(|id|{
+        format!("{}", id)
+      });
+
+// 替换成
+warp::path!("p3" / u32)
+      .then(|id| async move {
+        format!("{}", id)
+      });
+```
+上面代码有个`async move`这俩是干啥的呢，而且我们发现他在闭包参数的后面，并不是修饰整个闭包是异步的函数。其实要分开说`async{}`是异步代码块，代码块是有返回值的，异步代码块返回值是`Future`。而then的参数定义中闭包需要返回Future，如下图。而`move`就比较简单了，他其实是获取id的所有权，因为是异步执行，可能传id的上下文已经结束了，所以想要使用id，必须move进来，如此一来我们就有了async了，那就可以在里面使用`reqwest`了
+![im](https://i.imgur.com/y3yMTkZ.png)
+
+例如用reqwest请求其他服务
+```rs
+let baidu = warp::path!("baidu")
+      .then(|| async move {
+        let client = reqwest::Client::new();
+        let str = client.get("https://www.baidu.com")
+          .send()
+          .await.unwrap().text() .await.unwrap();
+        str
+      });
+```
+![image](https://i.imgur.com/rV5zpo1.png)
+
+但是这么写还是有点问题，client在每次请求的时候都临时创建。直接把client移动到外面就会报错，因为从上下文中在直接拿到了client所有权，这个和参数约束不同，当然了我们拿到所有权也会导致client只能用一次了。也是不行的。
+![image](https://i.imgur.com/QUwqSy2.png)
 ## tokio

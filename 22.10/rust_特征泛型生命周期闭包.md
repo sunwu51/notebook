@@ -371,3 +371,61 @@ fn main() {
 180 |     println!("{}", x)
     |                    ^ value borrowed here after move
 ```
+
+# FnOnce FnMut Fn小结
+如何快速判断一个闭包是哪种trait，
+- 1 如果没用捕获变量那就是fn(fn > Fn)
+- 2 捕获变量，按照优先级 将闭包中的变量当做 【copy->引用->可变引用->所有权本体】 来适配闭包，使得功能正常工作。如果全都是引用就万事大吉，那就是Fn，例如下面的c1 c2和c22。如果至少需要一个可变引用才能畅通，那就是FnMut，例如c3 c4和c6。而如果是必须本尊所有权持有者，亲自出马才能解决问题，那么就是FnOnce，例如c5.
+
+经常遇到例如`Vec`的iterator操作
+- `|| for elem in v.iter() {println!("{:?}",elem)};` iter的入参是`&self`，所以按照上面规则引用即可，是Fn
+- `|| for elem in v.into_iter() {println!("{:?}",elem)};` into_iter如参数`self`，所以需要本尊来才行，是FnOnce，如果传入Fn约束的函数中作为参数会报错`this closure implements FnOnce, not Fn.closure is FnOnce because it moves the variable v out of its environment`
+
+```rs
+fn main(){
+    let s1 = String::from("s1");
+    let s2 = String::from("s2");
+    let mut s3 = String::from("s3");
+    let mut s4 = String::from("s4");
+    let s5 = String::from("s5");
+    
+    let mut n = 1;
+    // 1 不捕获任何变量，纯匿名函数，本质就是个fn 符合Fn trait
+    let c1 = || {}; //Fn
+
+    // 2 捕获变量，但是不进行写操作也不需要所有权，只需要变量引用即可(或者copy)，符合Fn trait
+    let c2 = || println!("{}", s2); //Fn
+    let c22 = || n;
+
+    // 3 捕获变量，并需要对变量进行改动，因而需要变量的可变引用，Fn必须是不可变引用，所以不符合Fn，而符合FnMut
+    let c3 = || s3.push_str("_hi");
+
+    
+    let c4 = || s4.push_str("_hi");
+
+    // 4 捕获变量，并且不满足于引用，而是直接需要夺取所有权，此时也不符合FnFnMut，而符合FnOnce
+    let c5 = move || s5; //FnOnce
+
+    let c6 = || {n=n+1; format!("{}", n)};
+    
+    test1(c2);test2(c2);test3(c2); // Fn实现了FnOnce和FnMut，三个函数都能调用
+    test1(c3);test2(c4);           // FnMut实现了FnOnce，两个函数都能调用
+    test4(c5);                     // FnOnce只能用自己
+    test5(c6);
+    println!("finish");
+    
+}
+
+fn test1(func: impl FnOnce()){}
+
+fn test2(func: impl FnMut()){}
+
+fn test3(func: impl Fn()){}
+
+fn test4(func: impl FnOnce() -> String){}
+
+fn test5(func: impl FnMut() -> String){}
+
+fn test6(func: impl Fn() -> String){}
+
+```
