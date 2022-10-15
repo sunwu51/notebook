@@ -470,4 +470,6 @@ warp::path!("r")
       "my-h", "my-v")
   })
 ```
+
+warp的serve函数只能接一个root filter，如果我们有多个路径需要被监听和处理，那可以将多个filter用`or`拼出一个root filter。
 ## tokio
