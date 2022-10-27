@@ -381,51 +381,65 @@ fn main() {
 - `|| for elem in v.iter() {println!("{:?}",elem)};` iter的入参是`&self`，所以按照上面规则引用即可，是Fn
 - `|| for elem in v.into_iter() {println!("{:?}",elem)};` into_iter如参数`self`，所以需要本尊来才行，是FnOnce，如果传入Fn约束的函数中作为参数会报错`this closure implements FnOnce, not Fn.closure is FnOnce because it moves the variable v out of its environment`
 
+
+`move`关键字是可以帮助Fn和FnMut也实现拿到变量所有权，但是不改变闭包实现的trait。
 ```rs
-fn main(){
-    let s1 = String::from("s1");
-    let s2 = String::from("s2");
-    let mut s3 = String::from("s3");
-    let mut s4 = String::from("s4");
-    let s5 = String::from("s5");
+fn main() {
     
-    let mut n = 1;
-    // 1 不捕获任何变量，纯匿名函数，本质就是个fn 符合Fn trait
-    let c1 = || {}; //Fn
+    let k = 10;
+    fn f1(i: i32) -> i32 { i }
+    fn_test(f1);
 
-    // 2 捕获变量，但是不进行写操作也不需要所有权，只需要变量引用即可(或者copy)，符合Fn trait
-    let c2 = || println!("{}", s2); //Fn
-    let c22 = || n;
+    // 闭包没有捕捉上下文变量，退化成函数fn
+    let f2 = |i: i32|->i32 { i };
+    fn_test(f2);
+ 
+    // 闭包捕捉上下文中变量，无法退化成fn
+    let f3 = |i: i32|->i32 { i + k };
+    clo_test(f3);
 
-    // 3 捕获变量，并需要对变量进行改动，因而需要变量的可变引用，Fn必须是不可变引用，所以不符合Fn，而符合FnMut
-    let c3 = || s3.push_str("_hi");
+    // Fn 拿引用即可实现函数的功能，那就只拿引用，trait就是Fn
+    let s = "1".to_string();
+    let f4 = move ||->String { println!("s: {}", s); return "2".to_string(); };
+    Fn_test(f4);
+    println!("s: {}", s); 
 
-    
-    let c4 = || s4.push_str("_hi");
+    FnOnce_test(f4);
 
-    // 4 捕获变量，并且不满足于引用，而是直接需要夺取所有权，此时也不符合FnFnMut，而符合FnOnce
-    let c5 = move || s5; //FnOnce
+    // FnMut 拿可变引用即可实现函数的功能，那就只拿可变引用，trait就是FnMut
+    let mut s = "1".to_string();
+    let f5 = ||->String { s.push_str("1"); println!("s: {}", s); return "2".to_string(); };
+    FnMut_test(f5);
+    // FnOnce_test(f5);
 
-    let c6 = || {n=n+1; format!("{}", n)};
-    
-    test1(c2);test2(c2);test3(c2); // Fn实现了FnOnce和FnMut，三个函数都能调用
-    test1(c3);test2(c4);           // FnMut实现了FnOnce，两个函数都能调用
-    test4(c5);                     // FnOnce只能用自己
-    test5(c6);
-    println!("finish");
-    
+
+    // FnOnce 拿所有权才能实现函数功能，trait就是FnOnce
+    let s = "1".to_string();
+    let f6 = ||->String { println!("s: {}", s); return s; };
+    FnOnce_test(f6);
+
+    // fn Fn FnMut FnOnce move
+}
+// FnOnce FnMut Fn
+fn Fn_test<F: Fn()->String>(f: F) {
+    println!("Fn test {}", f());
+}
+fn FnMut_test<F: FnMut()->String>(mut f: F) {
+    println!("FnMut test {}", f());
+}
+fn FnOnce_test<F: FnOnce()->String>(f: F) {
+    println!("FnMut test {}", f());
+    f();
 }
 
-fn test1(func: impl FnOnce()){}
 
-fn test2(func: impl FnMut()){}
+fn fn_test(f: fn(i32)->i32) {
+    println!("{}", f(11));
+}
 
-fn test3(func: impl Fn()){}
+fn clo_test<F: FnOnce(i32)->i32>(f: F) {
+    println!("{}", f(11));
+}
 
-fn test4(func: impl FnOnce() -> String){}
-
-fn test5(func: impl FnMut() -> String){}
-
-fn test6(func: impl Fn() -> String){}
 
 ```
