@@ -12,46 +12,37 @@
         height: 700px;
         border: solid 1px black;
     }
-    .flex{
-        display: flex;
+    .grid{
+        display: grid;
+        grid-template: auto auto / auto auto auto;
     }
     .item{
-        /* margin: 10px; */
-    }
-    .item:nth-of-type(4n+1){
         background-color: aqua;
-        width: 200px;
-        height: 200px;
+        width: 100px;
+        height: 100px;
     }
-    .item:nth-of-type(4n+2){
-        background-color: bisque;
-        width: 210px;
-        height: 210px;
-    }
-    .item:nth-of-type(4n+3){
-        background-color: aqua;
-        width: 180px;
-        height: 180px;
-    }
-    .item:nth-of-type(4n+4){
-        background-color: bisque;
-        width: 220px;
+    #item3{
+        width: auto;
+        height: auto;
     }
 </style>
 <body>
     <div>
-        <label>direcion</label>
-        <select id="direction" onchange="update()">
-            <option value="row">row</option>
-            <option value="column">column</option>
+        <label>grid-template</label>
+        <select id="grid-template" onchange="update()">
+            <option value="auto auto / auto auto auto">auto auto / auto auto auto</option>
+            <option value="100px auto / 50% auto auto">100px auto / 50% auto auto</option>
+            <option value="200px 200px / 200px 200px 200px">200px 200px / 200px 200px 200px</option>
+            <option value="auto auto auto  / auto auto">auto auto auto / auto auto</option>
         </select>
-        <label>wrap</label>
-        <select id="wrap" onchange="update()">
-            <option value="nowrap">nowrap</option>
-            <option value="wrap">wrap</option>
+        <label>gap</label>
+        <select id="gap" onchange="update()">
+            <option value="0">0</option>
+            <option value="10px 20px">10px 20px</option>
         </select>
         <label>justify-content</label>
         <select id="justify-content" onchange="update()">
+            <option value="normal">normal</option>
             <option value="start">start</option>
             <option value="end">end</option>
             <option value="center">center</option>
@@ -69,8 +60,12 @@
             <option value="space-around">space-around</option>
         </select>
         <label>justify-items</label>
-        <select id="justify-items">
-            <option value="baseline">--</option>
+        <select id="justify-items" onchange="update()">
+            <option value="stretch">stretch</option>
+            <option value="start">start</option>
+            <option value="end">end</option>
+            <option value="center">center</option>
+            <option value="baseline">baseline</option>
         </select>
         <label>align-items</label>
         <select id="align-items" onchange="update()">
@@ -82,34 +77,13 @@
         </select>
         
         <hr/>
-        <label>basis</label>
-        <select id="basis" onchange="update()">
-            <option value="auto auto auto auto">auto</option>
-            <option value="0 0 0 0">0</option>
-            <option value="100px 100px 100px 100px">100px</option>
-            <option value="200px 200px 200px 200px">200px</option>
-            <option value="300px 300px 300px 300px">300px</option>
-            <option value="0 200px 100px 100px">0 200px 100px 100px</option>
-        </select>
-        <label>grow</label>
-        <select id="grow" onchange="update()">
-            <option value="0 0 0 0">0 0 0 0</option>
-            <option value="1 1 1 1">1 1 1 1</option>
-            <option value="0 1 1 1">0 1 1 1</option>
-            <option value="1 2 1 1">1 2 1 1</option>
-            <option value="0 2 1 1">0 2 1 1</option>
-        </select>
-        <label>shrink</label>
-        <select id="shrink" onchange="update()">
-            <option value="1 1 1 1">1 1 1 1</option>
-            <option value="0 0 0 0">0 0 0 0</option>
-            <option value="0 1 1 1">0 1 1 1</option>
-            <option value="1 2 1 1">1 2 1 1</option>
-            <option value="0 2 1 1">0 2 1 1</option>
-        </select>
         <label>item3 justify-self</label>
-        <select id="justify-self">
-            <option value="--">--</option>
+        <select id="justify-self" onchange="update()">
+            <option value="auto">auto</option>
+            <option value="stretch">stretch</option>
+            <option value="start">start</option>
+            <option value="end">end</option>
+            <option value="center">center</option>
         </select>
         <label>item3 align-self</label>
         <select id="align-self" onchange="update()">
@@ -119,26 +93,32 @@
             <option value="end">end</option>
             <option value="center">center</option>
         </select>
+        <label>item3 grid-area</label>
+        <select id="grid-area" onchange="update()">
+            <option value="1 / 3 / span 1 / span 1">1 / 3 / span 1 / span 1</option>
+            <option value="1 / 2 / span 2 / span 2">1 / 2 / span 2 / span 2</option>
+        </select>
+
     </div>
-    <div id="container" class="flex">
-        <div class="item">item1: <p>200x200</p></div>
-        <div class="item">item2: <p>210x210</p></div>
-        <div id="item3" class="item">item3: <p>180x180</div>
-        <div class="item">item4: <p>220xauto</p></div>
+    <div id="container" class="grid">
+        <div class="item">item1: <p>100x100</p></div>
+        <div class="item">item2: <p>100x100</p></div>
+        <div id="item3" class="item">item3: <p>100x100</div>
+        <div class="item">item4: <p>100x100</p></div>
     </div>
 </body>
 <script>
     function update() {
         var container = d3.select('#container');
-        container.style('flex-direction', d3.select('#direction').property('value'))
-        container.style('flex-wrap', d3.select('#wrap').property('value'))
+        container.style('grid-template', d3.select('#grid-template').property('value'))
+        container.style('gap', d3.select('#gap').property('value'))
         container.style('justify-content', d3.select('#justify-content').property('value'))
+        container.style('justify-items', d3.select('#justify-items').property('value'))
         container.style('align-items', d3.select('#align-items').property('value'))
         container.style('align-content', d3.select('#align-content').property('value'))
-        var grows = d3.select('#grow').property('value').split(' ')
-        var shrinks = d3.select('#shrink').property('value').split(' ')
-        var basiss = d3.select('#basis').property('value').split(' ')
-        d3.select('#item3').style('align-self',   d3.select('#align-self').property('value'))
+        d3.select('#item3').style('align-self',   d3.select('#align-self').property('value'));
+        d3.select('#item3').style('justify-self',   d3.select('#justify-self').property('value'));
+        d3.select('#item3').style('grid-area',   d3.select('#grid-area').property('value'));
         for(var i=0; i<4; i++){
             d3.select(`.item:nth-of-type(4n+${i+1})`).style('flex-grow', grows[i])
             d3.select(`.item:nth-of-type(4n+${i+1})`).style('flex-shrink', shrinks[i])

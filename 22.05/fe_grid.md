@@ -4,6 +4,12 @@ grid与flex以及float都用来布局，float的使用比较受限，所以用�
 flex注重的是单行/列维度的精修，如果wrap成多行也可以，并且自己有主轴方向，不一定是行。
 
 grid主轴就是行x列，不会旋转90°，理解起来比较简单，侧重于2维网格。
+# 一张图看懂grid container最常用的属性
+![image](https://i.imgur.com/IyGvvah.png)
+
+# 一张图看懂grid item最常用的属性
+![image](https://i.imgur.com/sbxZTwL.png)
+
 # 常用属性介绍
 ```css
 .container{
@@ -61,6 +67,7 @@ grid因为默认就是多行所以就更简单了，如果只有一个元素那�
 
 这里看到有一种情况，也就是justify-align:center的情况是flex不能实现左右居中的，因为flex默认是1行n列的，而grid默认是1行1列，如果只有1列，那放到这一列的中间，那就是整个一行左右的中间了。
 
+justify-self 和 align-self则是在item上单独可以指定自己的对齐方式，优先级高于父容器的默认对齐。
 # 最佳实践
 `grid`和`gap`是最常用在父容器上的，基本涵盖了所有的css样式。例如可以通过`grid: auto auto / auto auto auto;`指定2行3列的模板，然后`gap: 10px`指定行距和列距都是10px。
 

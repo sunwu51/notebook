@@ -1,56 +1,27 @@
 # flex样式
-在服级div上使用`display:flex`可以使得其内部元素如div等，紧凑排列。
+看flex之前可以先看[grid](./fe_grid.html)的介绍，里面会有对`justify`和`align`的说明，在`flex`中也会用到。
+
+在父级div上使用`display:flex`可以使得其内部元素如div等，紧凑排列。与grid用法类似。但是flex比grid更灵活也更复杂，我们可以认为默认情况下`flex`是一行多列的`grid`，并且列数无限，里面有多少个dom就有多少列。
 ```
 display: flex;
 ```
-flex详细配置如下，第一个值是默认值(flext-start可简写为start)
-- `flex-flow`: `flex-direction` `flex-wrap`
-- `flex-direction`: row/column/row-reverse/column-reverse
-- `flex-wrap`: nowrap/wrap 配置一行满了是否换行，默认不换行
-- `place-content`: `align-content` `justify-content`
-- `align-content`: stretch/flex-start/center/flex-end/space-around/space-between/space-evenly
-- `justify-content`: flex-start/flex-end/center/space-between/space-around/space-evenly 元素如何排列
-- `align-items`: stretch/flex-start/flex-end/baseline
-- `flex`: `flex-basis` `flex-shrink` `flex-grow`
-- `flex-basis`: 放缩的基准值
-- `flex-shrink`: 缩小比例
-- `flex-grow`: 放大比例
+这是默认的flex按照横向排列多个子元素。
+![image](https://i.imgur.com/oZEe13u.png)
+并且如果宽度不够，会自动适应缩小。
+![image](https://i.imgur.com/ROembsn.png)
+# 方向与换行
+刚才默认方向是row横向，还可以取以下方向。`flex-direction`: row/column/row-reverse/column-reverse。例如在纵向上下排布东西的时候column也是常用的。
 
-![image](https://i.imgur.com/rFM1r26.png)
-# 解释
-查看[demo](./flex/flex-show.html)
+默认也是不换行的nowrap，可以设置为换行。换行激活后，超出宽度的不会自动缩放，而是换到下一行，当然至少要放一个元素，一个都放不下，那这个会缩进。`flex-wrap`: nowrap/wrap 配置一行满了是否换行，默认不换行，wrap改为换行。
 
-1 flex-direction就是排列方向，又叫主方向，默认是横向。flex-warp就是超过屏幕后是不是要换行。
+![image](https://i.imgur.com/R8QjHQU.png)
 
-如果设定了内部元素的width，但是配置了nowrap也是会被压缩，而不会变滚轮。但是设置了height则超出页面就会变滚轮。因为默认div的高度是无限高的，可以通过设置外部div的height可以使item换列。
-
-![image](https://i.imgur.com/z9Dq7RG.gif)
-
-设置外部div height为700px后
-
-![image](https://i.imgur.com/zzZ5Dyw.png)
-
-2 justify-content是主方向的(列的)排列方式，start就是紧凑的从开始方向排列，end反之，center就是居中排列，space-between是第一个和最后一个元素靠边中间的均匀分布，另外两个的解释则如下。还有个justify-items是这一列的内部元素的左右排列。
-
-![image](https://i.imgur.com/3ofXZzM.png)
-
-注意只有空间允许才会有空隙的调整资格，如果空间都不够，就只能紧凑排列。
-
-![image](https://i.imgur.com/lKNFm8w.gif)
-
-3 align-items与align-content是垂直方向元素对齐调整，注意两者需要wrap，否则只有单行的概念，align-content无效。其中align-content是整个这一行跟其他行的对齐方式，是以行为操作单位的。align-items是每一行的各个元素为操作单位，例如：content是end就表示，从最下面开始第一行。然后items是start则表示这一行的元素都是贴着行的最上排列的。
-
-明确概念：一个行的范围 = wrap?最高的元素高度:容器高度 x wrap?父容器宽度:无限
-
-align-content 需要设置wrap作用于每一行，第一行在容器的什么维度，start就是北极，end是南极，center是赤道。
-
-align-items 是每一行内各个元素怎么对齐，start是靠在行的上方，end下方，center中间，stretch是填充整行高度，nowrap整行高度就是整个容器。
-
-注： baseline在div中等于start，不用管，基本用不上。
-
-![image](https://i.imgur.com/lUsXx1T.gif)
-
-4 flex-basis、flex-shrink、flex-grow缩放相关，是内部元素的样式而非父容器，grow是指如果元素默认宽度不够整行宽度的时候，放大以填满。shrink则是超出了整行宽度，缩小以填满。默认0代表不放缩，元素全是1代表全部等比放缩，不同值则是代表放缩比例不同。
+# item中的弹性缩放
+`flex`相比`grid`最灵活的就是他的缩放功能，刚才也看到了默认情况下就是有缩放的，其实目前看到的只有缩，没有放。缩放相关的由flex控制，如下，是三个css的集成，分别代表了缩放基准，缩和放。
+```
+flex: flex-basis flex-shrink flex-grow
+```
+flex-basis、flex-shrink、flex-grow缩放相关，是内部元素的样式而非父容器，grow是指如果元素默认宽度不够整行宽度的时候，放大以填满。shrink则是超出了整行宽度，缩小以填满。默认0代表不放缩，元素全是1代表全部等比放缩，不同值则是代表放缩比例不同。
 
 这组属性与width、min-width、max-width、wrap息息相关。
 
@@ -76,7 +47,28 @@ basis可以分别设置成不同的值，grow还是按照放大的像素成设�
 
 ![image](https://i.imgur.com/pEBwxVz.gif)
 
-上述看出width的作用优先级较低，是会被basis grow等覆盖。但是min-width和max-width仍是最高优先级，可以通过设定这两者来使得放缩的时候保持一个宽度的范围，防止过度缩放影响观感。
+上述看出width的作用优先级较低，是会被basis grow等覆盖。但是`min-width`和`max-width`仍是最高优先级，可以通过设定这两者来使得放缩的时候保持一个宽度的范围，防止过度缩放影响观感。
+# 对齐
+justify-content，justify-item，align-item这三个与grid中是一个意思。可以先去看下grid中的介绍，
+- content代表flex布局中瓦片的排列，item则代表瓦片中的dom元素的对齐，
+- justify代表主方向 与direction有关，默认就是横向；align就代表主方向垂直方向咯。
+
+注意我们align-content也就是纵向上的棋盘排放方式，默认flex是nowrap不换行的话，该属性是没有作用的，因为就一行，就是放到最上面的。只有wrap后，`align-content`才代表纵向上棋盘的
+
+# 详细配置
+flex详细配置如下，第一个值是默认值(flext-start可简写为start)
+- `flex-flow`: `flex-direction` `flex-wrap`
+- `flex-direction`: row/column/row-reverse/column-reverse
+- `flex-wrap`: nowrap/wrap 配置一行满了是否换行，默认不换行
+- `place-content`: `align-content` `justify-content`
+- `align-content`: stretch/flex-start/center/flex-end/space-around/space-between/space-evenly
+- `justify-content`: flex-start/flex-end/center/space-between/space-around/space-evenly 元素如何排列
+- `align-items`: stretch/flex-start/flex-end/baseline
+- `flex`: `flex-basis` `flex-shrink` `flex-grow`
+- `flex-basis`: 放缩的基准值
+- `flex-shrink`: 缩小比例
+- `flex-grow`: 放大比例
+
 
 # 案例
 flex能实现的一些常用案例（上面花里胡哨的其实很多都不是特别常用）
