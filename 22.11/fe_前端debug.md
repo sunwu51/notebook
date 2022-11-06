@@ -24,7 +24,8 @@ npm start
       "name": "Launch Chrome",
       "url": "http://localhost:3000", // 改为自己的目标 url
       "sourceMaps": true,
-      "webRoot": "${workspaceFolder}"
+      "webRoot": "${workspaceFolder}",
+      "skipFiles": ["node_modules/**"], // 这行是为了不去debug依赖
     }
   ]
 }
@@ -54,4 +55,5 @@ Lit也是一样的做法。
 ![image](https://i.imgur.com/xDPKBkZ.png)
 
 # gitpod
+gitpod上无法launch chrome。
 
