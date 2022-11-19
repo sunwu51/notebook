@@ -8,6 +8,22 @@ VM这个重量级实现还存在镜像体积巨大，构建和部署流程繁琐
 而java提出了一种更小代价的VM，不需要虚拟出整个操作系统，`jvm`只虚拟出`java`程序的`runtime`环境，`jvm`向上对开发者来说实现功能的函数一致，而向下兼容了多个操作系统，屏蔽了实现细节，实现相同功能可能底层调用的操作系统函数并不相同，但用户无需关心。真正意义上做到了相同代码，可以在不同的平台运行。于是在VM上运行`JVM`，`JVM`中运行java程序，成为一种主流的开发方式，用户可以用`windows`可以用`mac`可以用`ubuntu`，几乎可以用任何想用的开发机来开发程序，都可以成功的发布到服务器上。
 
 `JAVA`是`C++`写的，`C++`部分的代码又叫`native`代码，`native`这个词基本也就定了个跟OS紧密相关的基调，即实现同一功能的`native`的代码是会和OS不同而不同的。`JVM`定义了的`java runtime`是一个完整的“世界”，在里面有自己的内存堆、栈，有自己的线程，开发者只需要了解这个“世界”（jvm）的规则即可，基本不太需要关注OS对应的发生的事情。当然这也有一定的代价，就是我们需要在我们要运行程序的机器上去安装这个运行时`JRE`，此外JVM执行相同的功能需要的内存也远高于native的程序，因为vm本身的维护就需要较大内存。
+
+顺带提一句jvm是如何实现跨平台的，是因为jvm制定了一种文件格式规范，他能识别符合jvm规范的`.class`文件，在java运行的时候，解释器负责解释`.class`文件，而通过热度检测，找到经常运行到的函数，会将这部分代码进行编译，这是一个智能的动态的实时编译(JIT)的过程，我们不去讨论该技术的细节，只需要知道java中的JIT使java在运行初期是解释型运行，而不断的运行中自我进化，hotcode被编译成机器码，最终成为半解释半编译型语言。没有使用预先全编译成机器语言（AOT）的方式，一方面是AOT是和本机OS绑定的，这样就没法跨平台了，而JIT在运行时对`.class`文件可以根据当前运行的操作系统进行编译出native的机器码。另一方面AOT的预编译时间太长了。
+
+javac是编译成jvm规范的`.class`文件的，jaotc则是aot预编译真正编译成机器码的。
+![image](https://i.imgur.com/aUazh0g.png)
+
+![image](https://i.imgur.com/nwR74Da.png)
+
+jvm小结：
+- 常说的java的编译其实不是真正编译成机器码，而是`.class`规范文件，这个规范最终使java可跨平台，也使得遵循该规范的输出能运行在jvm，也就有了scala kotlin等jvm语言。
+- java也不是编译型语言，只能说不纯。
+- java的JIT(just in time)在预热后达到无限接近native的性能。
+- 预热需要时间，滚动发布，新发布机器限流是业界避免发布初期rt较高，机器挂掉的常见方案。
+- AOT(ahead of time)可以不用实时编译，使java成为纯编译型语言
+- AOT在java也有(新的老的都有)这种技术(方案)，但是牺牲跨平台性，并且对反射，动态代理(如cglib)等spring框架常用的技术还有坑，简单一提，就是AOT检测用不到的字段不会编译进机器码，反射的时候找不到了，目前解决方案是专门搞了一些注解。
+- Java AOT还有很长的路要走
 # 1.3 Docker
 `VM`是一种很重的实现，启动和扩容都很慢。而`Docker`的出现彻底改变的VM的发展。`Docker`是一种轻量级的虚拟化，本质上docker容器里的程序还是运行在当前宿主机上，是通过借助`cgroup`等工具链把linux上的资源进行了切分，进程级别去瓜分操作系统的资源，只不过`docker`的抽象让用户看起来像是运行在了`vm`里，`docker`启动非常迅速，扩容和销毁非常快，但是因为是假的“VM”，docker的隔离性没有`VM`那样彻底。即使这样，`docker`的轻量、快速和高效还是颠覆了虚拟化和云计算行业。
 
@@ -48,7 +64,7 @@ k8s是管理容器的，一般是管理docker，而docker提供的一种虚拟�
 但是实际上java在云原生场景并不吃香，因为JIT的编译方式，使java在启动速度和启动初期的预热，都占用较多时间和资源，对于微服务来说这一点是非常拉胯的。这也是没有出现k8s直接调度jvm的一个重要原因，属于是费力不讨好；这种形式只适合jvm语言像`java/scala/kotlin`，受众较小；最要命的是jvm出现较早也不满足OCI容器规范(OCI:Open Container Initiative)。
 
 ## 2.3 jvm的native化
-既然直接用k8s调度jvm行不通了，我们能不能把java变成native程序，去掉jvm呢。这样是不是可以更快的启动呢，也更符合native的理念。这是一个很好的思路，目前也有这样的尝试，GraalVm。GraalVm可以将下图中这些编程语言都编译成Native版本的程序，即去掉了虚拟机，想象一下我们的java程序不再需要用`java -jar`这样的java指令运行而是直接`./myJava`执行，这使得运行程序的系统不需要安装java环境就可以运行java程序，而且启动速度更快，无JIT，无预热，想象下这也太美好了。
+既然直接用k8s调度jvm行不通了，我们能不能把java变成native程序，去掉jvm呢。这样是不是可以更快的启动呢，也更符合native的理念。这是一个很好的思路，也就是前面我们提到过的AOT，但是前面也提到AOT for java还是有不少坑，不过目前最好的尝试就是，GraalVm。GraalVm可以将下图中这些编程语言都编译成Native版本的程序，即去掉了虚拟机，想象一下我们的java程序不再需要用`java -jar`这样的java指令运行而是直接`./myJava`执行，这使得运行程序的系统不需要安装java环境就可以运行java程序，而且启动速度更快，无JIT，无预热，想象下这也太美好了。
 
 ![image](https://i.imgur.com/3vl3Fia.png)
 
@@ -69,17 +85,47 @@ webassembly最早是一种应用在浏览器上的前端技术，他的key point
 但是本文中我们不想过多的介绍wasm在web领域的应用，我们将视角转到cloud。
 
 ## 3.1 wasm的runtime
-wasm虽然初期设计是给浏览器使用的，但是该规范使很多种语言都可以写wasm的程序，例如`c/c++/rust/golang/java`等等，在浏览器中v8引擎提供了wasm的runtime环境。而我们发现如果将这种runtime环境进行改造，作为一种“VM”将会获得很好的优势，例如多语言的支持，c/rust/golang等等，并且相比VM这种运行时的开销小很多，甚至比docker更轻量。而运行效率上因为可以针对性的对运行时需要的东西优化，而不像docker需要虚拟整个OS，所以效率上也应该至少不弱于docker。
+wasm虽然初期设计是给浏览器使用的，但是该规范（w3c制定的）使很多种语言都可以写wasm的程序，例如`c/c++/rust/golang/java`等等，只需要输出`wasm`格式的文件，wait，是不是似曾相识，当年jvm就是通过`class`文件格式规范，实现了跨平台和多语言可运行其上(java/scala等)，现在wasm一样，只不过血统不同时代不同，现在的wasm瞄准了更多的语言。在浏览器中v8引擎提供了wasm的runtime环境。而我们发现如果将这种runtime环境进行改造，作为一种“VM”将会获得很好的优势，例如多语言的支持，c/rust/golang等等，并且相比VM这种运行时的开销小很多，甚至比docker更轻量。而运行效率上因为可以针对性的对运行时需要的东西优化，而不像docker需要虚拟整个OS，所以效率上也应该至少不弱于docker。
 
-这种runtime环境很快就诞生了，当然v8也算一个，但因为v8本来的定位是解释js用的，只是因为w3c规范，后续支持了wasm，但是直接运行wasm，我们需要更专业的runtime。例如`wasmer`、`wasmtime`和`wasmEdge`。这些runtime类比就是jre或者jvm，而`.wasm`文件的规范，就类比`.class`文件规范。他们的使用也都很简单，在自己的电脑中就可以安装他们，可以选择其中一个进行尝试，安装完成后，例如通过rust写的程序将编译的target设置为`wasm32-wasi`，就可以得到`.wasm`格式的文件输出。这个[wasmEdge的文档](https://wasmedge.org/book/zh/dev/rust.html)给了简单的步骤来在这个运行时环境中启动web服务器。
+这种runtime环境很快就诞生了，当然v8也算一个，但因为v8本来的定位是解释js用的，只是因为w3c规范，后续支持了wasm，但是直接运行wasm，我们需要更专业的runtime。例如`wasmer`、`wasmtime`和`wasmEdge`。这些runtime类比就是jre或者jvm，而`.wasm`文件的规范，就类比`.class`文件规范。`wasm`也有JIT和AOT两种方式，这和jvm走的路可以说是一模一样了，runtime的作用是提供和OS交互的中间层，当然还有个重要的角色是SDK。举个例子java写文件的代码，jdk(sdk)可能是OpenJDK提供了File这个类能操作文件，jre这个运行时负责将这个类相关的操作例如写文件操作，翻译成调用当前操作系统的相关库例如linux下可能是glibc库，windows下可能是别的。
+
+jdk不同的提供商里面的函数可能也不通例如OracleJDK、AlibabaJDK、OpenJDK等等，有一些类名一样，方法名一样，但是内部逻辑可能稍有不同，还有些则是完全不同的类型，比如OracleJDK有些sun的包是在OpenJDK没有的，如果用了的话，用OpenJDK开发的人是显示找不到这个类的，但是用OpenJDK的jre却可以运行该程序。
+
+目前wasm的runtime并不是那么成熟，`wasi`是webassembly system interface的缩写，目前wasm的主角语言是rust，已经支持把代码编译的目标平台设置为`wasi`，大部分的rust库(sdk)都可以直接输出为`wasi`格式的文件。。
+
+这些wasm的runtime的使用也都很简单，在自己的电脑中就可以安装他们，可以选择其中一个进行尝试，安装完成后，例如通过rust写的程序将编译的target设置为`wasm32-wasi`，就可以得到`.wasm`格式的文件输出。
+
+## 3.2 wasm的demo
+我们来写几个wasm的demo，用rust + wasmEdge，当然你也可以选择别的运行时，注意要先安装rust和wasmEdge，这两个的安装都较为简单，两句curl的shell语句而已。
+
+首先是hello world，
+
+![image](https://i.imgur.com/SYxEOJe.png)
+
+然后我们试一下OS相关的，文件操作，发现直接读系统文件是不允许的，因为wasm主打安全隔离的沙盒环境，直接操作os文件显然需要预先授权。
+
+![image](https://i.imgur.com/CXP8o84.png)
+
+通过查看`wasmEdge -h`找到文件的赋权是`--dir`，然后我们如下运行即可读到文件。
+
+![image](https://i.imgur.com/gEgx7vR.png)
+
+
+网络则更离谱，我们直接使用[之前文章](https://xiaogenban1993.github.io/22.10/rust_%E7%BB%84%E7%BB%87%E9%A1%B9%E7%9B%AE%E4%B8%8E%E5%B8%B8%E7%94%A8%E5%BA%93%E7%9A%84%E4%BB%8B%E7%BB%8D.html)中warp的demo的例子，发现build成wasm就出现大量报错。原来对于网络的库，wasm内部行为和OS行为是不一样的，这里wasmEdge进行了重写，目前像wasmEdge的网络库是自己重写的需要借助他自己的sdk来用，而不能用rust sdk默认提供的网络(socket)库。可以参考这个[wasmEdge的文档](https://wasmedge.org/book/zh/dev/rust.html)给了简单的步骤来在这个运行时环境中启动web服务器
 
 ![image](https://i.imgur.com/lyuuXXJ.png)
-## 3.2 wasm取代docker，成为k8s的调度单元
+
+当然这也就意味着rust中积累的一些不错的web框架是无法直接编译为`wasi`使用的。目前的好消息是`hyper`、`tokio`、`mysql`、`reqwest`等库被老袁重写了，可以看他们的repo `https://github.com/orgs/WasmEdge/repositories`。目前来看wasmEdge虽然不是上面提到的几个runtime里star最多的，但是却是非常活跃的，并且已经进入cncf孵化，并且和docker公司建立了合作，dockerhub现在最上面都有这么一条消息，docker押宝wasmEdge，让其作为Docker调度Linux Container的另一种替代形式，docker直接调度wasmEdge运行时。
+
+![image](https://i.imgur.com/GSUQCyi.png)
+
+
+## 3.4 wasm取代docker，成为k8s的调度单元？
 wasm相比于vm/jvm，相比于docker，都有着自己的优势，虽然目前还没有那么成熟，但是k8s调度wasm而不是docker已经初见雏形。wasmtime wasmer和wasmEdge也都已经是CNCF的一员。可见CNCF还是很看重wasm这个发展方向。
 
 k8s目前也支持直接调度`wasm runtime`了，[这篇文章](https://developer.okta.com/blog/2022/01/28/webassembly-on-kubernetes-with-rust)中给出了一个使用rust打包wasm，并使用wasm-to-oci，将wasm转为符合OCI规范的容器，上传到容器镜像仓库，然后用Krustlet工具使k8s调度该容器运行。流程稍显繁琐，文章最后也有小结，目前的wasm in k8s还略显生涩。而[wasmEdge的官方文档](https://wasmedge.org/book/en/use_cases/kubernetes.html)也对自己在k8s中使用给出了例子。
 
 ![image](https://i.imgur.com/lMj9gOq.png)
 
-结论大概就是wasm无法取代docker，至少目前还不够成熟，但是是个很好的发展方向，给我们很大的启发。
+结论大概就是wasm无法取代docker，至少目前还不够成熟，并且docker也在新形势下尝试结合wasm。不过这是个很好的发展方向，给我们很大的启发。
 
