@@ -150,3 +150,57 @@ CC=x86_64-linux-musl-gcc go build -o musl_go_user user.go
 
 ## 6 rust编译
 rust是另一门编译型语言，他的toolchain安装更简单，rustup自己帮忙下载好，都不需要自己找musl库之类的。
+
+默认cargo build使用的是动态链接:
+
+![image](https://i.imgur.com/gJYIvkk.png)
+
+添加标志位，使其静态链接，[参考文档](https://doc.rust-lang.org/reference/linkage.html)最后部分。
+
+![image](https://i.imgur.com/WuqjSQE.png)
+
+ubuntu下使用musl的toolchain默认也是静态链接的。
+
+
+```
+// 查看支持的目标平台列表，支持很多
+$ rustup target list
+
+// 添加musl平台相关的支持，细节不用自己管rustup自己把需要的东西下好
+$ rustup target add x86_64-unknown-linux-musl
+
+// 默认musl作为target就是静态链接的，不用再指定FLAG
+$ cargo build --release --target x86_64-unknown-linux-musl
+```
+
+![image](https://i.imgur.com/EzskTz9.png)
+
+# 7 小结
+libc是很重要的，因为libc是和linux交互的关键，可能不是写C语言，但大概率也会依赖libc。
+
+gnu的glibc是一套性能不错也被广泛使用的libc库，musl在云原生时代逐渐被广泛使用。
+
+将c库可以动态或者静态的链接进程序，动态链接是常见的也是建议的行为，但是云原生时代，一个容易内一般也就一个程序，似乎静态链接也成了小范围的一种趋势。
+
+golang和rust是当前的编程界的宠儿，他们都是编译型语言，且都可以指定libc，当然也都支持交叉编译到其他平台。
+
+比较程序的大小
+```
+// rust的静态链接的大概是四五M，动态链接是3.9M
+5.6M    ./target/release/hello
+4.1M    ./target/x86_64-unknown-linux-musl/release/hello
+
+// c文件大小如下，都是1M以下
+8.0K    musl_c_dyn_hello
+20K     musl_cross_c_dyn_hello
+28K     musl_cross_c_static_hello
+16K     musl_c_static_hello
+20K     gnu_c_dyn_hello
+852K    gnu_c_static_hello
+
+// golang只有不到2M，即使CGO=0的也不到2M
+1.9M    gnu_go_0_user
+1.8M    gnu_go_hello
+1.9M    gnu_go_user
+1.9M    musl_go_user
+```
