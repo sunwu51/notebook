@@ -1,0 +1,14 @@
+[package]
+name = "io-test"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = "0.4.23"
+futures = "0.3.25"
+lazy_static = "1.4.0"
+reqwest = "0.11.13"
+time = "0.3.17"
+tokio = {version = "1.22.0", features=["full"]}
