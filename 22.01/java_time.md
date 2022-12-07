@@ -154,8 +154,5 @@ new : `DateTimeFormatter` 线程安全
 ```java
 DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 dtf.format(LocalDateTime.now());
-dtf.format(ZonedDateTime.now());
-
-LocalDateTime.parse("2022-01-01 11:11:11");
-ZonedDateTime.parse("2022-01-01 11:11:11");
+LocalDateTime.parse("2022-01-01 11:11:11", dtf);
 ```
