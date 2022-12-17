@@ -159,3 +159,60 @@ index.html文件内容如下，wasm_exec.js主要是使用Go这个对象，来ru
 这里的qjs就是quick js，是一个轻量级js运行环境，能运行js程序，这里就是在运行test.js这个文件，注意`--dir`参数是运行时这个沙盒和外部的目录映射，都是`.`也就是都是映射当前路径，他这个映射的顺序有点迷和docker的-v刚好相反，docker的是先宿主机后容器。
 
 # 5 使用rust写一个后端wasm
+这里直接用之前写的一个小程序[zlib_file_inflate](https://github.com/sunwu51/zlib_file_inflate)是解压zlib文件的，代码没几行都在main.rs中。使用这个程序的原因是他有文件读写还有控制台交互。
+
+我们先准备一个zlib文件吧，用刚才rust repo中引入的库，就可以顺手创建一个zlib文件，当然也可以直接到当前目录的wasm/zlib目录下找到提供好的`1.zlib`文件。
+```rs
+let bys = miniz_oxide::deflate::compress_to_vec_zlib(b"hello world!", 3);
+fs::write("1.zlib", bys);
+```
+解压文件的小程序用法就是`./decompress 1.zlib`就可以解压`1.zlib`为`1`并存到相同目录下。而使用wasmEdge运行如下图，需要`cargo b --relase --target wasm32-wasi`构建成wasi目标格式，最后target目录下会有wasm的文件。然后通过wasmEdge来运行，这里需要指定`--dir .:.`就是将目录映射进去，因为wasmEdge是一个沙盒runtime，是没有访问外部文件的权限的，他自己的沙盒世界里文件系统就是空的，有点像docker容器。我们把当前目录映射进去，他就可以操作了。
+
+![image](https://i.imgur.com/dPDLPNM.png)
+
+从图中看出`1.zlib`文件已经解压出来，内容是`hello world!`。
+
+到这我们用wasmEdge跑了一个具有文件读写能力的wasm-wasi程序，也许你会有疑问，我们直接运行rust程序就能搞定的事，为啥要换个格式，然后用wasmEdge来运行呢。而且有了这一层抽象，肯定没有rust这种native的程序效率高啊。那如果我说把程序在宿主机运行和在docker里运行哪个效率高，答案肯定也是宿主机，那还要docker干啥呢？
+
+这俩问题答案是一样的，主要就是隔离与扩展。这种沙盒环境互相隔离，自己独享一套文件系统，一套网卡的端口，而且cpu和内存资源是可以限制的。
+```
+--gas-limit
+                Limitation of execution gas. Upper bound can be specified as --gas-limit
+                `GAS_LIMIT`.
+// 是限制cpu资源的，gas的定义参考https://ewasm.readthedocs.io/en/mkdocs/determining_wasm_gas_costs/
+
+
+--memory-page-limit
+                Limitation of pages(as size of 64 KiB) in every memory instance. Upper bound
+                can be specified as --memory-page-limit `PAGE_COUNT`.
+// 是限制内存的页数，一页64k，1000页是64M
+```
+
+此外，如果你又想跃跃欲试，想把自己的rocket-web程序，直接打包成wasi来运行，就会发现又碰壁了。wasi的socket规范与rust中的并不完全一致，因而不能直接用。不同的wasm-runtime也都在封装自己的网络库。如果要在wasmedge使用网络相关的库，可以去关注下他们的CTO [juntao](https://crates.io/users/juntao)的crate，他有专门封装wasmedge中能使用的世面的一些流行的网络库`reqwest`、`hyper`、`tokio`、`mysql`等等，用法基本与原来一致，大部分只需要替换依赖中包的坐标，少部分要修改下参数。
+
+这是另一个runtime wasmtime下的一个回复，wasi中网络部分的接口还并不完善，目前11月份的时候merge了一个网友的repo作为提议，https://github.com/WebAssembly/wasi-sockets。但是很是很新，所以说目前各家要想玩网络，其实需要自己先按照自己的想法去实现。
+
+![image](https://i.imgur.com/ViZSs8o.png)
+
+这里展示下使用`hyper`这个web框架的demo程序，可以看到网络端口的监听不需要赋权限，直接在runtime中就能监听，直接对应的宿主机的8080端口，curl可以获取到数据。
+
+![image](https://i.imgur.com/F6zhFNV.png)
+
+# 6 使用golang写一个后端wasm
+这里参考了这篇[文章](https://www.wasm.builders/jennifer/golang-to-wasi-part1-il)，首先go的默认构建工具还没有支持wasi规范的wasm，所以需要借助`tinygo`这个构建工具，这个工具本身也可以替换`go build`是另一种构建器。安装参考[官网](https://tinygo.org/getting-started/install/)
+
+我们直接把web wasm测试golang的时候的hello world程序，拿来生成一份wasi的版本的。
+
+![image](https://i.imgur.com/XIH1ux5.png)
+
+```
+// 直接运行
+wasmedge test_wasi.wasm
+```
+![image](https://i.imgur.com/RzWRE7j.png)
+
+
+因为wasmedge的重心都放在了rust，目前wasmedge这个runtime没有提供golang版本的网络库的支持，同时如果使用了网络相关的库，再进行build也会返回`Killed`。
+
+# 7 其他
+spin是一个很好的工具，能够启动和管理wasm程序，他基于wasmtime这个运行时，并提供了自己的http包，可以简单快速的开发http程序，他就像是vercel等云平台提供的serveless函数服务的一个缩影：通过一个管理平台管理很多wasm的应用。
