@@ -105,16 +105,25 @@ client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
 ```
 首先`HttpClient.newHttpClient`创建的是`jdk.internal.net.http.HttpClientImpl`这个默认的实现，我们简单的来梳理下。
 
-`HttpClientImpl`中semgr成员是`SelectorManager`类型继承自Thread，是一个独立运行的单线程，该线程是事件循环，主要处理注册上来的事件，同时作为NIO的主循环也检测IO selectedKey进行事件的回调，这个循环是整个HttpClient的核心代码所在。以`建立连接`事件为例，在建立连接的函数中，将连接建立的事件进行注册，实际上是`SocketChannel`注册到NIO的`Selector`中，此时是非阻塞的，把`CompleteableFuture`传到事件中，等待连接完成，之后触发这个cf作为回调。
+`HttpClientImpl`中semgr成员是`SelectorManager`类型继承自Thread，是一个独立运行的单线程，该线程是事件循环，主要处理注册上来的事件，同时作为NIO的主循环也检测IO selectedKey进行事件的回调，这个循环是整个HttpClient的核心代码所在。以`建立连接`事件为例，在建立连接的函数中，将连接建立的事件进行注册，实际上是`SocketChannel`注册到NIO的`Selector`中，此时是非阻塞的，把`CompleteableFuture`传到事件中，等待连接完成，之后触发这个cf作为回调。而对其他事件，例如请求发送响应接收等等这里不展开讲了，原理类似但是代码更复杂，夹杂很多回调非常难懂。
+
+1
 
 <img width="787" alt="image" src="https://user-images.githubusercontent.com/15844103/210335079-58b4bce5-66d0-4cc7-9c0b-52dc1a956033.png">
 
+2
+
 <img width="747" alt="image" src="https://user-images.githubusercontent.com/15844103/210335776-7df79755-9371-489e-bf64-3f38ea4183b9.png">
+
+3
 
 <img width="602" alt="image" src="https://user-images.githubusercontent.com/15844103/210336478-d1d3f863-bf97-433c-8e54-5d60eeb40d4f.png">
 
+4
+
 <img width="698" alt="image" src="https://user-images.githubusercontent.com/15844103/210336713-0c566e24-6644-4885-9bff-654f1a12abc5.png">
 
+下面我们看一下HttpClient中是如何使用连接池的。
 
 
 
