@@ -83,5 +83,40 @@ public class DbConnPool {
 <img width="971" alt="image" src="https://user-images.githubusercontent.com/15844103/210301554-a65d9565-f7f7-4d45-94b3-f0873faa982a.png">
 
 # 2 http连接池
-与上面数据库连接池一样都是tcp连接池，我们已经看到连接池其实主要是对池子中现存的连接的一些维护工作，和并发场景下的性能等。http连接池的思路是类似的。
+与上面数据库连接池一样都是tcp连接池，我们已经看到连接池其实主要是对池子中现存的连接的一些维护工作，和并发场景下的性能等。http连接池的思路是类似的，所以没有太多的额外的知识点。不过这里想顺便介绍下NIO加持下的Http连接方式，上面介绍的Hikari的连接池是同步的连接，这里我们针对底层是NIO的jdk11之后自带的HttpClient源码进行分析。下面是基础的使用姿势。
+```java
+HttpClient client = HttpClient.newHttpClient();
+
+HttpRequest request = HttpRequest.newBuilder()
+    .GET()                           // 默认就是get可以不写
+    .uri(URI.create(BASE_URL))       // url
+    .headers("k1", "v1", "k2", "v2") // 添加header，没有可以不写这行
+    .timeout(Duration.of(30, ChronoUnit.SECONDS)) // 配置超时，超时后会以HTTPTimeoutException抛出异常
+    .build();
+
+client.sendAsync(request, HttpResponse.BodyHandlers.ofString())
+  .whenComplete((response, err) -> {
+    if (err == null && response.statusCode() == 200) {
+      String res = response.body();
+      // do something
+      System.out.println(Thread.currentThread() + -":" + res); // execution thread is ForkJoinPool.commonPool
+    }
+});
+```
+首先`HttpClient.newHttpClient`创建的是`jdk.internal.net.http.HttpClientImpl`这个默认的实现，我们简单的来梳理下。
+
+`HttpClientImpl`中semgr成员是`SelectorManager`类型继承自Thread，是一个独立运行的单线程，该线程是事件循环，主要处理注册上来的事件，同时作为NIO的主循环也检测IO selectedKey进行事件的回调，这个循环是整个HttpClient的核心代码所在。以`建立连接`事件为例，在建立连接的函数中，将连接建立的事件进行注册，实际上是`SocketChannel`注册到NIO的`Selector`中，此时是非阻塞的，把`CompleteableFuture`传到事件中，等待连接完成，之后触发这个cf作为回调。
+
+<img width="787" alt="image" src="https://user-images.githubusercontent.com/15844103/210335079-58b4bce5-66d0-4cc7-9c0b-52dc1a956033.png">
+
+<img width="747" alt="image" src="https://user-images.githubusercontent.com/15844103/210335776-7df79755-9371-489e-bf64-3f38ea4183b9.png">
+
+<img width="602" alt="image" src="https://user-images.githubusercontent.com/15844103/210336478-d1d3f863-bf97-433c-8e54-5d60eeb40d4f.png">
+
+<img width="698" alt="image" src="https://user-images.githubusercontent.com/15844103/210336713-0c566e24-6644-4885-9bff-654f1a12abc5.png">
+
+
+
+
+
 
