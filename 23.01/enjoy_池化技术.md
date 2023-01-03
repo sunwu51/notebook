@@ -14,11 +14,74 @@
 
 这个过程如上图，好像Pool的实现并不麻烦，只需要一个队列和维护队列`push/poll`的方法就可以了。然而实际上，数据库连接池还需要一些繁琐的“运维”工作，例如
 - 1 维持连接的鲜活的keepLive，可能是每过多少秒看看tcp是否正常。
-- 2 检查DB的心跳heartbeat，可能也是每多少秒的心跳操作与上面类似。
-- 3 如果一个连接失效了，可能是被db断开也可能是超过一定寿命了，需要被清理的操作。
-- 4 清理完，得进行补充以达到设定的poolSize。
-- 5 等等
+- 2 如果一个连接失效了，可能是被db断开也可能是超过一定寿命了，需要被清理的操作。
+- 3 清理完，得进行补充以达到设定的poolSize。
+- 4 等等
 
 “运维”工作是必须做的本分，此外还要考虑并发和性能问题，例如多线程同时想获取连接，怎么避免把同一个conn给了多个线程等。
 
-我们来看一下hikari的设计。
+我们来看一下hikari的设计，下面是Hikari使用方法。
+```xml
+<!-- https://mvnrepository.com/artifact/com.zaxxer/HikariCP -->
+<dependency>
+    <groupId>com.zaxxer</groupId>
+    <artifactId>HikariCP</artifactId>
+    <version>5.0.1</version>
+</dependency>
+<!-- https://mvnrepository.com/artifact/com.h2database/h2 -->
+<dependency>
+    <groupId>com.h2database</groupId>
+    <artifactId>h2</artifactId>
+    <version>2.1.214</version>
+</dependency>
+```
+```java
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+public class DbConnPool {
+    private static final DataSource dataSource;
+
+    static {
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl("jdbc:h2:mem:test;MODE=MySQL;");
+        config.setUsername("sa");
+        config.setPassword("");
+        dataSource = new HikariDataSource(config);
+    }
+
+
+    public static void main(String[] args) {
+        try (Connection conn = dataSource.getConnection()) {
+            Statement stat = conn.createStatement();
+            stat.execute("create table test (id INTEGER PRIMARY KEY, name VARCHAR(255))");
+            stat.execute("insert into test (id, name) values (1, 'a')");
+            stat.execute("insert into test (id, name) values (2, 'b')");
+
+            ResultSet resultSet = stat.executeQuery("select * from test");
+            while (resultSet.next()) {
+                System.out.println("name: " + resultSet.getString("name"));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+这是hikari主要的几个类的uml图，简单说一下几个重要的点
+- 1 用户使用的是`HikariDatasource`这个类，调用`getConnection`方法去使用一个连接，这个连接是`HikariProxyConnection`类型。
+- 2 `HikariDatasource`中的功能主要封在`HikariPool`这个类中，主要是一些线程池异步的进行池子的“维护”，例如houseKeepTask中有每30s检查连接数并填充的任务。
+- 3 `ConncurrentBag`是`HikariPool`中的主要成员，是存放连接的池子本身，主要有list来存放，其中ThreadLocal是加速用的。
+- 4 池子中存的是`PoolEntry`对象，该对象持有要返回的`Connection`，除此之外还有记录状态标志位，调度线程来keepAlive和endOfLife的清理，当然还有保证不被多个线程同时获取的cas操作。
+- 5 `HikariProxyConnection`是用户最终拿到的`Connection`，他的close方法是归还到池子中。
+
+<img width="971" alt="image" src="https://user-images.githubusercontent.com/15844103/210301554-a65d9565-f7f7-4d45-94b3-f0873faa982a.png">
+
+# 2 http连接池
+与上面数据库连接池一样都是tcp连接池，我们已经看到连接池其实主要是对池子中现存的连接的一些维护工作，和并发场景下的性能等。http连接池的思路是类似的。
+
