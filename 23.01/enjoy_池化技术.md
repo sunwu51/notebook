@@ -280,6 +280,8 @@ Tue Jan 03 23:32:00 CST 2023task 20running
 ```
 这个例子能很好的反映，core->queue->max这样的递进关系，其中max和core两个size会使人有点困惑，为什么不是一个size和一个队列。max多出core的部分在queue之后，使得`更早提交的10-20号任务反而在21-25任务之后才执行`。
 
+![image](https://i.imgur.com/ihmwDmu.png)
+
 其实max的出发点是，如果任务提交情况超出了设计之初的设想下，即queue也满了的情况下，提供一种buffer机制，例如少量超出的场景，通过max略大于core可以包容这部分溢出，来使系统稳定运行。如果只需要一个池子和一个队列，就可以简单的把core和max的值设置为一样即可。
 
 jdk提供的几个重要的线程池模型
