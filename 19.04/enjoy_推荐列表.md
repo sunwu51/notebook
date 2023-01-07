@@ -29,7 +29,6 @@
 # 五、测试工具
 - 1 [PostMan](https://www.getpostman.com/)模拟http请求。
 - 2 [Jmeter](http://jmeter.apache.org/)压测工具。
-- 3 [Xmeter](https://www.xmeter.net/)是Jmeter的图形化网页版，有较好的图表显示
 # 六、运维工具
 - 1 [grafana](http://grafana.org/)图表化显示服务的运行状态
 - 2 [Jenkins](https://jenkins.io/) 持续集成的老牌工具
