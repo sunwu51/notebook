@@ -29,6 +29,27 @@
 # 5 ConcurrentHashMap
 `ConcurrentHashMap`是一种性能较高的并发`HashMap`，他的底层存储结构与`HashMap`一致，只不过使用了`CAS`和对单个桶`synchronized`的方法，减小了锁的范围换来了更高的性能。
 
+有五种节点，如下。
+
+![image](https://i.imgur.com/7x48p8E.png)
+
+扩容的简图，如下。
+
+![image](https://i.imgur.com/KWqHAjJ.png)
+
+cas主要的位置
+- 1 get时，当桶子里是红黑树，使用了乐观锁，防止一边Rebalance一边get
+- 2 put时，当桶子是null可以直接set，用了乐观锁，防止多线程同时set当前桶子
+- 3 扩容时，sizeCtl用乐观锁改为一个size相关的负数，防止多线程put同时触发了扩容。
+
+synchronized主要的位置，都是对当前桶加锁，以下操作都是互斥的，因为他们都互相会有并发影响
+- 1 put，判断当前桶子不是null，map也不在扩容时，对当前桶子加锁
+- 2 transfer，扩容时，转移当前桶下的元素时，需加锁
+- 3 treeifyBin，桶子从链表转成红黑树形式，需加锁
+- 4 untreeifyBin，红黑树退化成链表，也需加锁
+
+下面是代码细节，不想看可跳过。
+
 我们简单的过一下重要方法的实现。
 
 先来看get，get其实和`HashMap`的类似。对于普通的空桶或者链表，是不用加锁的，空桶返回null，链表不会有并发读写问题，因为链表都是往后追加，要么加上了要么没加上。与HashMap的不同的在于`eh<0`这一行，在HashMap中hash值不会小于0，而在这里是可能小于0的，小于0代表了三种节点类型。
@@ -364,7 +385,7 @@ private final void transfer(Node<K,V>[] tab, Node<K,V>[] nextTab) {
 - put(冲突) 树化 反树化 转移是锁住当前桶子的，这些操作是互斥的。
 - put(无冲突) get 是通过cas加锁或者无锁的。
 - ConcurrentHashMap只是单句get/put等是线程安全的，如果有判断和操作的两步运算是不安全的
-
+## 5.1 经典案例
 例如简单的计数场景，没有则insert 1，有则原来基础上+1
 ```java
 // 常见错误用法: 
