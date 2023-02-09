@@ -426,7 +426,7 @@ scala中默认的可以修改内容的Map，他的实现按照官方的说法就
 ```
 
 # 7 scala immutable.HashMap
-只读的HashMap在scala中使用的是`Hash-Array Mapped Trie(HAMT)`或者叫`Hash-Array Mapped Prefix-tree(HAMP)`，这种数据结构主要对于只读的Map有较好的表现，对于传统的Hashtable，存在空间利用率上面的问题，例如java中HashMap底层数组最高利用率也只有75%，这也是为了保证查询复杂度，必须做出的牺牲。
+只读的HashMap在scala中使用的是`Hash-Array Mapped Trie(HAMT)`或者叫`Hash-Array Mapped Prefix-tree(HAMP)`，这种数据结构主要对于只读的Map有较好的表现，对于传统的Hashtable，存在空间利用率上面的问题，例如java中HashMap底层数组最高利用率也只有75%，这也是为了保证查询复杂度，必须做出的牺牲。而对于写操作，是不改变当前对象，复制一个新对象后进行写操作。对于trie来说也可以减少复制的次数。我们先来看具体结构，最后说写时复制。
 
 HAMT则基于Trie的思想进行构建，树的每个节点表示的是hash值的前缀，一般5个bit一组。例如对于一个key的hash值是32位的int值，那么我们把前5个bit相同的key分到一个node中，然后这个node中再去看第6-10bit相同的再分到一个node中，依次类推。例如32bit是00001 00011 00111 01111 11111 00001 11这样hash值的元素，从root节点找bitmap第1位，找到下面的node，再从这个node的bitmap中找第3位对应的node，当然中间可能就不对应一个node了，而是直接对应一个entry，只需判断key equals即可了。
 
@@ -438,3 +438,4 @@ HAMT则基于Trie的思想进行构建，树的每个节点表示的是hash值�
 
 这样trie的空间利用率就非常高了，一个很紧凑的树状结构就出现了。但是这个树对于写操作更新array是代价很高的，有数组拷贝。所以一般用来做只读的Map，查询的时间复杂度是`O(1)`，而空间利用更紧凑。我的评价是有点东西，但是不多。
 
+对于`Copy On Write`，复制过程中Trie也有其优势。例如要insert一个hash前五bit是x的kv，而如果刚好没有已存在的元素hash前五bit是x，那么就只需要复制一份第一层的数组，后面的基本都指向原来Tree的节点。当然如果已存在元素前5位是x，那就往下直咯，其他的节点就可以保留使用其引用了。因而trie结构对于只读结构还是很有用的。在Vector结构中也能看到类似的应用。
