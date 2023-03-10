@@ -10,7 +10,6 @@
 
 ![image](https://i.imgur.com/IEY9hfR.png)
 
-![image](https://i.imgur.com/oUno3nF.png)
 # 2 使用ffmpeg转码
 ffmpeg的安装非常简单，官网即可下载二进制文件。
 
