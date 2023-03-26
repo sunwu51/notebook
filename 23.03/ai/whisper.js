@@ -1,13 +1,13 @@
 const fs = require('fs');
 const { Configuration, OpenAIApi } = require("openai");
 const configuration = new Configuration({
-  apiKey: '',
+  apiKey: process.env.API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 openai.createTranscription(
-  fs.createReadStream("C:/Users/sunwu/Documents/录音/录音 (2).m4a"),
+  fs.createReadStream("测试.m4a"),
   "whisper-1"
 ).then(resp=>{
-    console.log(resp)
+    console.log(resp.data)
 }).catch(console.error);
 

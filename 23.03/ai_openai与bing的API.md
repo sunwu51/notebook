@@ -67,9 +67,10 @@ curl https://api.openai.com/v1/chat/completions \
 
 除了`assistant`和`user`两个role还有个`system`的role，用来规定一些基本的准则。
 ```bash
-curl https://api.openai.com/v1/chat/completions \
+$ export API_KEY=sk-xxxxxxxxx
+$ curl https://api.openai.com/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Authorization: Bearer $API_KEY" \
   -d '{
     "model": "gpt-3.5-turbo",
     "messages": [
@@ -88,26 +89,18 @@ curl https://api.openai.com/v1/chat/completions \
 ...
 ```
 
-关于stream模式返回，可以用一些http2的客户端库，当然openai官方提供了nodejs和Python的库。
-```js
-const { Configuration, OpenAIApi } = require("openai");
-
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const openai = new OpenAIApi(configuration);
-
-const completion = await openai.createChatCompletion({
-  model: "gpt-3.5-turbo",
-  messages: [{role: "user", content: "Hello world"}],
-});
-console.log(completion.data.choices[0].message);
-```
+关于stream模式返回，可以用一些http2的客户端库，当然openai官方提供了nodejs和Python的库，参考当前目录下`./ai/chat.js`的代码。
 ## 2 whisper API
-完犊子，试了一下好像api调不通了，尴尬。
+```bash
+$ export API_KEY=sk-xxxxxxxxx
+$ curl https://api.openai.com/v1/audio/transcriptions \
+>   -H "Authorization: Bearer $API_KEY" \
+>   -H "Content-Type: multipart/form-data" \
+>   -F file="@测试.m4a" \
+>   -F model="whisper-1"
+```
 
-不过要想体验whisper的功能也还有其他办法，因为whisper代码开源，[github连接](https://github.com/openai/whisper)，安装与运行的方式也在git中详细的介绍了。
+要想体验whisper的功能也还有其他办法，因为whisper代码开源，[github连接](https://github.com/openai/whisper)，安装与运行的方式也在git中详细的介绍了。
 - 1 安装whisper `pip install openai-whisper`
 - 2 安装ffmpeg，这个之前刚好介绍过，安装很简单
 - 3 安装rust
