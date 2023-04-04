@@ -54,6 +54,12 @@ public String getName() {
 
 上面例子中Person类型有个parent字段是复杂类型，该项有值可以递归进行序列化，但是如果出现循环，则会抛出异常。
 
+**含有泛型的反序列化**
+
+需要借助`TypeReference`来将泛型类作为该匿名类型的泛型部分，而不能直接用`Map<String,String>.class`，因为本身的泛型会被擦除，作为对象的参数则可以保留，最后一节展开讲。
+```java
+Map<String, String> xx = mapper.readValue(s, new TypeReference<Map<String,String>>() {});
+```
 
 # 2 修改json字段名或者忽略字段
 当java类中field名称保持不变，想要修改Json中的字段名，则可以使用`@JsonProperty("xxx")`注解
@@ -305,13 +311,122 @@ objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 ZonedDateTime zonedDateTime;
 ```
 
+`@JsonFormat`还可以用于类型的隐式转换，例如一个int值想要用String在json中表示，当然也可以是Float和Int转换，Float转Int会向下取整。
+```java
+@JsonFormat(shape = JsonFormat.Shape.STRING)
+public int Age;
+```
 小结：
 对于时间的表达，建议使用`ZonedDateTime`和`LocalDateTime`来准确的表达时间，`ZonedDateTime`在反序列化的时候支持的形式比较灵活，最放心的写法是用`@JsonFormat`来制定时间pattern。
 # 6 子类型
+对于继承关系的子类型例如下面三个类，当序列化的时候，按照之前的原则是会序列化具有`public`和`public getXX`方法的属性，因而对于一个子类型`Woman/Man`的`age`不会被序列化。
+```java
+class Person {
+    protected int age;
+    public String name;
+}
 
+class Woman extends Person {
+    public int realAge;
+}
+
+class Man extends Person {
+    public String realName;
+}
+```
+而对于反序列化，如果确定具体的类型的话，就和之前一样。
+```java
+Woman woman = mapper.readValue("{\"name\":\"www\",\"realAge\":12}", Woman.class);
+```
+但是如果json字符串只知道是Person类型，需要动态的运行时确定是哪个具体的类型，这里就会失败了，此时最简单的方法就是`Person`上添加注解。
+```java
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, property = "class")
+class Person {
+    protected int age;
+    public String name;
+}
+// {"class":"com.jackson.Woman","name":"www","realAge":12}
+```
+简单解释下这两个重要参数，`property`是指定某个属性作为区分子类型的依据，该`property`可以是`pub/private/protect`的属性或者get方法，有了这个注解修饰后，即使不public的也会作为json字段序列化。这里选择用`getClass`这个所有Object都有的`property`，如果有专门的字段，例如自定义的字段，也可以将class改为自己的字段名。然后use则是决定上面的属性是如何区分的，`Id.CLASS`就是全限定类名进行区分。
+
+不过`class`这种全限定类名的方式，在json中比较长，不太友好，所以可指定自定义的一个字段来进行区分。配合`@JsonSubTypes`来使用，例如下面使用`Id.NAME`形式，并指定sex字段来区分。
+```java
+// sex = female的会按照Woman类型反序列化， sex = male的会按照Man类型
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME,  property = "sex")
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = Woman.class, name = "female"),
+        @JsonSubTypes.Type(value = Man.class, name = "male")})
+class Person {
+    protected String sex;
+    protected int age;
+    public String name;
+}
+
+class Woman extends Person {
+    public int realAge;
+    {
+        sex = "female";
+    }
+}
+
+class Man extends Person {
+    public String realName;
+    {
+        sex = "male";
+    }
+}
+```
 # 7 自定义序列化和反序列化
+最灵活的方式莫过于自定义序列化和反序列化器，例如想要改变X类中Map的默认序列化反序列化行为，给该字段添加注解，指定自定义的序列化器
+```java
+class X {
+    @JsonSerialize(using = MyMapSer.class)
+    @JsonDeserialize(using = MyMapDes.class)
+    public Map<String, String> m;
+}
+```
+对于序列化器，如下定义，使map最终呈现成kv数组的形式。其中`writeStartArray`就是添加`[`，end就是`]`，而`writeStartObject`则是`{`，end是`}`。
+```java
+// {"m":[{"key":"k1","value":"v1"},{"key":"k2","value":"v2"},{"key":"k3","value":"v3"}]}
+class MyMapSer extends JsonSerializer<Map<String, String>> {
 
+    @Override
+    public void serialize(Map<String, String> value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+        gen.writeStartArray();
+        for (Map.Entry<String, String> entry : value.entrySet()) {
+            gen.writeStartObject();
+            gen.writeStringField("key", entry.getKey());
+            gen.writeStringField("value", entry.getValue());
+            gen.writeEndObject();
+        }
+        gen.writeEndArray();
+    }
+}
+```
+对于反序列化器，如下，其中`jsonParser`可以转为tree的根节点`JsonNode`，因为这里是数组节点，我们可以直接用`ArrayNode`这个类型然后对map进行填充并返回。
+```java
+// {"m":[{"key":"k1","value":"v1"},{"key":"k2","value":"v2"},{"key":"k3","value":"v3"}]}
+class MyMapDes extends JsonDeserializer<Map<String, String>> {
+
+    @Override
+    public Map<String, String> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+        ArrayNode root = p.readValueAsTree();
+        Map<String, String> res = new LinkedHashMap<>();
+        for (JsonNode jsonNode : root) {
+            res.put(jsonNode.get("key").textValue(), jsonNode.get("value").textValue());
+        }
+        return res;
+    }
+}
+```
 # 8 其他注解
-- @JsonAlias("_n","Name","name") 别名
-- @JsonInclude 设置序列化时，字段在什么情况下被include，例如可以配置null值就不include到json，来减少数据量`@JsonInclude(JsonInclude.Include.NON_NULL)`
-# 9 其他策略
+- `@JsonAlias("_n","Name","name")` 别名
+- `@JsonInclude` 设置序列化时，字段在什么情况下被include，例如可以配置null值就不include到json，来减少数据量`@JsonInclude(JsonInclude.Include.NON_NULL)`
+- 等等
+# 9 原理
+## 9.1 序列化的原理
+序列化的原理较为简单，基本的思路就是通过反射拿到类型中的`public`的字段或`get`方法，作为可以然后逐个字段进行json字符串的追加，默认使用的是`BeanSerializer`，可以去查看里面的代码。而对于`Collection`的序列化反序列化则是单独的，因为都比较简单，这里不展开。
+
+## 9.2 反序列化的原理
+反序列化稍微复杂，需要重点介绍一下。
+
