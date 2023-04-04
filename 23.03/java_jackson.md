@@ -428,5 +428,194 @@ class MyMapDes extends JsonDeserializer<Map<String, String>> {
 序列化的原理较为简单，基本的思路就是通过反射拿到类型中的`public`的字段或`get`方法，作为可以然后逐个字段进行json字符串的追加，默认使用的是`BeanSerializer`，可以去查看里面的代码。而对于`Collection`的序列化反序列化则是单独的，因为都比较简单，这里不展开。
 
 ## 9.2 反序列化的原理
-反序列化稍微复杂，需要重点介绍一下。
+反序列化稍微复杂，需要重点介绍一下，还是以最基础的`Bean`为例，反序列化的时候根据传入的`class`通过反射就知道有哪些属性需要被set，其中最重要的就是上面`JsonDeserializer`方法中的参数`JsonParser`是如何工作的。因为`JsonParser`能将字符串转为JsonNode，这是个树状的节点，通过这个类可以很容易的转换成任意类型，所以我们专门来看一下这个`readValueAsTree`是如何工作的。
 
+`{"name":"Sam", "age":10, "parent": {"name": "Tom"}}`以这个字符串为例，parser会逐个字符的处理，`indexPtr`代表处理到第几个char了。下面是最核心的代码
+```java
+protected final ObjectNode deserializeObject(JsonParser p, DeserializationContext ctxt,
+        final JsonNodeFactory nodeFactory) throws IOException
+{
+    final ObjectNode node = nodeFactory.objectNode();// node = {} 一开始 空的壳子
+
+    // nextFieldName 需要保证token是FIELD_NAME，然后去获取这个name。ptr向下寻找到"，然后找到俩"之间的字符串就是这个key
+    String key = p.nextFieldName(); 
+    for (; key != null; key = p.nextFieldName()) {
+        JsonNode value;
+        // next操作都会向后移动，此时token指向VALUE了，根据形态可以判断出是哪一种value
+        // 例如双引号是字符串有-号或0到9是数字，{是另一个对象，[则是数组等
+        JsonToken t = p.nextToken();
+        if (t == null) { // can this ever occur?
+            t = JsonToken.NOT_AVAILABLE; // can this ever occur?
+        }
+        switch (t.id()) {
+        // 第三次以parent进来，此时token是对象的start(也就是{)，那就递归解析对象
+        // 这个内部对象解析完成后，ptr指向最后一个大括号了，再次调用next会close，并返回null，循环结束
+        case JsonTokenId.ID_START_OBJECT:
+            value = deserializeObject(p, ctxt, nodeFactory);
+            break;
+        case JsonTokenId.ID_START_ARRAY:
+            value = deserializeArray(p, ctxt, nodeFactory);
+            break;
+        case JsonTokenId.ID_EMBEDDED_OBJECT:
+            value = _fromEmbedded(p, ctxt, nodeFactory);
+            break;
+        // 例如一开始的Sam是字符串，匹配这个case，getText会找出Sam，并将ptr指向Sam后的逗号
+        // 然后循环继续，去拿nextFieldName，skip逗号空格，拿到age
+        case JsonTokenId.ID_STRING:
+            value = nodeFactory.textNode(p.getText());
+            break;
+        // 第二次age进来匹配INT数字，用_fromInt转换，同时移动ptr到10后的逗号
+        // 然后继续循环找到parent这个key
+        case JsonTokenId.ID_NUMBER_INT:
+            value = _fromInt(p, ctxt, nodeFactory);
+            break;
+        case JsonTokenId.ID_TRUE:
+            value = nodeFactory.booleanNode(true);
+            break;
+        case JsonTokenId.ID_FALSE:
+            value = nodeFactory.booleanNode(false);
+            break;
+        case JsonTokenId.ID_NULL:
+            value = nodeFactory.nullNode();
+            break;
+        default:
+            value = deserializeAny(p, ctxt, nodeFactory);
+        }
+        JsonNode old = node.replace(key, value);
+        if (old != null) {
+            _handleDuplicateField(p, ctxt, nodeFactory,
+                    key, node, old, value);
+        }
+    }
+    return node;
+}
+```
+下面是一个很重要的，nextToken方法，上面nextXXX基本都会调用该方法，展示了是如何判断当前是那种VALUE，也展示了如果是inObject，是如何获取FieldName的值的。
+```java
+@Override
+public final JsonToken nextToken() throws IOException
+{
+    if (_currToken == JsonToken.FIELD_NAME) {
+        return _nextAfterName();
+    }
+    // But if we didn't already have a name, and (partially?) decode number,
+    // need to ensure no numeric information is leaked
+    _numTypesValid = NR_UNKNOWN;
+    if (_tokenIncomplete) {
+        _skipString(); // only strings can be partial
+    }
+    // 跳过空格等字符后的下一个字符
+    int i = _skipWSOrEnd();
+    if (i < 0) { // end-of-input
+    // Should actually close/release things
+        // like input source, symbol table and recyclable buffers now.
+        close();
+        return (_currToken = null);
+    }
+    // clear any data retained so far
+    _binaryValue = null;
+
+    // Closing scope?
+    if (i == INT_RBRACKET || i == INT_RCURLY) {
+        _closeScope(i);
+        return _currToken;
+    }
+
+    // Nope: do we then expect a comma?
+    if (_parsingContext.expectComma()) {
+        // 跳过逗号
+        i = _skipComma(i);
+
+        // Was that a trailing comma?
+        if ((_features & FEAT_MASK_TRAILING_COMMA) != 0) {
+            if ((i == INT_RBRACKET) || (i == INT_RCURLY)) {
+                _closeScope(i);
+                return _currToken;
+            }
+        }
+    }
+    /* And should we now have a name? Always true for Object contexts, since
+     * the intermediate 'expect-value' state is never retained.
+     */
+    boolean inObject = _parsingContext.inObject();
+    if (inObject) {
+        // First, field name itself:
+        _updateNameLocation();
+        String name = (i == INT_QUOTE) ? _parseName() : _handleOddName(i);
+        _parsingContext.setCurrentName(name);
+        _currToken = JsonToken.FIELD_NAME;
+        i = _skipColon();
+    }
+    _updateLocation();
+
+    // Ok: we must have a value... what is it?
+
+    JsonToken t;
+
+    switch (i) {
+    case '"':
+            _tokenIncomplete = true;
+        t = JsonToken.VALUE_STRING;
+        break;
+    case '[':
+        if (!inObject) {
+            _parsingContext = _parsingContext.createChildArrayContext(_tokenInputRow, _tokenInputCol);
+        }
+        t = JsonToken.START_ARRAY;
+        break;
+    case '{':
+        if (!inObject) {
+            _parsingContext = _parsingContext.createChildObjectContext(_tokenInputRow, _tokenInputCol);
+        }
+        t = JsonToken.START_OBJECT;
+        break;
+    case '}':
+        // Error: } is not valid at this point; valid closers have
+        // been handled earlier
+        _reportUnexpectedChar(i, "expected a value");
+    case 't':
+        _matchTrue();
+        t = JsonToken.VALUE_TRUE;
+        break;
+    case 'f':
+        _matchFalse();
+        t = JsonToken.VALUE_FALSE;
+        break;
+    case 'n':
+        _matchNull();
+        t = JsonToken.VALUE_NULL;
+        break;
+    case '-':
+        /* Should we have separate handling for plus? Although
+         * it is not allowed per se, it may be erroneously used,
+         * and could be indicate by a more specific error message.
+     */
+    t = _parseNegNumber();
+        break;
+    case '.': // [core#61]]
+        t = _parseFloatThatStartsWithPeriod();
+        break;
+    case '0':
+    case '1':
+    case '2':
+    case '3':
+    case '4':
+    case '5':
+    case '6':
+    case '7':
+    case '8':
+    case '9':
+        t = _parsePosNumber(i);
+        break;
+    default:
+        t = _handleOddValue(i);
+        break;
+    }
+    if (inObject) {
+        _nextToken = t;
+        return _currToken;
+    }
+    _currToken = t;
+    return t;
+}
+```
