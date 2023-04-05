@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>录音示例</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/showdown/dist/showdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
+    <style>
+        code {
+            background-color: #f1f1f1;
+            font-family: Consolas, monospace;
+            font-size: 13px;
+            color: darkmagenta;
+            padding: 2px 5px;
+        }
+        .bottom {
+            position: fixed;
+            bottom: 0;
+        }
+
+        body {
+            margin: 10px 10vw;
+        }
+        #container {
+            height: 70vh;
+            overflow-y: scroll;
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <input id="openAiKey"type="password" placeholder="OpenAI Key" value=''/>
+    <input id="azKey" type="password" placeholder="Az Speech Key" value=""/>
+    <div class="bottom">
+        <div>
+            <textarea style="width: 80vw; height: 150px;" id="question" placeholder="请输入问题，或点击开始说话"></textarea>
+        </div>
+        <button id="sendButton">发送</button>
+        <button id="recordButton">开始说话</button>
+    </div>
+    <div id="container">
+    </div>
+    </div>
+    <script>
+        var SPEECH_REGION = 'japaneast'
+        var OPENAI_API_KEY// = 
+        var SPEECH_KEY// = ''
+        var ctx = [];
+        const recordButton = document.getElementById('recordButton');
+        const openAiInput = document.getElementById('openAiKey')
+        const azKeyInput = document.getElementById('azKey')
+        const sendButton = document.getElementById('sendButton')
+        const question = document.getElementById('question')
+        const container = document.getElementById('container')
+        const converter = new showdown.Converter()
+        recordButton.addEventListener('click', startRecording);
+        sendButton.addEventListener('click', submitText);
+
+
+        let mediaRecorder;
+        let recordedChunks = [];
+        var audioBlob;
+
+        // 点击 说话 按钮后开始录制
+        async function startRecording() {
+            OPENAI_API_KEY = openAiInput.value
+
+            if (!OPENAI_API_KEY.startsWith("sk-")) {
+                alert("Please enter a valid OpenAI key!");
+                return
+            }
+            // 录制期间不能修改和发送
+            openAiInput.disabled = true
+            azKeyInput.disabled = true
+            sendButton.disabled = true
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.addEventListener('dataavailable', (event) => {
+                if (event.data.size > 0) {
+                    recordedChunks.push(event.data);
+                }
+            });
+
+            mediaRecorder.addEventListener('stop', async () => {
+                audioBlob = new Blob(recordedChunks, { type: 'audio/webm' });
+                recordedChunks = []
+                // 切换按钮的功能 结束录制->开始录制
+                recordButton.textContent = '开始说话';
+                recordButton.disabled = true;
+                await submitAudio();
+                recordButton.disabled = false;
+                recordButton.removeEventListener('click', stopRecording);
+                recordButton.addEventListener('click', startRecording);
+                openAiInput.disabled = false
+                azKeyInput.disabled = false
+                sendButton.disabled = false
+                // 这段代码是下载录制的音频
+                // const url = URL.createObjectURL(audioBlob);
+                // const a = document.createElement('a');
+                // a.href = url;
+                // a.download = '录音.webm';
+                // a.click();
+                // URL.revokeObjectURL(url);
+            });
+            mediaRecorder.start();
+            recordButton.textContent = '说完了';
+            // 切换按钮的功能 开示录制->结束录制
+            recordButton.removeEventListener('click', startRecording);
+            recordButton.addEventListener('click', stopRecording);
+        }
+
+        // 点击 说完了 停止录制，触发媒体录制结束，stop函数注册了whisper
+        async function stopRecording() {
+            mediaRecorder.stop();
+        }
+
+        // 发送录制好的audio到whisper，并返回文本填充textarea展示
+        async function submitAudio() {
+            try {
+                OPENAI_API_KEY = openAiInput.value
+
+                if (!OPENAI_API_KEY.startsWith("sk-")) {
+                    alert("Please enter a valid OpenAI key!");
+                    return
+                }
+                // 1 whisperAPI： 语音转文字
+                const formData = new FormData();
+                formData.append('model', 'whisper-1');
+                formData.append('file', audioBlob, '录音.webm');
+                const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+                    method: 'POST',
+                    headers:{
+                        'Authorization': `Bearer ${OPENAI_API_KEY}`
+                    },
+                    body: formData
+                });
+                let text = (await response.json()).text
+                question.value = text
+            } catch (error) {
+                console.error(error);
+                alert('调用openai失败，请查看log')
+            }
+        }
+
+        // 点击 发送，发送文本给chatGPT，并返回答案进行展示
+        async function submitText() {
+            
+            OPENAI_API_KEY = openAiInput.value
+
+            if (!OPENAI_API_KEY.startsWith("sk-")) {
+                alert("Please enter a valid OpenAI key!");
+                return
+            }
+            // 发送期间不能修改和发送
+            openAiInput.disabled = true
+            azKeyInput.disabled = true
+            sendButton.disabled = true
+            const text = question.value.trim();
+            if (text.length == 0) {
+                alert('问题不能为空！')
+                return
+            }
+            appendPre(`提问： \n${text}`)
+            question.value = ''
+
+            // chatAPI：文字去询问chat
+            const chatResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers:{
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-3.5-turbo",
+                    messages: [
+                        ...ctx,
+                        {role: "user", content: text}
+                    ],
+                })
+            });
+            let chatText = (await chatResponse.json()).choices[0].message.content;
+            ctx.push(
+                {role: "user", content: text},
+                {role: "assistant", content: chatText}
+            )
+            const div = appendAnswer(`${chatText}`)
+
+            appendAudioBtn(chatText)
+            openAiInput.disabled = false
+            azKeyInput.disabled = false
+            sendButton.disabled = false
+        }
+        
+        function appendPre(text) {
+            let hr = document.createElement('hr');
+            container.appendChild(hr);
+            let pre = document.createElement('pre');
+            pre.textContent = text;
+            container.appendChild(pre);
+            container.scrollTop = container.scrollHeight;
+            return pre
+        }
+        
+
+        function appendAnswer(text) {
+            let html = converter.makeHtml(text)
+            const div = document.createElement('div');
+            div.innerHTML = html;
+            container.appendChild(div);
+            // Prism.highlightAll();
+            Prism.highlightAllUnder(container)
+        }
+
+        function appendAudioBtn(chatText) {
+            let btn = document.createElement('button');
+            btn.textContent = '转语音'
+            btn.addEventListener('click', ()=> {
+                tts(chatText)
+                container.removeChild(btn)
+            })
+            container.appendChild(btn)
+            container.scrollTop = container.scrollHeight;
+
+        }
+
+        function appendAudio(blob) {
+            let audio = document.createElement('audio');
+            let audioURL = URL.createObjectURL(blob);
+            audio.controls = true;
+            audio.src = audioURL;
+            audio.play();
+            container.appendChild(audio);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function tts(text){
+            SPEECH_KEY = azKeyInput.value
+            const blob = await fetch(`https://${SPEECH_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+                method: 'POST',
+                headers:{
+                    'Ocp-Apim-Subscription-Key': SPEECH_KEY,
+                    'Content-Type': 'application/ssml+xml',
+                    'X-Microsoft-OutputFormat': 'audio-16khz-128kbitrate-mono-mp3'
+                },
+                body: `<speak version='1.0' xml:lang='zh-CN'>
+                    <voice xml:lang='zh-CN'  name='zh-CN-YunxiNeural'>
+                        ${text}
+                    </voice>
+                </speak>`
+            }).then(res => res.blob()).then(
+                blob => appendAudio(blob)
+            )
+        }
+    </script>
+</body>
+</html>
