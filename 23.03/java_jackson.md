@@ -619,3 +619,42 @@ public final JsonToken nextToken() throws IOException
     return t;
 }
 ```
+## 9.3 反序列化中的泛型擦除
+Java的泛型是会在运行时擦除的，例如在运行时`ArrayList<String>`内部的存储结构是`Object[]`而不是`String[]`，所以泛型更多是为了在写代码的时候提供一个校验，实际运行时会伴随着擦除。而当反序列化的类型中含有泛型参数的时候就会有点复杂。
+
+例如最常见的集合类型Map，我们可以这样写代码，但是会有一个警告，因为`readValue`中传入的是`Map`所以返回的也是Map类型，相当于我们把Map强制转成了`Map<String, String>`，因为泛型擦除的原因，其实这俩是一个类型即Map，这一行并不报错，当运行到下一行`get("a")`的时候就会报错，因为get出来的对象本质上是Int类型，这里强制转为String就会报错
+`java.lang.Integer cannot be cast to java.lang.String`，这种后知后觉其实是有很大隐患的，我们需要的是在json反序列化的时候就提前发现问题来抛出异常。
+```java
+String s2 = "{\"a\" : 1}";
+Map<String, String> xx = mapper.readValue(s2, Map.class); // Map<String,String>.class 没有这种写法，且就算有，因为擦除的原因也等于没写。
+String v = xx.get("a");
+```
+首先解决方法是有两种，一种是传入指定泛型具体类型的对象`.getClass`，如下
+```java
+String s2 = "{\"a\" : [1]}";
+Map<String, int[]> xx = mapper.readValue(s2, new HashMap<String, int[]>(){}.getClass());
+int[] v = xx.get("a");
+```
+另一种方法则是使用jackson提供的`TypeReference`.
+```java
+String s2 = "{\"a\" : [1]}";
+Map<String, int[]> xx = mapper.readValue(s2, new TypeReference<Map<String, int[]>>(){});
+int[] v = xx.get("a");
+```
+这两种方式底层原理一致，都是借助了`object.getClass().getGenericSuperclass()`，注意这个`getGenericSuperclass`方法返回的类型是`Type`而不是`Class`，`Class`是`Type`接口的一种实现而已，如果父类型是有泛型参数则返回的是`ParameterizedType`这个类型是含有泛型的信息的，如下图。但是必须通过一个实例化的对象，而不能直接用类，因为Class上是类型擦除的。到这里我们也能更好的理解java的类型擦除，其实是运行时对象中是的泛型类型约束不存在，但是类的元数据信息中是可以找到泛型信息的。
+
+![image](https://i.imgur.com/lIp7Bdz.png)
+
+![image](https://i.imgur.com/EBaRZR0.png)
+
+
+
+
+
+
+
+
+
+
+
+
