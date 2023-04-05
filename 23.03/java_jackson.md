@@ -641,13 +641,16 @@ String s2 = "{\"a\" : [1]}";
 Map<String, int[]> xx = mapper.readValue(s2, new TypeReference<Map<String, int[]>>(){});
 int[] v = xx.get("a");
 ```
-这两种方式底层原理一致，都是借助了`object.getClass().getGenericSuperclass()`，注意这个`getGenericSuperclass`方法返回的类型是`Type`而不是`Class`，`Class`是`Type`接口的一种实现而已，如果父类型是有泛型参数则返回的是`ParameterizedType`这个类型是含有泛型的信息的，如下图。但是必须通过一个实例化的对象，而不能直接用类，因为Class上是类型擦除的。到这里我们也能更好的理解java的类型擦除，其实是运行时对象中是的泛型类型约束不存在，但是类的元数据信息中是可以找到泛型信息的。
+
+这两种方式底层原理一致，都是借助了`object.getClass().getGenericSuperclass()`，注意这个`getGenericSuperclass`方法返回的类型是`Type`而不是`Class`，`Class`是`Type`接口的一种实现而已，如果父类型是有泛型参数则返回的是`ParameterizedType`这个类型是含有泛型的信息的，如下图。下面两个方法都是通过一个实例化的对象，而不能直接用类，因为Map这个Class上是类型擦除的。
 
 ![image](https://i.imgur.com/lIp7Bdz.png)
 
 ![image](https://i.imgur.com/EBaRZR0.png)
 
+除了使用这种匿名类型的对象的`getClass.getGenericSuperclass`的方法也可以直接使用一个自定义的类，他们原理都是一样的。这个例子下我们就更好理解为什么java中需要有`getGenericSuperclass`方法，来获取父类中的泛型参数了，因为当前类的父类如果是`Map`，那么K和V的泛型可以指定死，如下，也可以依旧使用泛型，这个父类的泛型参数信息是需要记录在当前类中的（注意不是记录在父类Map中的），通过反射可以获取到这个参数。
 
+![image](https://i.imgur.com/Qf7b0em.png)
 
 
 
