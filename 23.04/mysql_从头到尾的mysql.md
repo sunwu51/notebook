@@ -114,3 +114,27 @@ redo log是指定的文件个数的，比如设置了3个文件，那么就是xx
 ## 6.2 MTR的原子性
 在进行事务操作的时候，改动都是先写Buffer Pool，然后由redolog记录，redolog被分为很多个不可分割的”组”，例如某个insert操作中，主键的max值自增是一个组，插入b+树数据是一个组。而b+树插入可能有很多步骤，尤其产生分裂的时候，如何保证这个组不可分割，那就在redo中以一个特殊标志位标识是组的最后一个log完成。这样就能在恢复的时候，不至于只恢复半个组，导致数据不一致。我们把只包含一个分组的这个操作叫做(MTR)最小事务，一个MTR对应不可分割的redolog组。
 # 7 undo log
+undo log与事务回滚和mvcc的版本链都有关系，mvcc我们后续介绍，undo log本质是为了记录对数据的操作历史记录。
+
+一行数据3个隐藏字段`row_id`，`trx_id`，`roll_pointer`。其中事务id就是当前的事务的id，roll_pointer则是指向上一次事务修改的数据，这个数据就在undo log中。因而当事务中修改数据的时候，需要将老的数据扔到`undo_log`的数据页中新的数据通过指针指向老的数据。这样如果事务回滚的话，只需将老的数据恢复回来即可。
+
+## 7.1 undo页
+与redo log不同，undo log和db一样用页的方式组织的，有一种专门的page_type就是undolog类型。这是因为undo log是事务相关的，一个事务需要自己的undo log链，而redo log是物理页的改动记录，与逻辑层无关，所以可以无脑顺序写。
+
+undolog对不同的增删改操作生成的log结构并不相同，
+- 对于新增操作需要记录新增的id即可；
+- 对于修改操作则需要记录改动前的旧值(只记改的列)；
+- 而对于删除操作稍微不太一样，需要记录删除前的样子，并且还不能直接把主索引树种的记录删除，因为删了的话就没法link到undolog了，所以是把原来的记录打一个delete标志，然后把所有的列值记录到undolog中。
+
+对于insert和非insert，有两个链表insert链和update链（虽然叫update其实也包含delete），而对于临时表和普通表也是分开的，所以一个事务对应的undo log会有0~4个redo log链。
+
+![image](https://i.imgur.com/zJOOhJ0.png)
+
+insert undo链表 中只存储类型为 TRX_UNDO_INSERT_REC 的 undo日志 ，这种类型的 undo日志 在事务提交之后就没用了，就可以被清除掉。所以在某个事务提交后，重用这个事务的 insert undo链表 （这个链表中只有一个页面）时，可以直接把之前事务写入的一组 undo日志 覆盖掉，从头开始写入新事务的一组 undo日志 ，如下图所示
+
+![image](https://i.imgur.com/Ms00fV4.png)
+
+但是update链就稍微特殊，因为事务提交后，也不代表undolog可以删除，因为mvcc追溯版本可能还会追溯到提交后的历史事务中来，所以page可以重复利用空闲的部分，但是原来的数据不能改。
+
+![image](https://i.imgur.com/2baII8z.png)
+## 7.2  
