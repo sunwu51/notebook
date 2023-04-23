@@ -1,14 +1,16 @@
 # mysql
 本文从到到尾梳理mysql的知识点，主要用于面试的复习，内容主要分为以下几个部分：
-- 1存储引擎的对比
-- 2底层是如何组织存储的
-- 3索引
-- 4buffer Pool
-- 5bin log
-- 6redo log
-- 7undo log
-- 8mvcc
-- 9锁
+- 1 存储引擎的对比
+- 2 底层是如何组织存储的
+- 3 索引
+- 4 buffer Pool
+- 5 bin log
+- 6 redo log
+- 7 undo log
+- 8 事务的隔离级别
+- 9 mvcc
+- 10 锁
+- 11 explain
 # 1 存储引擎的对比
 ![image](https://i.imgur.com/YbMkQSh.png)
 # 2 底层是如何组织存储的
@@ -137,4 +139,129 @@ insert undo链表 中只存储类型为 TRX_UNDO_INSERT_REC 的 undo日志 ，�
 但是update链就稍微特殊，因为事务提交后，也不代表undolog可以删除，因为mvcc追溯版本可能还会追溯到提交后的历史事务中来，所以page可以重复利用空闲的部分，但是原来的数据不能改。
 
 ![image](https://i.imgur.com/2baII8z.png)
-## 7.2  
+## 7.2 undo段（回滚段）
+回滚段是特殊的一页，这一页有1024个undo slot，每个slot指向`first undo page`也就是undo log链表的第一个节点，因而一个回滚段可以指向1024个链，一个事务最多4个链，因而一个回滚段就能支持至少256事务并行，而mysql有128个回滚段。
+# 8 事务的隔离级别
+- read uncommited: 有脏读问题，即事务A写的数据，还没提交事务B就读到了，A回滚后，B使用的是脏数据。
+- read commited: 有不可重复读问题，即事务A查到一条数据，事务B修改了这条并提交，事务A再次查询发现，同一条数据前后两次读出来的结果不一样了。
+- repeatable read: 有幻读问题，即事务A按照条件P查出了一批数据，而事务B插入了一批符合P的数据并提交。此时事务A又用P去查数据，发现条数比之前多了。
+- serializable: 无任何并发问题，因为不支持并发，串行执行事务。
+# 9 MVCC
+上面undo log中介绍了每一条数据在被事务修改后，历史版本的数据不会被立即删除，即使事务提交了也不会删除(insert的历史可以删除)，这样每个历史的版本都会保存下来到undo log页中，通过`roll_pointer`将一条数据的所有版本串联起来，这就是版本链。下面都是RR隔离级别为例，讲述MVCC工作流程。
+
+trx_id是当事务有写操作时才会申请的自增id，如果纯读事务trx_id=0，RR的实现是在第一句`select`的时候创建`ReadView`，直到事务结束都使用这个视图实现的，而`ReadView`本质是记录当前所有已经提交和未提交的事务，RR读取数据的时候查看数据的`trx_id`，如果不是已经提交的事务，就顺着`roll_pointer`向前直到找到已经提交的版本。
+
+RR和RC最大的区别就是RR是第一句select建立view，而RC是每一句select都重新创建view。
+## 9.1 Readview
+ReadView能判断一个trx_id是已经提交的还是正在运行的，主要通过以下四个字段：
+- max_trx_id 下一个要分配的trx_id
+- min_trx_id 所有活跃的trx中最小的id
+- m_ids 所有活跃的trx id列表
+- creator_trx_id 当前事务的id（可能是0，因为当前可能没有或者还没执行到写操作）
+
+trx_id拿来之后先判断是不是`>=max_trx_id`，如果是的话说明是未来提交的事务，不能用；
+
+然后判断是不是`<min_trx_id`，如果是的话说明已经提交的事务，直接用；
+
+如果在两者之间，需要判断是不是`=creator_trx_id`，如果是的话说明是自己改的，直接用；
+
+如果不是的话，需要判断是不是`in m_ids`，如果是的话说明是未提交的事务，不能用，否则可以用。
+
+ReadView是一个简单的数据结构，RR下每个有读操作的事务都会生成一个ReadView，RC下则可能有多个。ReadView以列表的形式存放在特殊的位置。当一个事务结束后，ReadView就会被删除，因而列表中存放的ReadView都是active的事务。从这个列表中，可以筛选出所有的`min_trx_id`中最小的，如果比这个id还小2个版本的undolog说明不会被任何事务所依赖了，那这部分就可以被清理了。有个专门的线程来做清理工作。
+## 9.2 快照读与当前读
+依赖`ReadView`的读取又叫快照读、视图读、一致性读，但是并非所有的读都能用视图读。例如当我们执行写操作的时候
+```sql
+update user set age=20 where age=19;
+```
+上面这句sql执行的时候，如果采用快照读，根据age=19找到的数据可能是一个老版本undolog中复原出来的数据，那么此时如果要修改他的age，是要修改undolog中的节点，还是修改聚簇索引的数据节点呢。先排除undolog，因为undolog页记录没法修改，只能加一个版本用指针链接起来，那这个老版本就被两个节点指向，就不是单链表了。所以只能修改数据节点，数据节点就是当前最新版本了，所以写操作都不能用视图读，只能用当前读。
+
+因而写操作用当前读，读操作用视图读，可以保证读的时候不会出现幻读，因为多次读使用的视图相同。但是写操作的当前读，另外锁定读`select for update`和`select in share mode`使用当前读。当前读就有可能出现幻读，例如
+```
+事务A                       事务B
+开始                        开始
+select for update(n条)          
+                           insert一条符合条件的数据
+
+                           提交
+select for update(n+1条)
+提交
+```
+因为insert和select for update都是当前读，所以都是最新数据，因而第二次就读出了比第一次多一条的数据。也就是产生了幻读。
+
+为了解决当前读的幻读，mysql引入了锁机制。
+# 10 锁
+锁主要有行锁和表锁两大类。其中行锁是解决当前读幻读的主要机制。通过对数据范围加锁，导致另一个事务无法进行数据的修改，例如上面例子中，行锁会锁住符合条件的范围，防止数据的插入，事务Binsert会被阻塞，直到A提交。
+## 10.1 行锁
+行锁主要有5种： 记录锁，间隙锁，临键锁(next-key)，插入意向锁和隐式锁。
+
+记录锁就是锁住当前条目，例如`update xx where id=1`会把id=1这一条锁住防止其他事务对其修改。
+
+间隙锁(gap)是锁住B+树中当前条目和前一条之间的缝隙，例如`update xx where id<1`假如找到0条数据，并且存在id=1这条，那么就需要锁住(-无穷，1)，防止其他事务在这个范围插入了数据，导致后续当前读读取的条目增加。
+
+next-key是记录锁+间隙锁，也就是左开右闭区间的锁，例如`update xx where id<=1`假如找到1条id=1这条数据，那么就需要锁住(-无穷,1]这个范围，因为1也不能被修改，这就是next-key lock。
+
+插入意向锁是指前面gap或者next-key锁住一个范围之后，如果另一个事务想要在这个范围插入数据会被阻止，并且会分配一把锁给这个事务，只不过是`waiting`等锁的状态，等gap释放就可以插入了。
+
+隐式锁，是针对`insert`的，默认是不加锁的，减少开销，当另一个事务要访问对应的id的时候，会看这条数据的`trx_id`来判断是不是已经提交的事务，如果不是，那就需要给这条数据加锁，锁的持有trx是记录中的`trx_id`，同时给自己创建一把对这条记录的锁，`waiting`状态。隐式锁可以减少`insert`时锁的创建，只有发生竞争的时候由另一个事务惰性创建，借助了`trx_id`这个隐式的条件。
+
+当然为了提高并发性能，我们发现读-读是不需要互斥的，所以就有了类似读写锁的：独占锁(X)和共享锁(S)，例如`select in share mode`就只需要给数据加共享锁，允许其他事务也进行`select in share mode`。而`select for update`和写操作就需要加独占锁，其他事务既不能写也不能读，因为读的话，可能因为这个事务的修改，而导致两次读取数据的不一致。
+
+对行锁进行分析，准备数据如下。
+```
+CREATE TABLE user (
+   id INT AUTO_INCREMENT PRIMARY KEY,
+   name VARCHAR(255) NOT NULL UNIQUE,
+   age INT
+);
+insert into user (id, name, age) values (1, 'lily',20),(3, 'sam',24), (5, 'kity', 33), (10, 'tim',  44);
+
+id name age
+1  lily 20
+3  sam  24
+5  kity 33
+10 tim  44
+
+[ id 主键]
+[ name 唯一索引]
+```
+查看锁
+```sql
+SELECT * FROM performance_schema.data_locks;
+// 8.0查看锁信息 注意8.0是加锁就会在该表有记录
+SELECT * FROM INFORMATION_SCHEMA.INNODB_LOCKS;
+// 5.7查看锁信息 注意如果是5.7的话，得真正发生竞争了表里才有数据，所以至少俩事务并发运行才行
+// 否则该表是空
+```
+加锁的原则就是防止其他事务影响这句sql中where条件去select的再次运行，对于主键需要锁住聚簇索引，而对于二级索引需要锁住二级索引，并通过回表锁住聚簇索引，防止数据其他字段被修改。
+```sql
+select * from user where id = 1 for update;
+-- 记录锁X锁，锁住聚簇索引中id=1的这条
+
+update user set age = age+1 where name = 'lily';
+-- 记录锁X锁，锁住二级索引中name='lily'这条，并且回表锁住id=1的这条
+-- 如果name不是唯一索引，那么这句加next-key
+
+select * from user where id>=3 for update;
+-- 3记录锁，5 next-key,10 next-key,sup next-key
+
+select * from user where age>1 for update;
+-- 当前读没有命中索引，每一条记录都加next-key，性能很差
+
+select * from user where name>='sam' for update;
+-- 理论上是，二级索引中 sam 记录锁，tim next-key，sup next-key，聚簇索引中 id=3 记录锁，id=10 记录锁
+-- 实际是sam也是next-key，原因不明
+```
+## 10.2 表锁
+表锁的效果等价于对每一条数据next-key锁，表锁的S锁和X锁使用非常少，代价较大，性能较差，以下方式在事务中获取表锁。
+```sql
+LOCK TABLES user READ;
+LOCK TABLES user WRITE;
+```
+行锁和表锁存在一定的互斥关系，例如如果在这个表中有在用的行X锁，那想要获取这个表X锁，也是不行的，为了更快的判断这个情况，在进行加行X锁的时候(S锁类似)，需要先给表加`IX`锁。IX和IS又叫表的意向锁。
+
+自增锁`AUTO-INC`，比较特殊是专门针对自增键的，比较简单，但是他的生效范围与其他不同，其他行锁都是事务范围的，也就是事务结束的时候，锁才释放，但是自增锁是`insert`这一句结束就释放锁。
+## 10.3 MDL
+当我们进行表结构修改DDL的时候使用的并不是表锁，而是server级别的元数据锁(Metadata Lock, MDL)，这就不是innodb引擎级别的锁了。
+## 10.4 死锁
+当一个事务锁的顺序是id=2,id=3，另一个事务锁顺序反过来，并发运行时，就会出现死锁。死锁出现时，mysql会选择较小的事务进行回滚，并向上报错。
+# 11 explain
