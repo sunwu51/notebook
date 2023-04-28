@@ -26,7 +26,7 @@ spring是如何解决循环依赖的，这是一道很常见的面试题，可�
 
 
 下面我们来说下bean的创建流程：
-- 1 map1有了就直接返回，否则实例化`A a = new A()`，把a和def信息mbd加入到3级缓,然后删掉map2中的a(如果有的话)。，`map3.put("beanName",() -> getEarlyBeanReference(beanName, mbd, bean))`，map3存的工厂对象，工厂对象中捕捉了这个创建的对象和一些bean的元数据信息mbd，例如需不需要aop增强，怎么个增强法都在mbd记录。然后删除map2中的值。
+- 1 map1有了就直接返回，否则实例化`A a = new A()`，把a和def信息mbd加入到3级缓，`map3.put("beanName",() -> getEarlyBeanReference(beanName, mbd, bean))`，map3存的工厂对象，工厂对象中捕捉了这个创建的对象和一些bean的元数据信息mbd，例如需不需要aop增强，怎么个增强法都在mbd记录。然后删除map2中的值。
 - 2 设置属性，依次从map1，map2，map3中寻找是不是有初始化过的bean
   - 2.1 map1或map2有的话就可以拿来设置到属性中
   - 2.2 map3中有的话，因为是工厂对象，是不能直接用的需要调用工厂对象的`getEarlyBeanReference`来产生对应的对象，产生的过程其实就是根据`mbd`判断是不是要增强，需要的话就增强并返回增强过的代理对象，不需要就返回1中创建的初始对象,这个函数名叫`wrapIfNecessary`。这里需要注意一下，该方法还做了个两个额外的操作就是1往`earlyProxyReferences`这个map里塞了原对象，2往map2塞了`wrapIfNecessary`后的对象，这俩后面有用的。
