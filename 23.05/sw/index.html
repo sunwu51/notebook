@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <button id="btn">发送消息</button>
+    <script>
+        var t = { id:99 };
+
+        // 注册 Service Worker
+        navigator.serviceWorker.register('/23.05/sw/service-worker.js').then((registration) =>{
+            console.log('Service worker registered with scope: ', registration.scope);
+        });
+        
+        // 监听从serviceworker线程发送到主线程的message
+        navigator.serviceWorker.addEventListener('message', function (e) {
+            console.log('service worker传到主线程的', e.data, e); 
+            console.log(t);
+        });
+
+        // postMessage方法，从主线程发送数据到worker，注意所有的发送数据都是深拷贝，而不是共享内存。避免并发问题
+        document.getElementById('btn').addEventListener('click', function() {
+            navigator.serviceWorker.controller.postMessage(t);
+        });
+    </script>
+</body>
+</html>
