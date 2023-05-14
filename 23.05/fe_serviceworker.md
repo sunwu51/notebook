@@ -36,7 +36,12 @@
 - `activate`在第一次激活的时候触发，符合scope的页面第一次打开的时候触发。
 - `fetch`在主线程调用fetch函数的时候触发，返回值会作为主线程fetch的返回值，所以可以在这里做缓存替换。
 - `message`和`postMessage`与主线程中类似，是和主线程通信用的。
+
+
 ```js
+// 在worker中如果要使用js文件需要用importScript这种写法 可以是跨域的
+importScripts('test.js');
+
 // install事件，在第一次注册的时候会触发
 //  这里在install的时候进行了初始化，是将两个资源添加到了cache中
 //  caches是浏览器内置的缓存对象，addALL会立即请求该资源并进行缓存
@@ -93,3 +98,13 @@ service worker是一个线程，对于一个js文件是一个单独的线程，�
 ![image](https://i.imgur.com/1lyHRrH.png)
 
 所以我们得慎用`console.log`方法，因为会在所有的tab中都打印消息。
+
+因为这种共享的机制，也就使得sw是不能也不应该操作dom元素的，因为会有多个页面都用一个sw，操作哪个dom呢？
+# 缓存
+目前sw主要作用还是缓存资源，众所周知浏览器对于http资源本来也是可以进行缓存的，这和手动的sw进行缓存的区别是什么呢。浏览器network缓存主要受控于资源的`response header`:  Cache-Control 中。
+
+# 框架
+原生的sw用法如上，其实本质上并不是只用于缓存，也可以用一个`scope`一个线程的额外线程来做一些事情，在sw中也是可以调用fetch这种函数的，当然也可以自由的进行数学运算，例如加密等。只不过后面这些`web worker`好像更合适。
+
+对于单纯的缓存来说google有个workbox框架底层用的sw，因为sw没有对缓存有策略的设置，都需要自己写代码处理，所以workbox是sw的一个简单封装，但是更好用了，此外sw需要加载单独的js文件来注册，workbox就不需要了，像webpack有专门的workbox插件，而对于vite也有专门的sw的cache插件，用到的时候可以再去研究。
+
