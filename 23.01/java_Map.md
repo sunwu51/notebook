@@ -35,7 +35,7 @@
 
 扩容的简图，如下。
 
-![image](https://i.imgur.com/KWqHAjJ.png)
+![image](https://i.imgur.com/7YvjbUf.png)
 
 cas主要的位置
 - 1 get时，当桶子里是红黑树，使用了乐观锁，防止一边Rebalance一边get
