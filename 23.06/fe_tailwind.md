@@ -145,7 +145,7 @@ export default App
 
 ![image](https://i.imgur.com/Mr93Ah7.png)
 
-注意我们没有专门对`postcss`进行配置，就已经天然的在运行时编译了css文件
+注意我们没有专门对`postcss`进行配置，就已经天然的在运行时编译了css文件，因为vite是出厂就支持`ts`、`scss`、`less`、`postcss`等，甚至不配置react的插件也是识别`jsx、tsx`文件的，所以只要配置了`postcss.config.js`这个文件，`vite`就会自动运行`postcss`。
 # 语法介绍
 
 ## 常用的className
