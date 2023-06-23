@@ -1,0 +1,30 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src='hello.js'>
+    </script>
+    <script>
+      function fib(n) {
+        return n<2? 1: fib(n-1) + fib(n-2);
+      }
+      // 等1s等wasm加载完成，hello.js是异步的
+      setTimeout(function() {
+        var wasm_fib = Module._fib;
+        // 测试wasm的fib 40的计算时间
+        console.time(1)
+        wasm_fib(40)
+        console.timeEnd(1)
+
+        // 测试js的fib 40的计算时间
+        console.time(2)
+        fib(40)
+        console.timeEnd(2)
+      }, 1000);
+    </script>
+</body>
+</html>
