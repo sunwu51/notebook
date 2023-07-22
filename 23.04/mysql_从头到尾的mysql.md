@@ -199,7 +199,7 @@ ReadView能判断一个trx_id是已经提交的还是正在运行的，主要通
 - max_trx_id 下一个要分配的trx_id
 - min_trx_id 所有活跃的trx中最小的id
 - m_ids 所有活跃的trx id列表
-- creator_trx_id 当前事务的id（可能是0，因为当前可能没有或者还没执行到写操作）
+- creator_trx_id 当前事务的id（可能是0，因为当前可能没有写操作）
 
 trx_id拿来之后先判断是不是`>=max_trx_id`，如果是的话说明是未来提交的事务，不能用；
 
