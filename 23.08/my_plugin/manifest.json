@@ -1,0 +1,17 @@
+{
+    "manifest_version": 3,
+    "name": "My Extension",
+    "version": "1.0.0",
+    "icons": {
+        "70": "images/icon.png"
+    },
+    "background":{
+        "service_worker": "service_worker.js"
+    },
+    "action": {
+        "default_icon": {
+            "70": "images/icon.png"
+        }
+    },
+    "permissions": ["scripting", "activeTab"]
+}
