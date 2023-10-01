@@ -3,7 +3,7 @@
     "description": "Search Tabs",
     "version": "1.0",
     "background": {
-        "service_worker": "service-worker.js"
+        "service_worker": "service_worker.js"
     },
     "action": {},
     "omnibox": {
@@ -11,8 +11,8 @@
     },
     "manifest_version": 3,
     "permissions": [
-		"windows",
-		"tabGroups",
-		"tabs"
+        "windows",
+        "tabGroups",
+        "tabs"
     ]
 }
