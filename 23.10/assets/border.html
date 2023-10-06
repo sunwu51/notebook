@@ -1,0 +1,134 @@
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC&family=ZCOOL+KuaiLe&display=swap');
+    body {
+        margin: 0;
+        font-family: 'Noto Sans SC', sans-serif;
+        font-family: 'ZCOOL KuaiLe', sans-serif;
+    }
+    pre {
+        margin: 0;
+    }
+    pre p {
+        font-family: 'ZCOOL KuaiLe', sans-serif;
+    }
+    div {
+        width: 100%;
+        height: 150px;
+        position: relative;
+        border-radius: 2px;
+        box-shadow: 0px 6px 13px darkgray;
+    }
+
+    div::after {
+        content:"";
+        background-repeat: repeat-x;
+        width: 100%;
+        position: absolute;
+        bottom: 0;
+    }
+
+    #div1::after{
+        background-image: url(./border1.svg);
+        height: 30px;
+
+    }
+
+    #div2::after {
+        background-image: url(./border2.svg);
+        height: 15px;
+    }
+    #div3::after {
+        background-image: url(./border3.svg);
+        height: 5px;
+        bottom: -1px;
+        border-bottom: 0px;
+    }
+    #div4::after {
+        background-image: url(./border4.svg);
+        height: 15px;
+    }
+    #div5::after {
+        background-image: url(./border5.svg);
+        height: 15px;
+    }
+    #div6::after {
+        background-image: url(./border6.svg);
+        height: 20px;
+    }
+    #div7::before {
+        content:"";
+        background-repeat: repeat-x;
+        width: 100%;
+        position: absolute;
+        height: 14px;
+        top: 0;
+        background-image: url(./border2.svg);
+        transform: rotate(180deg) translateX(8px);
+
+    }
+    #div8::before {
+        content:"";
+        background-repeat: repeat-x;
+        width: 100%;
+        position: absolute;
+        height: 14px;
+        top: 0;
+        background-image: url(./border2-revert.svg);
+    }
+</style>
+<div id="div1">
+    <pre>
+        <p>
+            使用方法直接参考源码的css配置即可，核心要点就是div要配置position=relative,然后边框主要通过after元素设置
+            如果要翻转例如作为top的边框，需要将after改为before，并且bottom的css改为top的css。
+            如果需要翻转则在after中添加transform: rotate(180deg);旋转180，如果是左右边框则90
+
+        </p>
+    </pre>
+</div>
+<div id="div2">
+    <pre>
+        <p>
+            这个页面的例子都是不设置border的情况下设置after，这样after占用的是div自身盒模型的部分
+            有时候会导致里面的内容与after重叠，如果想要完全在div外面
+            则可以对div设置border: 20px solid transparent 然后对after的bottom设置为-20px
+            （这里20px是个举例，具体要看边框的svg多高）
+        </p>
+    </pre>
+</div>
+<div id="div3">
+    <pre>
+        <p>
+           after在box内部还是border里，各有优劣，如果是box内部则可以修改box和after的border
+           进行一些再加一条外部的粗线，华清边界感，这样的操作。或者像这里我用的就是
+           box-shadow加了阴影，也有华清边界的效果。
+           
+        </p>
+    </pre>
+</div>
+<div id="div4">
+    <pre>
+        <p>
+           而如果是after在border中，可以设置border的颜色，就作为了svg部分的背景色，然后调整svg颜色。
+           形成border带。
+           
+        </p>
+    </pre>
+</div>
+<div id="div5"></div>
+<div id="div6"></div>
+<div id="div7">
+    <pre>
+        <p>
+            div7是改的上边沿，拖动改变页面大小会发现这个边框的是从右往左排过来的，有点不太舒服。
+            所以如果想彻底解决最好好使直接修改svg文件，准备一个反过来的svg版本。
+        </p>
+    </pre>
+</div>
+<div id="div8">
+    <pre>
+        <p>
+            这个是revert版本的svg
+        </p>
+    </pre>
+</div>
