@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tools</title>
+    <link rel="stylesheet" href="cdn/themes/light.css" />
+    <script type="module" src="cdn/shoelace.js"></script>
+</head>
+<body>
+    <sl-card style="width: 100%">
+        <div slot="header">
+            搜索tab
+        </div>
+        <div>
+            <sl-input id="search-input"></sl-input>    
+            <sl-menu id="search-menu" style="display:block">
+                
+            </sl-menu>
+        </div>
+    </sl-card>
+    <sl-card style="width: 100%">
+        <div slot="header">
+            分组聚合
+        </div>
+        <div style="display: flex; flex-direction:column">
+            <sl-input id="group-input" placeholder="e.g: 谷歌-/^.*\\.google\\..*$/"></sl-input>
+            <sl-button id="group-btn" variant="warning">立即分组</sl-button>
+        </div>
+    </sl-card>
+    <sl-card style="width: 100%">
+        <div slot="header">
+            功能设置
+        </div>
+        <div style="display: flex; flex-direction:column">
+            <sl-checkbox id="reuse-check" checked=1 >重复tab复用</sl-checkbox>
+        </div>
+    </sl-card>
+    <script src="search.js"></script>
+    <script src="setting.js"></script>
+    <script src="group.js"></script>
+</body>
+</html>
