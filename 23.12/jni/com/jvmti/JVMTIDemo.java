@@ -8,7 +8,7 @@ public class JVMTIDemo {
 
     public static void main(String[] args) {
         List<A> list= new ArrayList<>(); 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1000; i++) {
             A a = new A();
             System.out.println(a.hashCode());
             list.add(a);
