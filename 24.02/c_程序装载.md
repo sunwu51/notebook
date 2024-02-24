@@ -53,3 +53,59 @@ exec() 系统调用告诉内核加载和执行指定的程序。
 
 当 main() 函数返回时，C 运行时会进行清理工作，比如调用全局析构函数，并最终调用 exit() 系统调用来结束进程。
 ```
+
+# 入口是_start
+gcc编译的ELF默认的入口是`_start`的位置，由该函数负责处理入参环境变量等初始化操作，并最后启动`main`函数。`_start`符号来自`libc中的crt1.o`文件，（其实是他又引用的别的文件，最终是一段asm汇编代码）。
+
+我们也可以写一个只有`_start`函数的文件，这样就需要排除c标准库来进行编译，与此同时我们也不能使用标准库给我们提供的头文件了，代码如下`mini.c`.
+
+注意这是x86平台的linux，能找到`/glibc-2.35/sysdeps/unix/sysv/linux/x86_64/64/arch-syscall.h:#define __NR_write 1`，平台系统调用序号并不是1，需要自己去查，当然其他平台寄存器也不是这么写。
+```c
+// 裸机程序示例，使用 _start 作为程序入口
+// 注意：这是在 Linux x86_64 架构下的示例
+// 编译命令: gcc -static -nostdlib -nostartfiles -o mini mini.c
+
+// 先从libc的sys/syscall.h找到以下定义拿过来，因为不能直接include
+#define SYS_write 1 // 这是write系统调用的代号
+#define SYS_exit 60 // 这是exit系统调用的代号
+
+// 定义 _start 函数，这是执行时的程序入口点
+void _start() {
+    // 要写入的消息
+    const char message[] = "Hello, World!\n";
+    // 消息长度
+    unsigned long length = sizeof(message) - 1;
+
+    // 使用内联汇编进行系统调用
+    // syscall(SYS_write, STDOUT_FILENO, message, length)
+    __asm__("movq $1, %%rax\n\t"          // 系统调用号 SYS_write
+            "movq $1, %%rdi\n\t"          // 文件描述符 STDOUT_FILENO
+            "movq %0, %%rsi\n\t"          // 消息缓冲区的地址
+            "movq %1, %%rdx\n\t"          // 消息的长度
+            "syscall\n\t"
+            :
+            : "r"(message), "r"(length)
+            : "%rax", "%rdi", "%rsi", "%rdx");
+
+    // 使用内联汇编执行退出系统调用
+    // syscall(SYS_exit, 0)
+    __asm__("movq $60, %%rax\n\t"         // 系统调用号 SYS_exit
+            "xor %%rdi, %%rdi\n\t"        // Exit status 0
+            "syscall"
+            :
+            :
+            : "%rax", "%rdi");
+}
+```
+编译链接就可以运行了，建议使用静态链接
+```bash
+$ gcc -static -nostdlib -nostartfiles -o mini mini.c
+$ ./mini
+Hello, World!
+
+$ nm mini
+0000000000404000 R __bss_start
+0000000000404000 R _edata
+0000000000404000 R _end
+0000000000401000 T _start
+```
