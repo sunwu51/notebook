@@ -216,5 +216,148 @@ TMenu menu = this.addMenu("&menu");
 缺点是java的库，所以本身运行依赖java环境，对非javaer非常不友好，无法native运行，体积也较大；页面样式比较老，非常有年代感，不够现代化；依赖`/bin/sh`，对windows不友好，无法跨平台；提供的控件样式几乎不能修改。
 
 # 2 rust的Ratatui
-在最开始介绍的buttom(btm)就是通过这个库的前身`tui-rs`(已经不维护)写的。
+在最开始介绍的buttom(btm)就是通过这个库的前身`tui-rs`(已经不维护)写的。从一个简单的`hello`程序来了解`ratatui`的组织形式，如下，主要就是三步，其中第一步和第二步都是准备工作和退出的工作，所以关键就是中间的`loop`部分，后面我们着重来说`loop`部分怎么写。
+```rust
+use crossterm::{
+    event::{self, KeyCode, KeyEventKind},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    ExecutableCommand,
+};
+use ratatui::{
+    prelude::{CrosstermBackend, Stylize, Terminal},
+    style::Color,
+    widgets::{Block, Borders, Paragraph},
+};
+use std::io::{stdout, Result};
 
+fn main() -> Result<()> {
+    // 第一部分：“擦黑板”，准备工作就是将终端的内容替换成一块新的屏幕，并清理屏幕
+    stdout().execute(EnterAlternateScreen)?;
+    // raw_mode就是中端进入空白模式，输入输出键盘等指令全都不好使
+    enable_raw_mode()?;
+    let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
+    terminal.clear()?;
+
+    // 第二部分：“黑板写字”，在黑板上写东西，注意是个死循环，使用的是每一帧都全量刷新的模式
+    loop {
+        terminal.draw(|frame| {
+            let area = frame.size();
+            frame.render_widget(
+                Paragraph::new("Hello Ratatui! (press 'q' to quit)")
+                    .bg(Color::Yellow)
+                    .fg(Color::LightRed)
+                    .block(Block::default().blue().borders(Borders::ALL)),
+                area,
+            );
+        })?;
+
+        if event::poll(std::time::Duration::from_millis(16))? {
+            if let event::Event::Key(key) = event::read()? {
+                if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q') {
+                    break;
+                }
+            }
+        }
+    }
+
+    // 第三部分：“擦黑板退出到原来”
+    stdout().execute(LeaveAlternateScreen)?;
+    disable_raw_mode()?;
+    Ok(())
+}
+```
+
+![image](https://i.imgur.com/6Flovbs.png)
+
+`loop`部分主要有两个步骤:
+- 1 `terminal.draw`widget
+- 2 `event`事件监听，触发后台逻辑和widget的一些变化。
+
+## 2.1 terminal.draw
+`draw`函数接一个闭包，参数是`Frame`，即当前这一帧，可以在这一帧上画一些`widget`，使用`frame.render_widget`方法，这个方法有俩参数，`W`和`Rect`，其中前者是控件，后者就是画在哪个区域。
+```rust
+pub fn render_widget<W: Widget>(&mut self, widget: W, area: Rect)
+```
+先来说`Rect`是指定一个矩形的区域，上面hello代码中直接使用`frame.size()`即当前整个画布。我们也可以自定一个区域。
+```rust
+// Rect::new(x, y, width, height)
+let area = Rect::new(0,0,100,100); // 指定一个100x100的区域，左上角是顶格
+
+// 一个已知的area可以通过x y width height left() top()..等获取各项数值。
+// 例如位于屏幕中央长宽各一半的写法如下图
+let area = frame.size();
+let area = Rect::new(
+    area.width / 4,
+    area.height / 4,
+    area.width / 2,
+    area.height / 2,
+);
+```
+![image](https://i.imgur.com/ZYWvOlU.png)
+
+`area`通过四个点的坐标指定当前的位置，但是对于一些类似bottom这种工具的布局来说写起来有点费劲，所以提供了好用的`layout`工具，`Layout`本质是一种布局规则，最终通过`split`方法作用于一个`area`就可以将其切分成多块。
+
+```rust
+// 先横向按照5:5分左右两区域
+let hareas = Layout::new(
+    ratatui::layout::Direction::Horizontal,
+    vec![Constraint::Percentage(50), Constraint::Percentage(50)],
+)
+.split(frame.size());
+
+// 对左侧再上下5:5分上下区域
+let left_areas = Layout::new(
+    ratatui::layout::Direction::Vertical,
+    vec![Constraint::Percentage(50), Constraint::Percentage(50)],
+)
+.split(hareas[0]);
+
+// 对右侧再上下5:5分上下区域
+let right_areas = Layout::new(
+    ratatui::layout::Direction::Vertical,
+    vec![Constraint::Percentage(50), Constraint::Percentage(50)],
+)
+.split(hareas[1]);
+
+
+// 这样就分了四个象限，可以分别去draw东西
+
+frame.render_widget(
+    some_widget,
+    left_areas[0],
+);
+
+frame.render_widget(
+    some_widget,
+    left_areas[1],
+);
+
+frame.render_widget(
+    some_widget,
+    right_areas[0],
+);
+
+frame.render_widget(
+    some_widget,
+    right_areas[1],
+);
+```
+内置控件widget，可以参考[官方文档](https://ratatui.rs/showcase/widgets/)，还有一些优秀的[第三方控件](https://ratatui.rs/showcase/third-party-widgets/).
+
+组件基本都实现了`Stylize`接口，有以下几个常用的函数
+- bg(Color) 修改背景色
+- fg(Color) 修改前景色(文字颜色)
+- block(Block) 修改边框Block本来就是个Widget，类似html中div
+
+这里挑几个介绍下。
+
+- Paragraph,
+```rust
+frame.render_widget(
+    Paragraph::new("Hello Ratatui! (press 'q' to quit)")
+        .bg(Color::Yellow)
+        .fg(Color::LightRed)
+        .block(Block::default().blue().borders(Borders::ALL)),
+    frame.size(),
+);
+```

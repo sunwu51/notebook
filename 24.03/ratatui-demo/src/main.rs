@@ -4,8 +4,10 @@ use crossterm::{
     ExecutableCommand,
 };
 use ratatui::{
+    layout::{Constraint, Layout, Rect},
     prelude::{CrosstermBackend, Stylize, Terminal},
-    widgets::{Block, Borders, Paragraph},
+    style::{Color, Modifier, Style},
+    widgets::{block::Position, Block, BorderType, Borders, Paragraph},
 };
 use std::io::{stdout, Result};
 
@@ -17,12 +19,33 @@ fn main() -> Result<()> {
 
     loop {
         terminal.draw(|frame| {
-            let area = frame.size();
+            // let hareas = Layout::new(
+            //     ratatui::layout::Direction::Horizontal,
+            //     vec![Constraint::Percentage(50), Constraint::Percentage(50)],
+            // )
+            // .split(frame.size());
+
+            // let left_areas = Layout::new(
+            //     ratatui::layout::Direction::Vertical,
+            //     vec![Constraint::Percentage(50), Constraint::Percentage(50)],
+            // )
+            // .split(hareas[0]);
+
+            // let right_areas = Layout::new(
+            //     ratatui::layout::Direction::Vertical,
+            //     vec![Constraint::Percentage(50), Constraint::Percentage(50)],
+            // )
+            // .split(hareas[1]);
+
             frame.render_widget(
-                Paragraph::new("Hello Ratatui! (press 'q' to quit)")
-                    .white()
-                    .block(Block::default().borders(Borders::ALL)),
-                area,
+                Block::default()
+                    .title_top("title")
+                    .title_alignment(ratatui::layout::Alignment::Center)
+                    .borders(Borders::LEFT | Borders::RIGHT)
+                    .border_style(Style::default().fg(Color::White))
+                    .border_type(BorderType::Rounded)
+                    .style(Style::default().bg(Color::Black)),
+                frame.size(),
             );
         })?;
 
