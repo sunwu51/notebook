@@ -7,7 +7,9 @@ use ratatui::{
     layout::{Constraint, Layout, Rect},
     prelude::{CrosstermBackend, Stylize, Terminal},
     style::{Color, Modifier, Style},
-    widgets::{block::Position, Block, BorderType, Borders, Paragraph},
+    widgets::{
+        block::Position, Block, BorderType, Borders, List, ListDirection, ListState, Paragraph,
+    },
 };
 use std::io::{stdout, Result};
 
@@ -16,43 +18,56 @@ fn main() -> Result<()> {
     enable_raw_mode()?;
     let mut terminal = Terminal::new(CrosstermBackend::new(stdout()))?;
     terminal.clear()?;
-
+    let mut state = ListState::default();
+    let items = ["Item 1", "Item 2", "Item 3"];
+    state.select(Some(0));
     loop {
         terminal.draw(|frame| {
-            // let hareas = Layout::new(
-            //     ratatui::layout::Direction::Horizontal,
-            //     vec![Constraint::Percentage(50), Constraint::Percentage(50)],
-            // )
-            // .split(frame.size());
+            let list = List::new(items)
+                .block(Block::default().title("List").borders(Borders::ALL))
+                .highlight_style(Style::new().add_modifier(Modifier::REVERSED))
+                .highlight_symbol(">")
+                .repeat_highlight_symbol(true);
 
-            // let left_areas = Layout::new(
-            //     ratatui::layout::Direction::Vertical,
-            //     vec![Constraint::Percentage(50), Constraint::Percentage(50)],
-            // )
-            // .split(hareas[0]);
+            frame.render_stateful_widget(list, Rect::new(0, 0, 40, 40), &mut state);
 
-            // let right_areas = Layout::new(
-            //     ratatui::layout::Direction::Vertical,
-            //     vec![Constraint::Percentage(50), Constraint::Percentage(50)],
-            // )
-            // .split(hareas[1]);
-
-            frame.render_widget(
-                Block::default()
-                    .title_top("title")
-                    .title_alignment(ratatui::layout::Alignment::Center)
-                    .borders(Borders::LEFT | Borders::RIGHT)
-                    .border_style(Style::default().fg(Color::White))
-                    .border_type(BorderType::Rounded)
-                    .style(Style::default().bg(Color::Black)),
-                frame.size(),
-            );
+            // frame.render_widget(
+            //     Paragraph::new("Hello Ratatui! (press 'q' to quit)")
+            //         .bg(Color::Yellow)
+            //         .fg(Color::LightRed)
+            //         .block(Block::default().blue().borders(Borders::ALL)),
+            //     frame.size(),
+            // );
         })?;
 
         if event::poll(std::time::Duration::from_millis(16))? {
             if let event::Event::Key(key) = event::read()? {
                 if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q') {
                     break;
+                }
+                if key.kind == KeyEventKind::Press && key.code == KeyCode::Up {
+                    match state.selected() {
+                        Some(index) => {
+                            if index == 0 {
+                                state.select(Some(items.len() - 1));
+                            } else {
+                                state.select(Some(index - 1));
+                            }
+                        }
+                        None => state.select(Some(0)),
+                    }
+                }
+                if key.kind == KeyEventKind::Press && key.code == KeyCode::Down {
+                    match state.selected() {
+                        Some(index) => {
+                            if index == items.len() - 1 {
+                                state.select(Some(0));
+                            } else {
+                                state.select(Some(index + 1));
+                            }
+                        }
+                        None => state.select(Some(0)),
+                    }
                 }
             }
         }

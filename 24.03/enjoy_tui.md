@@ -351,13 +351,37 @@ frame.render_widget(
 
 这里挑几个介绍下。
 
-- Paragraph,
+- 1 `Block`最基础的空间，块，就是一个矩形，可以指定矩形的各种样式，标题、颜色、边框等
 ```rust
-frame.render_widget(
-    Paragraph::new("Hello Ratatui! (press 'q' to quit)")
+Block::default()
+    // 标题的位置是上方，内容是title，对齐是居中
+    .title_top("title")
+    .title_alignment(ratatui::layout::Alignment::Center)
+    // 边框是上左右三边，样式是白色，圆角边框
+    .borders(Borders::LEFT | Borders::RIGHT | Borders::TOP)
+    .border_style(Style::default().fg(Color::White))
+    .border_type(BorderType::Rounded)
+    // 整个block是蓝色背景
+    .style(Style::default().bg(Color::Blue))
+```
+![image](https://i.imgur.com/7qBwA8S.png)
+
+- 2 `Paragraph`文本段落，展示一段文字，可调整颜色，背景色，边框，对齐，粗细，字体，下划线等等，上面hello程序就是用的Paragraph。
+```rust
+Paragraph::new("Hello Ratatui! (press 'q' to quit)")
         .bg(Color::Yellow)
         .fg(Color::LightRed)
         .block(Block::default().blue().borders(Borders::ALL)),
-    frame.size(),
-);
 ```
+- 3 `List`一段文本列表，可以修改选择的item，就像npm安装库一样的页面展示。
+```rust
+let list = List::new(items)
+    .block(Block::default().title("List").borders(Borders::ALL))
+    .highlight_style(Style::new().add_modifier(Modifier::REVERSED))
+    .highlight_symbol(">")
+    .repeat_highlight_symbol(true);
+
+frame.render_stateful_widget(list, Rect::new(0, 0, 40, 40), &mut state);
+```
+基础的控件就说这三个，这里可能会有一些疑问，怎么没有输入框之类的交互式的控件。这是因为rataTUI主要就是提供的布局，对于输入框，可以参考官方的jsonEditor的例子，他是通过文本+键盘的输入事件来拼装成的输入框。
+
