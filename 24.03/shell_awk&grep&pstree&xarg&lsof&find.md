@@ -251,6 +251,8 @@ $ awk -F ',' '{print $1}' 1.txt
 # /正则/ 下面用法用正则匹配行，效果等于grep 'h\w' 1.txt，换句话说大多数场景下awk可以替代grep
 $ awk '/h\w/ {print}' 1.txt
 ```
+![image](https://i.imgur.com/EW2b0ew.png)
+![image](https://i.imgur.com/6zHVUUd.png)
 
 常见{}中可用的内置变量与内置函数：
 - $0整行 $1第一列 $2第二列...

@@ -5,9 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="2b7db832-7a4c-4341-830d-203faa511123" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../enjoy_tui.md" beforeDir="false" afterPath="$PROJECT_DIR$/../enjoy_tui.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../ratatui-demo/src/main.rs" beforeDir="false" afterPath="$PROJECT_DIR$/../ratatui-demo/src/main.rs" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -80,6 +78,7 @@
       <updated>1710559823568</updated>
       <workItem from="1710559824620" duration="3137000" />
       <workItem from="1711692500745" duration="599000" />
+      <workItem from="1711896450394" duration="599000" />
     </task>
     <servers />
   </component>
