@@ -385,3 +385,303 @@ frame.render_stateful_widget(list, Rect::new(0, 0, 40, 40), &mut state);
 ```
 基础的控件就说这三个，这里可能会有一些疑问，怎么没有输入框之类的交互式的控件。这是因为rataTUI主要就是提供的布局，对于输入框，可以参考官方的jsonEditor的例子，他是通过文本+键盘的输入事件来拼装成的输入框。
 
+# 3 go的bubbletea
+上面两个框架都有一些缺点，rust这个太原生，控件较少，实现功能需要自己写较多代码来自定义组件。而java的功能非常强大，但是本质是一个复杂的UI，不同的终端环境下渲染效果可能有差异，甚至无法渲染出一开始预设的ui。
+
+bubbletea是go语言写的，风格上接近ratatui的纯文本形式，但提供了更多的组件，对于事件的组织形式也更简单，容易上手。
+
+以官方教程的代码为例，我们来看一下一个程序的运行需要哪些基础的代码，其实需要的准备比较简单，总结一句话就是需要一个tea.Model。
+
+![image](https://i.imgur.com/f7xYygp.png)
+
+
+demo程序没有使用任何封装的控件，纯用文本和状态给我们提供了一个tui选择框的功能，这给我们提供了一个很好的学习和参考实例。
+
+![image](https://i.imgur.com/o8zfBtO.gif)
+
+上图这样一个tui，我们需要记录的状态和数据有：3个选项，现在指向那个选项，选中的选项，这样三个状态对吧，所以下面代码中`model`结构体存储了这三部分。然后`Init`不需要做任何事情，返回`nil`即可；
+
+`Update`需要捕捉键盘上下移动，空格选中，还有q退出等信息，上下移动就是修改`cursor`，鼠标指向，而选中就是修改`selected`集合，退出就是返回`Cmd`为`tea.Quit`.
+
+`View`则是在`Update`之后都会触发的，根据model中的state渲染tui的函数，返回是个string，这个string就是print到console，展示出来的tui，这个示例中人为拼写`[ ]`和`[x]`来表示选没选中，`>`表示指针的位置了。
+
+
+上面准备好之后在主函数中通过`tea.NewProgram(initialModel()).Run()`创建model并运行程序即可，initialModel()就是返回一个初始的model给程序。注意和`Init`方法不同，后者是初始状态下需要执行的`tea.Cmd`。
+```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+type model struct {
+	cursor   int
+	choices  []string
+	selected map[int]struct{}
+}
+
+func initialModel() model {
+	return model{
+		choices: []string{"Buy carrots", "Buy celery", "Buy kohlrabi"},
+
+		// A map which indicates which choices are selected. We're using
+		// the map like a mathematical set. The keys refer to the indexes
+		// of the `choices` slice, above.
+		selected: make(map[int]struct{}),
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return nil
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "q":
+			return m, tea.Quit
+		case "up", "k":
+			if m.cursor > 0 {
+				m.cursor--
+			}
+		case "down", "j":
+			if m.cursor < len(m.choices)-1 {
+				m.cursor++
+			}
+		case "enter", " ":
+			_, ok := m.selected[m.cursor]
+			if ok {
+				delete(m.selected, m.cursor)
+			} else {
+				m.selected[m.cursor] = struct{}{}
+			}
+		}
+	}
+
+	return m, nil
+}
+
+func (m model) View() string {
+	s := "What should we buy at the market?\n\n"
+
+	for i, choice := range m.choices {
+		cursor := " "
+		if m.cursor == i {
+			cursor = ">"
+		}
+
+		checked := " "
+		if _, ok := m.selected[i]; ok {
+			checked = "x"
+		}
+
+		s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+	}
+
+	s += "\nPress q to quit.\n"
+
+	return s
+}
+
+func main() {
+	p := tea.NewProgram(initialModel())
+	if _, err := p.Run(); err != nil {
+		fmt.Printf("Alas, there's been an error: %v", err)
+		os.Exit(1)
+	}
+}
+```
+## 3.1 Msg与Cmd
+上面例子中我们说`Msg`是事件，可以是键盘鼠标等内建的事件，也可以自定义事件来传递信息，因为`Msg`定义如下，本质可以是任何数据类型，他只是一个传递数据的载体，例如我们可以设置一个`type CustomMsg int`来传递一个int值的消息，只不过键盘鼠标的触发是内置写好的，自己的这个消息，需要由自己来触发。
+
+![image](https://i.imgur.com/t1PbMoT.png)
+
+怎么触发呢？其实就是通过`tea.Cmd`命令，因为Cmd定义就是一个返回Msg的函数`type Cmd func() Msg`。`Init`或者`Update`的返回值，就可以返回一个自定义的命令来触发消息。
+
+例如在Init的时候，返回一个函数，函数为3s后关闭程序如下，自定义Msg，在Init后返回一个Cmd即一个返回Msg的匿名函数，该函数在3s后返回一个CustomMsg 0来关闭程序，Update程序在3s后捕捉到该消息，并进行退出。
+```go
+type CustomMsg int
+
+func (m model) Init() tea.Cmd {
+	return func() tea.Msg {
+		timer := time.NewTimer(3 * time.Second)
+		<-timer.C
+		return CustomMsg(0)
+	}
+}
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case CustomMsg:
+		if msg == 0 {
+			return m, tea.Quit
+		}
+		return m, nil
+    }
+    return m, nil
+}
+```
+当然Update函数本身也可以返回Cmd，所以其实同样的效果也可以这样写↓，Update自己返回Cmd，然后延时发送Msg再次触发Update，即Update自己触发Update，来实现状态更新，与上面效果一致。
+```go
+func (m model) Init() tea.Cmd {
+	return func() tea.Msg {
+		return CustomMsg(0)
+	}
+}
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case CustomMsg:
+		if msg == 0 {
+			return m, func() tea.Msg {
+				timer := time.NewTimer(3 * time.Second)
+				<-timer.C
+				return CustomMsg(1)
+			}
+		} else if msg == 1 {
+			return m, tea.Quit
+		}
+		return m, nil
+    }
+    return m, nil
+}
+```
+## 3.2 使用控件
+内置的组件或者叫控件都在另一个项目`bubbles`（不带tea）中，[repo](https://github.com/charmbracelet/bubbles)，我们以`chat`这个为例。
+
+![image](https://raw.githubusercontent.com/charmbracelet/bubbletea/master/examples/chat/chat.gif)
+
+!! 使用注意：如果当前控制台剩余的空间（宽 高）不足以让样式完全渲染开，可能会有显示的bug
+
+
+代码简化如下，整体结构与之前是一样的也是要创建一个`model`，这里整合了两个其他的内建组件（model），`textarea`和`viewport`，其中textarea就是输入框，然后`viewport`是个展示文本的容器，能够滚动显示，此外额外记录了`viewport`中展示的消息数组，这是因为`viewport`只提供了`SetContent`没有提供`GetContent`所以只能外面自己记录。
+
+`initialModel`方法中，需要对引入的两个组件进行初始化，下面代码主要是设置了各自的大小等基础信息，并且焦点设置到输入框
+
+`Init`中返回的是让textarea的光标闪烁Blink。
+
+`Update`比较重要，首先要将事件下发到子组件，看子组件是否又更新，然后再判断是否有自己定义的事件，进行相应的更新，自定义的逻辑为：回车就会把内容从textarea清空，append到viewport的最后。最后返回更新后的m和聚合后的Cmd，注意这里的Batch方法将多个Cmd聚合为一个，就是专门用在这种组件融合的场景的一个方法。
+
+`View`类似，也是需要将子组件的View聚合然后返回，注意这里通过`\n`分割了两个组件的`view`，使其呈现为上下结构。
+```go
+package main
+
+import (
+	"fmt"
+	"strings"
+
+	"github.com/charmbracelet/bubbles/textarea"
+	"github.com/charmbracelet/bubbles/viewport"
+	tea "github.com/charmbracelet/bubbletea"
+)
+
+func main() {
+	tea.NewProgram(initialModel()).Run()
+}
+
+type model struct {
+	viewport viewport.Model
+	messages []string
+	textarea textarea.Model
+}
+
+func initialModel() model {
+	ta := textarea.New()
+	ta.Placeholder = "Send a message..."
+	ta.Focus()
+
+	ta.Prompt = "┃ "
+	ta.CharLimit = 280
+
+	ta.SetWidth(30)
+	ta.SetHeight(3)
+
+	ta.ShowLineNumbers = false
+
+	vp := viewport.New(30, 5)
+	vp.SetContent(`Welcome!`)
+
+	ta.KeyMap.InsertNewline.SetEnabled(false)
+
+	return model{
+		textarea: ta,
+		messages: []string{},
+		viewport: vp,
+	}
+}
+
+func (m model) Init() tea.Cmd {
+	return textarea.Blink
+}
+
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var (
+		tiCmd tea.Cmd
+		vpCmd tea.Cmd
+	)
+	m.textarea, tiCmd = m.textarea.Update(msg)
+	m.viewport, vpCmd = m.viewport.Update(msg)
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.Type {
+		case tea.KeyCtrlC, tea.KeyEsc:
+			fmt.Println(m.textarea.Value())
+			return m, tea.Quit
+		case tea.KeyEnter:
+			m.messages = append(m.messages, "You: "+m.textarea.Value())
+			m.viewport.SetContent(strings.Join(m.messages, "\n"))
+			m.textarea.Reset()
+			m.viewport.GotoBottom()
+		}
+	}
+	return m, tea.Batch(tiCmd, vpCmd)
+}
+
+func (m model) View() string {
+	return fmt.Sprintf("%s\n%s",
+		m.viewport.View(),
+		m.textarea.View(),
+	)
+}
+```
+## 3.3 使用lipgloss
+`Lip Gloss`是配套的样式和布局的库，[repo](https://github.com/charmbracelet/lipgloss)，他的主要作用就是给普通tui以布局和颜色。
+
+以上面为例，因为使用的控制台打印纯文本字符串的方式实现的`View`所以效果是黑白如下
+
+![image](https://i.imgur.com/njyplnY.png)
+
+
+通过NewStyled定义字体粗、前景、背景颜色和边距等样式，然后通过`style.Render(string)`重新渲染字符串，
+```go
+import "github.com/charmbracelet/lipgloss"
+
+var style = lipgloss.NewStyle().
+    Bold(true).
+    Foreground(lipgloss.Color("#FAFAFA")).
+    Background(lipgloss.Color("#7D56F4")).
+    PaddingTop(2).
+    PaddingLeft(4).
+    Width(22)
+
+....
+
+func (m model) View() string {
+	return fmt.Sprintf("%s\n%s",
+		style.Render(m.viewport.View()),
+		m.textarea.View(),
+	)
+}
+```
+
+![image](https://i.imgur.com/7S41Quw.png)
+
+修改布局为左右布局
+```go
+func (m model) View() string {
+	return lipgloss.JoinHorizontal(lipgloss.Top, style.Render(m.viewport.View()), m.textarea.View())
+}
+```
+![image](https://i.imgur.com/56lRIzu.png)
