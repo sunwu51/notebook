@@ -399,7 +399,9 @@ demo程序没有使用任何封装的控件，纯用文本和状态给我们提�
 
 ![image](https://i.imgur.com/o8zfBtO.gif)
 
-上图这样一个tui，我们需要记录的状态和数据有：3个选项，现在指向那个选项，选中的选项，这样三个状态对吧，所以下面代码中`model`结构体存储了这三部分。然后`Init`不需要做任何事情，返回`nil`即可；
+上图这样一个tui，我们需要记录的状态和数据有：3个选项，现在指向那个选项，选中的选项，这样三个状态对吧，所以下面代码中`model`结构体存储了这三部分。
+
+`Init`不需要做任何事情，返回`nil`即可；
 
 `Update`需要捕捉键盘上下移动，空格选中，还有q退出等信息，上下移动就是修改`cursor`，鼠标指向，而选中就是修改`selected`集合，退出就是返回`Cmd`为`tea.Quit`.
 
@@ -407,6 +409,11 @@ demo程序没有使用任何封装的控件，纯用文本和状态给我们提�
 
 
 上面准备好之后在主函数中通过`tea.NewProgram(initialModel()).Run()`创建model并运行程序即可，initialModel()就是返回一个初始的model给程序。注意和`Init`方法不同，后者是初始状态下需要执行的`tea.Cmd`。
+
+整体上就是，`Init`可以做一些初始化tui时的操作，比如请求一些一开始要展示的数据，很像react的useEffect。而`Update`则是处理一些消息Msg或者叫事件，例如键盘、鼠标和其他`自定义的消息`均可（因为tea.Msg是个interface{}所以可以自定义任何类型作为msg），处理事件本质上是要修改`model`中的属性值，因为model中存储了要展示的数据，Update中可以修改这些数据。除了修改这些属性之外，Update还有第二返回值`tea.Cmd`，这是一个`fun() tea.Msg`函数，用来返回一个新的消息给程序，这样就会在下一次循环中再次调用Update，触发对应的操作。而`View`最直观，就是直接返回要展示的`text`，他可能依赖model中属性的值来最终完成渲染。
+
+此外如果是纯第三方想要触发消息，进而触发Update和View的话，需要借助`p := tea.NewProgram(initialModel())`这个初始化之后的`p.Send(tea.Msg)`方法。
+
 ```go
 package main
 

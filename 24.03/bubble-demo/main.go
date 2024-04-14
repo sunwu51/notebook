@@ -7,7 +7,6 @@ import (
 	"github.com/charmbracelet/bubbles/textarea"
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 func main() {
@@ -18,6 +17,9 @@ type model struct {
 	viewport viewport.Model
 	messages []string
 	textarea textarea.Model
+	state    int
+	width    int
+	height   int
 }
 
 func initialModel() model {
@@ -28,12 +30,9 @@ func initialModel() model {
 	ta.Prompt = "┃ "
 	ta.CharLimit = 280
 
-	ta.SetWidth(30)
-	ta.SetHeight(10)
-
 	ta.ShowLineNumbers = false
 
-	vp := viewport.New(30, 10)
+	vp := viewport.New(10, 10)
 	vp.SetContent(`Welcome!`)
 
 	ta.KeyMap.InsertNewline.SetEnabled(false)
@@ -57,6 +56,9 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.textarea, tiCmd = m.textarea.Update(msg)
 	m.viewport, vpCmd = m.viewport.Update(msg)
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.state = 1
+		m.width, m.height = msg.Width, msg.Height
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
@@ -72,14 +74,17 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(tiCmd, vpCmd)
 }
 
-var style = lipgloss.NewStyle().
-	Bold(true).
-	Width(22)
+// var style = lipgloss.NewStyle().
+// 	Bold(true).
+// 	Width(22)
 
 func (m model) View() string {
 	// return lipgloss.JoinVertical(lipgloss.Top, style.Render(m.viewport.View()), m.textarea.View())
-
-	return fmt.Sprintf("%s\n%s",
+	if m.state == 0 {
+		return "Initializing..."
+	}
+	return fmt.Sprintf("%dx%d\n%s\n%s",
+		m.width, m.height,
 		m.viewport.View(),
 		m.textarea.View(),
 	)
