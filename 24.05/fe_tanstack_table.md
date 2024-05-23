@@ -380,5 +380,29 @@ const table = useReactTable({
 ![img](https://i.imgur.com/CEsZXVi.png)
 
 `server-side`以分页为例，服务端模式都会比客户端更麻烦一点，例如服务端分页的话，你需要去掉`getPaginationRowModel`，并且在hook中指定`pageCount`总页数的属性
+```js
+// server-side就需要自己维系data和pageIndex信息
+  const [data, setData] = React.useState(() => [...defaultData])
+  const [pageIndex, setPageIndex] = React.useState(0)
+  const table = useReactTable({
+    data,
+    columns,
+    columnResizeMode: 'onChange',
+    getCoreRowModel: getCoreRowModel(),
+    pageCount: 10,
+    manualPagination: true, 
+    state:{
+      pagination:{
+        pageIndex,
+        pageSize: 10
+      }
+    },
+    autoResetPageIndex: false,
+  })
 
 
+  ...
+  <div>Page{table.getState().pagination.pageIndex+1} of {table.getPageCount()}</div>
+  <button disabled={!table.getCanPreviousPage()} onClick={()=>{setData(fetchFromServer()); setPageIndex(pageIndex - 1)}}>&lt;</button>
+  <button disabled={!table.getCanNextPage()} onClick={()=>{setData(fetchFromServer()); setPageIndex(pageIndex + 1)}}>&gt;</button>
+```
