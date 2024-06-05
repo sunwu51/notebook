@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.copy-code-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #f5f5f5;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    color: black;
+    font-weight: bolder;
+}
+
+.copy-code-button:hover {
+    background-color: #e0e0e0;
+}
+
+
+.container-wrapper {
+    display: flex;
+}
+
+.container-wrapper .content-wrapper {
+    flex-grow: 1;
+    flex-shrink: 1;
+    max-width: calc(100% - 300px);
+    min-width: 750px;
+    border-right: 3px solid #ccc;
+}
+
+.toc-wrapper {
+    flex-grow: 0;
+    flex-shrink: 0;
+    min-width: 300px;
+    overflow: auto;
+}
+
+li {
+    list-style: none;
+}
+
+.markdown-body .container-wrapper p code {
+    background: #f2d4f8;
+    color: black;
+    font-weight: 900;
+}
+
+.toc-wrapper {
+    position: -webkit-sticky;
+    position: sticky;
+    height: fit-content;
+    top: 15px;
+    padding: 20px;
+}
+
+.markdown-body h1 a,
+.markdown-body h2 a,
+.markdown-body h3 a {
+    color: black;
+    text-decoration: none;
+}
+
+@media (max-width: 999px) {
+    .toc-wrapper {
+        display: none;
+    }
+
+    .container-wrapper .content-wrapper {
+        border-right: none;
+    }
+}
+
+nav>ol.toc-level-1 {
+    margin: 0;
+    padding: 0;
+}
+
+.tags-container span {
+    color: white;
+    background-color: var(--w-green-dark);
+    padding: 2px 5px;
+    border-radius: 5px;
+    margin-right: 5px;
+}

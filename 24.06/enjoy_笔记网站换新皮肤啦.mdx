@@ -1,0 +1,107 @@
+---
+title: 我的笔记网站换新皮肤啦
+date: 2024-06-02 12:28:00
+tags: 笔记,note,next.js
+---
+
+## 1 这是一些测试
+### 1.1 测试代码样式
+`javascript`是最受欢迎的编程语音之一，他的变量声明语法类似这样，注意`const`赋值是不可修改的。
+```js :demo.js {3}
+var a = 1;
+let b = 2;
+const c = 3;
+console.log(a + b + c);
+```
+如果代码块语音prism不识别，则按照`github-markdown`的灰色样式展示
+```
+这是无语言标记的markdown
+```
+
+### 1.2 测试表格
+源代码为：
+```md
+| 姓名 | 年龄 | 性别 |
+| ---- | ---- | ---- |
+| 张三 | 18 | 男 |
+```
+输出效果如下：
+| 姓名 | 年龄 | 性别 |
+| ---- | ---- | ---- |
+| 张三 | 18 | 男 |
+
+### 1.3 测试嵌入html模块
+源码为
+```html
+<div style={{background: 'red', color: 'white', fontSize: '2rem'}}>你好</div>
+```
+输出效果如下:
+
+<div style={{background: 'red', color: 'white', fontSize: '2rem'}}>你好</div>
+
+### 1.4 测试嵌入React组件
+从`antd`中引入了常用的`Card`、`Tooltip`、`Button`、`DirectoryTree`组件，以及自己写的`Tabs/Item`组件可以直接在`mdx`文件中使用，直接嵌入代码和效果如下
+```jsx
+<div className="flex">
+    <Card style={{ width: 300, border: '1px solid' }}>
+        <Tooltip title="prompt text">
+            <Button type={'primary'}>ant design</Button>
+        </Tooltip>
+    </Card>
+    <Card style={{ width: 300 }}>
+        <DirectoryTree
+            multiple
+            defaultExpandAll
+            treeData={[
+                {title: 'parent 0', children: [{ title: 'leaf 0-0', isLeaf: true},{ title: 'leaf 0-1', isLeaf: true}]},
+                {title: 'parent 1', children: [{ title: 'leaf 1-0', isLeaf: true},{ title: 'leaf 1-1', isLeaf: true}]},
+            ]}
+        />
+    </Card>
+    <Card style={{ width: 300 }}>
+        <Tabs>
+            <Item title={"tab1"}>Content of tab1</Item>
+            <Item title={"tab2"}>Hello Mdx</Item>
+        </Tabs>
+    </Card>
+</div>
+```
+
+<div className="flex">
+    <Card style={{ width: 300, border: '1px solid' }}>
+        <Tooltip title="prompt text">
+            <Button type={'primary'}>ant design</Button>
+        </Tooltip>
+    </Card>
+    <Card style={{ width: 300 }}>
+        <DirectoryTree
+            multiple
+            defaultExpandAll
+            treeData={[
+                {title: 'parent 0', children: [{ title: 'leaf 0-0', isLeaf: true},{ title: 'leaf 0-1', isLeaf: true}]},
+                {title: 'parent 1', children: [{ title: 'leaf 1-0', isLeaf: true},{ title: 'leaf 1-1', isLeaf: true}]},
+            ]}
+        />
+    </Card>
+    <Card style={{ width: 300 }}>
+        <Tabs>
+            <Item title={"tab1"}>Content of tab1</Item>
+            <Item title={"tab2"}>Hello Mdx</Item>
+        </Tabs>
+    </Card>
+</div>
+
+
+### 1.5 测试嵌入iframe工具
+*CodeSandBox*
+
+<iframe src="https://codesandbox.io/embed/6fsg97?view=editor+%2B+preview&module=%2Fsrc%2Findex.js"
+     style={ {width:'100%', height:'500px', border:0, borderRadius: '4px', verflow:'hidden'} }
+     title="react-playgroud"
+     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
+     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
+></iframe>
+
+*Jsrun*
+
+<iframe width="100%" height="300" src="//jsrun.net/3pDKp/embedded/quick/light" allowFullScreen="allowfullscreen" frameBorder="0"></iframe>

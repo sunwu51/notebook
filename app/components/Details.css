@@ -1,0 +1,21 @@
+.details-container {
+    padding: 5px;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.details-title {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.details-trigger-button {
+    width: fit-content;
+}
+
+.details-content {
+    animation: fadeIn 0.5s forwards;
+}

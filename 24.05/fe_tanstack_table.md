@@ -212,7 +212,7 @@ typeof(cell.column.columnDef.cell) === 'string' ?
 
 如下我们只需要改动几行代码，就可以实现一个对列可以排序的按钮。
 
-```tsx
+```tsx {7,14} :main.tsx
 import { ColumnDef, flexRender, getCoreRowModel, getSortedRowModel, useReactTable } from "@tanstack/react-table";
 ....
   const table = useReactTable({
