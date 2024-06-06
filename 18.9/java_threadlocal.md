@@ -96,7 +96,7 @@ obj=null;
 pf.get();//永远返回null
 ```
 ## 3 为啥ThreadLocalMap.Entry继承弱引用
-Entry extends WeakReference<ThreadLocal<?>>这里其实是指的这个entry对他的key弱引，即如果key不再被其他地方引用的话，该key(threadlocal)会被gc。被gc掉之后这里的key就变成null了，value部分就失去意义了，如果不清楚就内存泄漏了，所以threadlocal有个清理无效entry的设定。
+`Entry extends WeakReference<ThreadLocal<?>>`这里其实是指的这个entry对他的key弱引，即如果key不再被其他地方引用的话，该key(threadlocal)会被gc。被gc掉之后这里的key就变成null了，value部分就失去意义了，如果不清楚就内存泄漏了，所以threadlocal有个清理无效entry的设定。
 
 既然可能造成内存泄漏，那为什么还要这么做呢？其实下面会讲到调用get set和remove方法中任意个，都会清除掉如果key为null的value。即在谨慎使用时，不会内存泄漏，而弱引用，可以及时尽早的的清理不用的threadlocal和对应的value。
 

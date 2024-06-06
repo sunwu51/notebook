@@ -278,11 +278,11 @@ objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 - 1 毫秒时间戳 = 1679974795838
 - 2 秒.纳秒时间戳 = 1679974795.838000000
 - 3 ISO_LOCAL_DATE = 2023-03-28
-- 4 ISO_LOCAL_TIME = 03:44:{38{.9位以内数字}}
+- 4 ISO_LOCAL_TIME = `03:44:{38{.9位以内数字}}`
 - 5 ISO_LOCAL_DATE_TIME = ISO_LOCAL_DATE + 'T' + ISO_LOCAL_TIME
-- 6 ISO_DATE_TIME = ISO_LOCAL_DATE_TIME + {offsetId{[zoneRegionId]}}
-- 7 ISO_ZONED_DATE_TIME = ISO_LOCAL_DATE_TIME + offsetId + {[zoneRegionId]}
-- 8 ISO_LOCAL_DATE_TIME + offsetId = 7 不含 [zoneRegionId]
+- 6 ISO_DATE_TIME = ISO_LOCAL_DATE_TIME + `{offsetId{[zoneRegionId]}}`
+- 7 ISO_ZONED_DATE_TIME = ISO_LOCAL_DATE_TIME + offsetId + `{[zoneRegionId]}`
+- 8 ISO_LOCAL_DATE_TIME + offsetId = 7 不含 `[zoneRegionId]`
 
 这里尤其要注意有些形式例如`ISO_ZONED_DATE_TIME`他其实有很多种合法的形式，下面都是合法的：
 - 2023-03-28T03:44Z

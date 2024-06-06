@@ -457,7 +457,7 @@ a中的两个UND未定义的符号shared和swap在b中找到了，所以最后ab
 
 ## 静态链接后，汇编代码的情况
 这是ab的汇编代码，我们可以对比前面列出的a.o和b.o的汇编，找下不同：
-- lea 0x2fe2(%rip),%rdx # 404000 <shared> 这一行给rdx->rsi最终赋值的不再是0x0而是0x2fe2，后面注释表示这就是shared的符号地址。
+- lea 0x2fe2(%rip),%rdx # 404000 `<shared>` 这一行给rdx->rsi最终赋值的不再是0x0而是0x2fe2，后面注释表示这就是shared的符号地址。
 ```bash
 $ objdump -d ab
 ab:     file format elf64-x86-64

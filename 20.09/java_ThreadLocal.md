@@ -13,6 +13,7 @@
 这里其实想说的是，相同hashcode的不一定挨着，hashcode算出来的下标的数组位置不一定存着一个hashcode算出来就是自己的。这个数组的put和get其实是比较复杂的过程，后面会提到“顺带”清理的设计。
 # 3 弱引用与内存泄漏
 Map中的Entry是弱引用类型的，他的定义如下，弱引用的含义是整个Entry对于作为key的ThreadLocal是弱引用。这也就意味着，如果这个ThreadLocal只被这个Entry引用，而没有被其他对象强引用了，就会在下一次GC的时候回收掉这个ThreadLocal。
+```
 static class Entry extends WeakReference<ThreadLocal<?>> {
     /** The value associated with this ThreadLocal. */
     Object value;
@@ -21,6 +22,7 @@ static class Entry extends WeakReference<ThreadLocal<?>> {
         value = v;
     }
 }
+```
 很多人不太理解弱引用的作用，我们简单的写一段伪代码，代码段1：
 ```java
 public class M{

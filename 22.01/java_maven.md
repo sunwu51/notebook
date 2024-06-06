@@ -87,7 +87,7 @@
 - 默认是`compile`也就是全范围的；
 - `provided`是编译测试阶段可以用，但是不会打包到`jar`包，一般是服务器的容器中提供的例如`servlet`、`spark`等；
 - `runtime`运行时才用不参与编译，常见于jdbc的driver包，是不需要参与编译的过程的，当然用默认compile也没问题。
-- `system`和<systemPath>${basedir}/lib/xxxxx.jar</systemPath>一起使用，指定本地的jar包
+- `system`和`<systemPath>${basedir}/lib/xxxxx.jar</systemPath>`一起使用，指定本地的jar包
 
 ![image](https://i.imgur.com/G4b7EdR.png)
 

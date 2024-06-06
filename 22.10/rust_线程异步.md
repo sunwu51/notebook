@@ -187,7 +187,7 @@ fn main() {
     println!("hello {}", i);// i已经move走了，此时报错
 }
 ```
-async代码块中使用`await?`，代码块的返回值是Future<自动推断>，而我们在异步代码块中经常调用返回值是`Result`的异步函数，例如一些库`reqwest`等都是定义返回值为`Result`类型，此时我们希望使用`await?`来简单的处理。但是因为表达式自动推断返回类型是`Result<T,E>`，但我们的正常业务逻辑只返回Ok的值，Err的并没有处理，如下，此时无法推断E的类型，报错。
+async代码块中使用`await?`，代码块的返回值是`Future<自动推断>`，而我们在异步代码块中经常调用返回值是`Result`的异步函数，例如一些库`reqwest`等都是定义返回值为`Result`类型，此时我们希望使用`await?`来简单的处理。但是因为表达式自动推断返回类型是`Result<T,E>`，但我们的正常业务逻辑只返回Ok的值，Err的并没有处理，如下，此时无法推断E的类型，报错。
 ```rs
 async fn foo() -> Result<u8, String> {
     Ok(1)

@@ -140,7 +140,7 @@ remove和get一样，还少了初始化的步骤。
 set
 
 set是最复杂的，假设hash(key)=x，同样去找table[x]。
-- 如果找到null，就直接令table[x]=<key,value>。
+- 如果找到null，就直接令`table[x]=<key,value>`。
 - 如果找到e，且e.k==key，则直接更新e.v=value。
 - 如果找到e，且e.k!=key，则x++。
 

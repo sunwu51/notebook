@@ -200,7 +200,7 @@ export default App
 7 display相关，也是class直接用display的取值，例如`block`,`flex`, `grid`, `hidden`(对应display:none)
 
 8 background相关，都是`bg-`开头的。
-- bg-{颜色表达如red-100} 是调整颜色
+- `bg-{颜色表达如red-100}` 是调整颜色
 - 其他的还有一些较少使用，比如图片，repeat等这里不列出了，用到了去看官网。
 
 第二部分 文字

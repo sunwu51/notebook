@@ -2,7 +2,7 @@
 # 1 redis提供的基础类型和底层实现
 redis是k-v存储，对于k部分都是string类型，而v则提供了五种基础的数据类型，分别是`String`,`Hash`,`List`,`Set`和`Zset`。
 
-`String`底层可能使用的是`int`或`embstr`或`raw`（sds），当存入整数类型时使用int，当存入小数或者短字符串(<39)使用embstr，否则使用raw。
+`String`底层可能使用的是`int`或`embstr`或`raw`（sds），当存入整数类型时使用int，当存入小数或者短字符串(小于39)使用embstr，否则使用raw。
 
 `Hash`底层可能使用的是`ziplist`或`hashtable`，当所有键和值字符串都小于64字节，且键和值总数小于512个时，使用ziplist，否则用hashtable。
 

@@ -19,7 +19,7 @@ print res
 ```
 python语法相对简洁，不过有些全局函数如open len map filter等需要在多写中记住，三目运算写法复杂也是槽点，另外没有++这种写法。
 # JavaScript和PHP
-js、php外加perl是使用度第二阶梯的脚本了，不过我不会perl这里就先不提他。js很多人觉得只试用于网页或者说浏览器，不能成大气候。php很多人印象中就是写网页的，嵌入到html中的<?php ?>标签。
+js、php外加perl是使用度第二阶梯的脚本了，不过我不会perl这里就先不提他。js很多人觉得只试用于网页或者说浏览器，不能成大气候。php很多人印象中就是写网页的，嵌入到html中的`<?php ?>`标签。
 
 这些看法都是片面的，nodejs兴起以来，一直流行着一个定律：所有可以用 JavaScript 编写的程序，最终都会出现 JavaScript 的版本。毫不夸张的讲js可以胜任python脚本实现的任何功能。我个人就一直在用js写脚本，这大大提高我的效率，而且js的书写中总有很多惊喜。比如上面的wordcout的例子：
 ```javascript
@@ -32,9 +32,9 @@ fs.readFileSync('a.js').toString().split("\n").forEach(it=>{
 })
 console.log(res)
 ```
-js的方法都是对象点出来的，用起来比较舒服。而且闭包使用非常方便，完美转换json格式。缺点就是nodejs并不是各大操作系统自带的环境，需要自行安装。
+js的方法都是对象点出来的，用起来比较舒服。而且闭包使用非常方便，完美转换json格式。缺点就是nodejs并不是各大操作系统自带的环境，需要自行安装。
 
-php也可以用来写各种场景的脚本，只是php web相关的库会比较多，很多人都是拿他写web去了，例如上面wordcount的php版本如下
+php也可以用来写各种场景的脚本，只是php web相关的库会比较多，很多人都是拿他写web去了，例如上面wordcount的php版本如下
 ```php
 <?php
 $res=[];
