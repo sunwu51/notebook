@@ -26,7 +26,7 @@ cron是linux下的定时执行任务的服务。
 分 时 日 月 星期几
 ```
 # 实例
-![image](img/2.gif)
+![image](img/1872.gif)
 
 上图中可以看出crontab不支持?。直接用*同时指定日和周就可以。
 
@@ -35,4 +35,4 @@ cron是linux下的定时执行任务的服务。
 2 在任意一个SpringBean类中写定时执行任务的方法
 3 在这个方法上添加@Scheduled注解，该注解支持的参数可以是一个cron表达式(六段)，也可以是设置执行周期和初次执行延时。
 
-![image](img/3.gif)
+![image](img/1873.gif)

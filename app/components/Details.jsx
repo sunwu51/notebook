@@ -12,7 +12,7 @@ function Details(props) {
 
     return (
         <div className={'details-container w-[500px]'} >
-            <button {...buttonProps} className={'details-title'}>
+            <button {...buttonProps} className={'details-title ' + props.btnClassName}>
                 <div>
                     {props.title}
                 </div>

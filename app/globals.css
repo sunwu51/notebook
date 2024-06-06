@@ -2,6 +2,52 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    --w-white-light: #fffefe;
+    --w-white-dark: #e6e6e6;
+    --w-white: var(--w-white-light);
+
+    --w-black-light: #161616;
+    --w-black-dark: #000000;
+    --w-black: var(--w-black-light);
+
+    --w-red-light: #f87171;
+    --w-red-dark: #7f1d1d;
+    --w-red: var(--w-red-light);
+
+    --w-orange-light: #f59e0b;
+    --w-orange-dark: #a67000;
+    --w-orange: var(--w-orange-light);
+
+    --w-yellow-light: #ffcc00;
+    --w-yellow-dark: #a69600;
+    --w-yellow: var(--w-yellow-light);
+
+    --w-green-light: #84cc16;
+    --w-green-dark: #00a600;
+    --w-green: var(--w-green-light);
+
+    --w-blue-light: #73bcec;
+    --w-blue-dark: #1e3a8a;
+    --w-blue: var(--w-blue-light);
+
+    --w-indigo-light: #888afd;
+    --w-indigo-dark: #312e81;
+    --w-indigo: var(--w-indigo-light);
+
+    --w-violet-light: #c084fc;
+    --w-violet-dark: #581c87;
+    --w-violet: var(--w-violet-light);
+
+}
+
+:focus-visible {
+    outline: none;
+}
+
+body h1 {
+    font-family: "ZCOOL KuaiLe", sans-serif;
+}
 
 .copy-code-button {
     position: absolute;
@@ -44,7 +90,64 @@ li {
     list-style: none;
 }
 
-.markdown-body .container-wrapper p code {
+main .wave {
+    position: relative;
+    background: linear-gradient(90deg, var(--w-indigo-dark) 0%, #282a36 100%);
+    border-radius: 1rem;
+}
+
+/* Wave text css */
+main .wave,
+main .wave a {
+    color: #fff;
+    text-align: center;
+    font-weight: bold;
+    padding-top: 25px;
+    padding-bottom: 25px;
+}
+
+main .wave {
+    font-size: 24px;
+}
+
+main .wave a {
+    font-size: 20px;
+}
+
+main .wave a:hover {
+    color: var(--w-yellow)
+}
+
+/* */
+
+
+main .wave::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-repeat: repeat;
+    height: 10px;
+    background-size: 20px 20px;
+    background-image:
+        radial-gradient(circle at 10px -5px, transparent 12px, #fff 13px);
+}
+
+main .wave::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background-repeat: repeat;
+    height: 15px;
+    background-size: 40px 20px;
+    background-image:
+        radial-gradient(circle at 10px 15px, #fff 12px, transparent 13px);
+}
+
+.markdown-body .container-wrapper code:not(pre code) {
     background: #f2d4f8;
     color: black;
     font-weight: 900;

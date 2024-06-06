@@ -9,6 +9,7 @@ import toc from "@jsdevtools/rehype-toc";
 import remarkCodeTitles from "remark-flexible-code-titles";
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeCodeCopyButton from '@/rehypePlugins/rehype-code-copy-button.mjs'
+import rehypeImageSrcModifier from '@/rehypePlugins/rehype-image-src-modifier.mjs'
 import rehypeTocExt from '@/rehypePlugins/rehype-toc-ext.mjs'
 import { getMDXComponent } from 'mdx-bundler/client'
 import '@/app/globals.css'
@@ -28,7 +29,7 @@ export default async function Post({ params }) {
   const mdxSource = fs.existsSync(mdxPath) ? fs.readFileSync(mdxPath, 'utf8') : fs.readFileSync(mdPath, 'utf8');
   const { text: readingTimeText } = readingTime(mdxSource);
   const result = await bundleMDX({
-    source: mdxSource,
+    source: mdxSource + '\n\n# ' + month,
     cwd: path.join(process.cwd(), 'app', 'components'),
     mdxOptions: (options, frontmatter) => {
       options.remarkPlugins = [...(options.remarkPlugins ?? []), ...[remarkGfm, remarkCodeTitles]]
@@ -36,8 +37,9 @@ export default async function Post({ params }) {
         rehypeSlug,
         [rehypeAutolinkHeadings, { behavior: 'wrap' }],
         [rehypePrismPlus, { ignoreMissing: true, showLineNumbers: true }],
-        toc,
         rehypeCodeCopyButton,
+        rehypeImageSrcModifier,
+        toc,
         rehypeTocExt,
       ]]
       return options;
@@ -53,7 +55,7 @@ export default async function Post({ params }) {
   return (
     <>
       <header>
-        <h1>{frontmatter.title}</h1>
+        <h1>{frontmatter.title || slug}</h1>
         {frontmatter.description && <p>{frontmatter.description}</p>}
         <div className='flex gap-4'>
           <span>{readingTimeText}</span>
@@ -62,6 +64,7 @@ export default async function Post({ params }) {
               .map((tag, i) => <span key={i} className=' bg-green-600 text-white px-2 py-1 rounded-md mr-1 text-sm'>{tag.trim()}</span>)}
           </div>
         </div>
+        <hr></hr>
       </header>
       <main>
         <Component components={{

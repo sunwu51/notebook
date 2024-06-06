@@ -36,8 +36,10 @@ pre[class*="language-"] {
 
 
 :not(pre)>code[class*="language-"],
-pre[class*="language-"] {
+pre[class*="language-"],
+div .pre-with-code {
     background: #282a36 !important;
+    color: white;
 }
 
 
