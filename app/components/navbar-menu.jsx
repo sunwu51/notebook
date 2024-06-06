@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "./cn";
+import DocSearch from '@/app/components/DocSearch'
 
 const transition = {
     type: "spring",
@@ -115,7 +116,7 @@ export default function Navbar({ className }) {
     const [active, setActive] = React.useState(null);
     return (
         <div
-            className={cn("fixed top-10 inset-x-0 max-w-[20rem] mx-auto z-50", className)}
+            className={cn("fixed top-10 inset-x-0 max-w-[25rem] mx-auto z-50", className)}
         >
             <Menu setActive={setActive}>
                 <MenuItem setActive={setActive} active={active} item={<span><a href="/">首页</a></span>}>
@@ -123,8 +124,15 @@ export default function Navbar({ className }) {
                 <MenuItem setActive={setActive} active={active} item={
                     <span>
                         <a href="https://github.com/sunwu51/notebook"><Image src="/github-mark-white.png" width={16} height={16} /></a>
-                    </span>}></MenuItem>
+                    </span>}>
+                </MenuItem>
+                <div style={{
+                    position: 'relative',
+                    right: '-30px'
+                }}>
+                    <DocSearch />
+                </div>
             </Menu>
-        </div>
+        </div >
     );
 }

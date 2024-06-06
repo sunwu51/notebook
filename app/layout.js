@@ -1,5 +1,6 @@
 import { Inter } from "next/font/google";
 import NavBar from "@/app/components/navbar-menu";
+import DocSearch from "@/app/components/DocSearch"
 import "./globals.css";
 import "./prism-dracula.css";
 
