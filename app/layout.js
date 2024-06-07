@@ -26,7 +26,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className={inter.className + '  container mx-[auto] max-w-[80%]'}>
         <div className="relative w-full flex items-center justify-center bg-yellow-400">
-          <NavBar className="top-2" />
+          <NavBar className="top-0" />
         </div>
         <div className="markdown-body mt-20">{children}</div>
       </body>

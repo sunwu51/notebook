@@ -74,8 +74,6 @@ body h1 {
 .container-wrapper .content-wrapper {
     flex-grow: 1;
     flex-shrink: 1;
-    max-width: calc(100% - 300px);
-    min-width: 750px;
     border-right: 3px solid #ccc;
 }
 

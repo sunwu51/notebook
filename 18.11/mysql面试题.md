@@ -1,4 +1,5 @@
 # mysql面试题整理
+本文中的mysql面试题整理非常浅显，建议移步更新的文档：[23.04/mysql_从头到尾的mysql](../23.04/mysql_从头到尾的mysql)
 # 1 MySQL中myisam与innodb的区别
 - 1.InnoDB支持`事物`，而MyISAM不支持事物
 - 2.InnoDB支持`行级锁`，而MyISAM支持表级锁

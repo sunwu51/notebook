@@ -1,3 +1,6 @@
+---
+tags: k8s,docker,kubernetes
+---
 # 探究Pod
 pod是k8s的最小调度单位，一般会说一个pod可能有一个或多个容器组成。每当我们创建一个pod的时候都会伴随创建一个基于`registry.access.redhat.com/rhel7/pod-infrastructure:latest`镜像的容器，以前好像是gcr上的一个pause镜像。可能我是centos下直接yum安装的原因，这个镜像变成了红帽的一个镜像。
 ## 共享IP
@@ -102,5 +105,8 @@ volumes:
     Path: "/logs"
 ```
 
+## 原理
+`Pod`与`container`的区别：
 
+![image](https://i.imgur.com/YfXLEVJ.png)
 

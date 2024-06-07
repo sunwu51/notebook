@@ -1,3 +1,6 @@
+---
+tags: cron
+---
 # cron
 cron是linux下的定时执行任务的服务。
 # cron表达式

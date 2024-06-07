@@ -1,3 +1,6 @@
+---
+tags: k8s,docker,kubernetes
+---
 # ingress
 一种基于nginx的反向http代理工具
 # default-backend搭建

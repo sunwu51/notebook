@@ -1,3 +1,6 @@
+---
+tags: k8s,docker,kubernetes
+---
 # k8s集群和文件创建资源
 ## 一、k8s集群搭建需要修改的点
 之前是在单机条件下模拟了集群的情况，实际的集群情况我们还应该对配置有所修改，比如apiserver默认监听的是localhost，kubelet指向的apiserver地址也是localhost。我们来看下配置文件。

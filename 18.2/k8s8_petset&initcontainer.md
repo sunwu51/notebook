@@ -1,3 +1,6 @@
+---
+tags: k8s,docker,kubernetes
+---
 # Pet Set 和init Container
 # Pet Set/StatefulSet
 有状态的pod，对于存储类的服务如mysql，不能按照无状态来处理，需要有状态的pod。

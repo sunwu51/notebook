@@ -1,3 +1,8 @@
+---
+tags: awk,grep,sed
+---
+
+这篇文件介绍的非常浅显，建议直接看比较新的文章中对于`awk` `grep`的介绍: `../24.03/shell_awk&grep&pstree&xarg&lsof&find`
 # awk
 通俗讲awk，就是逐行执行一个命令，一般命令包含print。例如：
 ```bash

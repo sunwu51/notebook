@@ -1,5 +1,4 @@
 # jvm类加载
-[干货文章，科普移步]
 
 类加载机制为双亲委派：
 
@@ -174,3 +173,4 @@ BC两个依赖在加载的时候全部使用不同的加载器。
 
 这样new B的时候是L2加载的，然后B内运行有new A的地方则用的是`L2`加载的。如果是C的话就是L3加载的，C内运行new A的地方也就是用的`L3`加载了。
 
+可以参考的代码仓库：[sunwu51/ClassloaderDemo](https://github.com/sunwu51/ClassloaderDemo)

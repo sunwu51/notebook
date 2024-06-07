@@ -1,3 +1,6 @@
+---
+tags: k8s,docker,kubernetes
+---
 # 探究service
 将同一个pod多个副本统一抽象化成service，通过一个clusterIP（serviceIP）+port映射出一个服务入口，自动实现负载均衡。这就是service。
 ## 1 理解三个IP

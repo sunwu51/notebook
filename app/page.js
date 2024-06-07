@@ -47,13 +47,13 @@ function sortFilesByCreationTime(dir) {
 
 export default function Home() {
   return (
-    <main className="flex  flex-col items-center min-w-[900px]">
+    <main className="flex  flex-col items-center">
       <div className="flex flex-col items-center justify-center">
         <h1>
           hi, 欢迎来到我的博客(笔记)
         </h1>
       </div>
-      <div className="flex flex-col items-center justify-center w-[80%]">
+      <div className="flex flex-col items-center justify-center w-full">
         <Tabs>
           {
             years.map(year => (

@@ -67,7 +67,7 @@ export const Menu = ({
                 boxShadow: '2px 2px var(--w-green-dark), 4px 4px var(--w-black-dark)'
             }}
             onMouseLeave={() => setActive(null)} // resets the state
-            className="relative rounded-full boder justify-around items-center border-transparent dark:bg-black dark:border-white/[0.2] bg-black shadow-input flex space-x-4 px-8 py-2 "
+            className="relative rounded-full boder justify-between items-center border-transparent dark:bg-black dark:border-white/[0.2] bg-black shadow-input flex space-x-4 px-8 py-2 "
         >
             {children}
         </nav>
@@ -116,20 +116,12 @@ export default function Navbar({ className }) {
     const [active, setActive] = React.useState(null);
     return (
         <div
-            className={cn("fixed top-10 inset-x-0 max-w-[25rem] mx-auto z-50", className)}
+            className={cn("fixed inset-x-0 max-w-[25rem] mx-auto z-50", className)}
         >
             <Menu setActive={setActive}>
-                <MenuItem setActive={setActive} active={active} item={<span><a href="/">首页</a></span>}>
-                </MenuItem>
-                <MenuItem setActive={setActive} active={active} item={
-                    <span>
-                        <a href="https://github.com/sunwu51/notebook"><Image src="/github-mark-white.png" width={16} height={16} /></a>
-                    </span>}>
-                </MenuItem>
-                <div style={{
-                    position: 'relative',
-                    right: '-30px'
-                }}>
+                <span><a href="/" className="text-white">首页</a></span>
+                <div className={"flex items-center"}>
+                    <a href="https://github.com/sunwu51/notebook"><Image src="/github-mark-white.png" width={16} height={16} /></a>
                     <DocSearch />
                 </div>
             </Menu>

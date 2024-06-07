@@ -58,7 +58,7 @@ export default async function Post({ params }) {
         <h1>{frontmatter.title || slug}</h1>
         {frontmatter.description && <p>{frontmatter.description}</p>}
         <div className='flex gap-4'>
-          <span>{readingTimeText}</span>
+          <span>{readingTimeText + " created at " + (frontmatter.created ?? "")}</span>
           <div>
             {frontmatter.tags && frontmatter.tags.split(',').filter(item => item.trim().length)
               .map((tag, i) => <span key={i} className=' bg-green-600 text-white px-2 py-1 rounded-md mr-1 text-sm'>{tag.trim()}</span>)}
@@ -76,7 +76,7 @@ export default async function Post({ params }) {
           Item
         }} />
       </main>
-      <div className='container max-w-[1200px] py-12 px-0'>
+      <div className='container mx-auto max-w-[1200px] py-12 px-0'>
         <Discussion />
       </div>
     </>
