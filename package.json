@@ -25,6 +25,7 @@
     "esbuild": "^0.21.4",
     "esbuild-plugin-css-modules": "^0.3.0",
     "framer-motion": "^11.2.10",
+    "https-proxy-agent": "^7.0.4",
     "mdx-bundler": "^10.0.2",
     "next": "14.2.3",
     "node-fetch": "^3.3.2",
