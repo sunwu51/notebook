@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
         <link rel="manifest" href="/site.webmanifest" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/4.0.0/github-markdown.min.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin={true} />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin={"true"} />
         <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
       </head>
       <body className={inter.className + '  container mx-[auto] max-w-[80%]'}>

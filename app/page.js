@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Item, Tabs } from "./components/Tabs";
 import { Card, Timeline } from 'antd';
 import Details from "./components/Details";
@@ -57,7 +56,7 @@ export default function Home() {
         <Tabs>
           {
             years.map(year => (
-              <Item title={year}>
+              <Item key={year} title={year}>
                 {year2Month[year].map(month =>
                   <div key={month} className="p-4 my-2 wave">
                     <Details btnClassName="text-xl font-600" title={month} defaultSelected={true}>
