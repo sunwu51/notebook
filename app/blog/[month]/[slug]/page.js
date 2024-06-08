@@ -22,9 +22,9 @@ export default async function Post({ params }) {
   let { month, slug } = params;
   slug = querystring.unescape(slug);
 
-  if (slug.endsWith(".md") || slug.endsWith(".mdx") || slug.endsWith(".html")) {
-    slug = slug.replace(/\.(md|mdx|html)$/, '');
-  }
+  // if (slug.endsWith(".md") || slug.endsWith(".mdx") || slug.endsWith(".html")) {
+  //   slug = slug.replace(/\.(md|mdx|html)$/, '');
+  // }
 
   var mdxPath = path.join(process.cwd(), month, `${slug}.mdx`);
   var mdPath = path.join(process.cwd(), month, `${slug}.md`);

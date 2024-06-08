@@ -41,7 +41,7 @@ function rehypeImageSrcModifier() {
                 }
 
                 // 如果本地启动无法翻墙，请注释掉下面imgur这段代码
-                else if (src.startsWith('https://i.imgur.com/')) {
+                else if (process.env.NODE_ENV ==='production' && src.startsWith('https://i.imgur.com/')) {
                     let picName = src.replace('https://i.imgur.com/', '');
                     fetch(src, {agent: undefined, headers :{
                         "user-agent": "curl/7.84.0",
