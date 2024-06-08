@@ -1,4 +1,7 @@
 import { visit } from 'unist-util-visit';
+import fetch from 'node-fetch';
+import fs from 'fs'
+import path from 'path';
 
 function rehypeImageSrcModifier() {
     return (tree) => {
@@ -29,8 +32,25 @@ function rehypeImageSrcModifier() {
                 if (src.startsWith('./img')) {
                     node.properties.src = src.replace('./img', '/oriimg/' + month);
                 }
-                if (src.startsWith('img')) {
+                else if (src.startsWith('img')) {
                     node.properties.src = src.replace('img', '/oriimg/' + month);
+                }
+                else if (src.startsWith('https://i.imgur.com/')) {
+                    let picName = src.replace('https://i.imgur.com/', '');
+                    fetch(src).then(response => {
+                        if (!response.ok) {
+                            console.error(`Failed to fetch ${url}: ${response.statusText}`);
+                        }
+                        return response.buffer();
+                    })
+                    .then(buffer => {
+                        if (!fs.existsSync(path.join(process.cwd(), "public", "imgur"))) {
+                            fs.mkdirSync(path.join(process.cwd(), "public", "imgur"));
+                        }
+                        // 将图片数据写入本地文件
+                        fs.writeFileSync(path.join(process.cwd(), "public", "imgur", picName), buffer);
+                    })
+                    node.properties.src = "/imgur/" + picName;
                 }
             }
         });

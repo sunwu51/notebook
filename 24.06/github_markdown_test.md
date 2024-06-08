@@ -84,9 +84,9 @@ var test = function this_is(){
 }
 ```
 
-```bogus_language
-var test = function this_is(){
-  console.log("language declared as bogus_language");
+```diff
++ var test = function this_is(){
+-   console.log("language declared as bogus_language");
 }
 ```
 

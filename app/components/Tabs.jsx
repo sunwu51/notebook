@@ -23,14 +23,14 @@ function Tabs({ children, ...props }) {
             <div className={'tabs-button-container ' + props.className} >
                 {children.map((item, index) => (
                     <button
-                        className={(index == currentIndex ? 'tabs-button-selected ' : "tabs-button ") + props.tabBtnClassName}
+                        className={(index == currentIndex ? 'tabs-button-selected ' : "tabs-button ") + props.tabBtnClassName??""}
                         key={index} onClick={() => changeItem(index)}>
                         {item.props.title}
                     </button>
                 ))}
             </div>
             {children.map((item, index) => (
-                <div className={(index == currentIndex ? 'tabs-panel-selected ' : "tabs-panel ") + props.tabPanelClassName} key={index}>
+                <div className={(index == currentIndex ? 'tabs-panel-selected ' : "tabs-panel ") + props.tabPanelClassName??""} key={index}>
                     {item}
                 </div>
             ))}
