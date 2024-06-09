@@ -79,7 +79,7 @@ export default function Home() {
                             <a href={"/blog/" + month + "/" + slug}>{slug}</a>
                             { tags && tags.length > 0 &&  <div className="mt-[-16px]">{
                               tags.map(tag => (                            
-                                <span key={tag} className="bg-[var(--w-green-dark)] text-white px-2 py-1 rounded-md mr-1 text-[0.7rem]">
+                                <span key={tag} className=" bg-gray-900 text-white px-2 py-1 rounded-md mr-1 text-[0.7rem]">
                                   {tag}
                                 </span>
                               ))
