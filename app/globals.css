@@ -39,6 +39,7 @@
     --w-violet-dark: #581c87;
     --w-violet: var(--w-violet-light);
 
+    --w-box-shadow: 2px 2px var(--w-green-dark), 4px 4px var(--w-black-dark);
 }
 
 :focus-visible {
@@ -187,4 +188,11 @@ nav>ol.toc-level-1 {
     padding: 2px 5px;
     border-radius: 5px;
     margin-right: 5px;
+}
+.markdown-body main img {
+    width: calc(100% - 20px);
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid;
+    box-shadow: var(--w-box-shadow);
 }

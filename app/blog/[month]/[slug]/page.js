@@ -58,6 +58,15 @@ export default async function Post({ params }) {
     }
   })
   const { code, frontmatter } = result
+  let tags = []
+  if (frontmatter.tags) {
+    if (typeof(frontmatter.tags) === 'string') {
+      tags = frontmatter.tags.split(',').map(it=>it.trim()).filter(it=>it.length)
+    }
+    if (Array.isArray(frontmatter.tags)) {
+      tags = frontmatter.tags
+    }
+  }
   const Component = getMDXComponent(code)
   return (
     <>
@@ -67,8 +76,10 @@ export default async function Post({ params }) {
         <div className='flex gap-4'>
           <span>{readingTimeText  + (frontmatter.created ? (" created at " + frontmatter.created):  "")}</span>
           <div>
-            {frontmatter.tags && frontmatter.tags.split(',').filter(item => item.trim().length)
-              .map((tag, i) => <span key={i} className=' bg-green-600 text-white px-2 py-1 rounded-md mr-1 text-sm'>{tag.trim()}</span>)}
+            {tags.length>0 && tags.map((tag, i) => 
+              <span key={i} className=' bg-[var(--w-green-dark)] text-white px-2 py-1 rounded-md mr-1 text-sm'>
+                {tag.trim()}
+              </span>)}
           </div>
         </div>
         <hr></hr>
