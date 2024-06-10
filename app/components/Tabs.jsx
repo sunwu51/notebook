@@ -1,6 +1,7 @@
 'use client'
 import React, { useState } from "react";
 import './Tabs.css'
+import { cn } from "./cn";
 
 const useTabs = (initialTab, allTabs) => {
     const [currentIndex, setCurrentIndex] = useState(initialTab);
@@ -20,7 +21,7 @@ function Tabs({ children, ...props }) {
     const { currentIndex, currentItem, changeItem } = useTabs(0, children);
     return (
         <div className='tabs-container'>
-            <div className={'tabs-button-container ' + props.className} >
+            <div className={cn('tabs-button-container ',props.className)} >
                 {children.map((item, index) => (
                     <button
                         className={(index == currentIndex ? 'tabs-button-selected ' : "tabs-button ") + props.tabBtnClassName??""}
@@ -30,7 +31,7 @@ function Tabs({ children, ...props }) {
                 ))}
             </div>
             {children.map((item, index) => (
-                <div className={(index == currentIndex ? 'tabs-panel-selected ' : "tabs-panel ") + props.tabPanelClassName??""} key={index}>
+                <div className={cn((index == currentIndex ? 'tabs-panel-selected ' : "tabs-panel "), props.tabPanelClassName)} key={index}>
                     {item}
                 </div>
             ))}
