@@ -197,3 +197,7 @@ nav>ol.toc-level-1 {
     border: 1px solid;
     box-shadow: var(--w-box-shadow);
 }
+.toc-wrapper .toc a {
+    font-weight: 700;
+    color: var(--w-indigo-light);
+}
