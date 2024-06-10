@@ -1,13 +1,14 @@
 'use client'
 import Giscus from '@giscus/react';
 
+const categoryId = process.env.NEXT_PUBLIC_GISCUS_CATEGORY_ID;
 export default function () {
     return <Giscus
         id="comments"
         repo="sunwu51/notebook"
         repoId="MDEwOlJlcG9zaXRvcnkxMTkxNjk2MzE="
         category="General"
-        categoryId="DIC_kwDOBxpiX84CfzJL"
+        categoryId={categoryId}
         mapping="url"
         term=""
         reactionsEnabled="1"
