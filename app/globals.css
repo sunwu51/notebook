@@ -76,6 +76,7 @@ body h1 {
     flex-grow: 1;
     flex-shrink: 1;
     border-right: 3px solid #ccc;
+    padding-right: 10px;
 }
 
 .toc-wrapper {
@@ -190,7 +191,7 @@ nav>ol.toc-level-1 {
     margin-right: 5px;
 }
 .markdown-body main img {
-    max-width: calc(100% - 20px);
+    max-width: calc(100% - 10px);
     padding: 5px;
     border-radius: 5px;
     border: 1px solid;
