@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { notFound } from 'next/dist/client/components/not-found';
 import remarkGfm from 'remark-gfm';
 import rehypeSlug from 'rehype-slug';
 import rehypePrismPlus from 'rehype-prism-plus';
@@ -17,7 +18,6 @@ import Discussion from '@/app/components/Discussion';
 import { Button, Card, Tooltip, DirectoryTree } from '@/app/components/Antd';
 import { Tabs, Item } from '@/app/components/Tabs';
 
-
 export default async function Post({ params }) {
   let { month, slug } = params;
   slug = querystring.unescape(slug);
@@ -32,7 +32,7 @@ export default async function Post({ params }) {
   try { 
     mdxSource = fs.existsSync(mdxPath) ? fs.readFileSync(mdxPath, 'utf8') : fs.readFileSync(mdPath, 'utf8'); 
   } catch (e) {
-    return <><div className='flex items-center h-screen w-fit text-4xl mx-auto'style={{marginTop: '-5rem !important'}}>404 PAGE NOT FOUND</div></>;
+    notFound();
   }
   const { text: readingTimeText } = readingTime(mdxSource);
   const result = await bundleMDX({
@@ -117,4 +117,14 @@ export async function generateStaticParams() {
       });
     return posts;
   })
+
+  return postsList;
+}
+
+export async function generateMetadata({params}) {
+  let { month, slug } = params;
+  slug = querystring.unescape(slug);
+  return {
+    title: `${month} | ${slug}`
+  }
 }

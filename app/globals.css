@@ -190,7 +190,7 @@ nav>ol.toc-level-1 {
     margin-right: 5px;
 }
 .markdown-body main img {
-    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
     padding: 5px;
     border-radius: 5px;
     border: 1px solid;

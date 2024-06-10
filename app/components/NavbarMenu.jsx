@@ -119,14 +119,14 @@ export default function Navbar({ className }) {
             className={cn("fixed inset-x-0 max-w-[25rem] mx-auto z-50", className)}
         >
             <Menu setActive={setActive}>
-                <a href="/" className="text-white flex items-center">
+                <Link href="/" className="text-white flex items-center">
                     <Image alt="notebook" src="/logo.png" width={24} height={24} />
                     首页
-                </a>
-                <a href="https://github.com/sunwu51/notebook" className="text-white flex items-center gap-1">
+                </Link>
+                <Link href="https://github.com/sunwu51/notebook" className="text-white flex items-center gap-1">
                     <Image alt="github" src="/github-mark-white.png" width={16} height={16} />
                     github
-                </a>
+                </Link>
                 <DocSearch />
             </Menu>
         </div >

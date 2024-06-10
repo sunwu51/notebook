@@ -2,6 +2,7 @@ import { Item, Tabs } from "./components/Tabs";
 import Details from "./components/Details";
 import fs from "fs";
 import matter from 'gray-matter'
+import Link from "next/link";
 const path = require('path');
 const POSTS_PATH = process.cwd();
 var filenames = fs.readdirSync(POSTS_PATH);
@@ -75,8 +76,8 @@ export default function Home() {
                     <Details btnClassName="text-xl font-600" title={month} defaultSelected={true}>
                       {
                         month2Posts[month].map(({slug, tags}) => (
-                          <div key={slug} className="my-2">
-                            <a href={"/blog/" + month + "/" + slug}>{slug}</a>
+                          <div key={slug} className="mb-2">
+                            <Link style={{padding:0}} href={"/blog/" + month + "/" + slug}>{slug}</Link>
                             { tags && tags.length > 0 &&  <div className="mt-[-16px]">{
                               tags.map(tag => (                            
                                 <span key={tag} className=" bg-gray-900 text-white px-2 py-1 rounded-md mr-1 text-[0.7rem]">
