@@ -18,6 +18,7 @@
     "@react-types/shared": "^3.23.1",
     "@types/mdx": "^2.0.13",
     "antd": "^5.18.0",
+    "asciinema-player": "^3.7.1",
     "clsx": "^2.1.1",
     "esbuild": "^0.21.4",
     "esbuild-plugin-css-modules": "^0.3.0",

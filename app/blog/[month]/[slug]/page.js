@@ -17,6 +17,7 @@ import querystring from 'querystring';
 import Discussion from '@/app/components/Discussion';
 import { Button, Card, Tooltip, DirectoryTree } from '@/app/components/Antd';
 import { Tabs, Item } from '@/app/components/Tabs';
+import AsciinemaPlayer from '@/app/components/AsciinemaPlayer';
 
 export default async function Post({ params }) {
   let { month, slug } = params;
@@ -91,7 +92,8 @@ export default async function Post({ params }) {
           Tooltip,
           DirectoryTree,
           Tabs,
-          Item
+          Item,
+          AsciinemaPlayer
         }} />
       </main>
       <div className='container mx-auto max-w-[1200px] py-12 px-0'>

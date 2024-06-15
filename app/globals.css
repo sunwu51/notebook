@@ -201,3 +201,8 @@ nav>ol.toc-level-1 {
     font-weight: 700;
     color: var(--w-indigo-light);
 }
+
+.markdown-body .ap-player pre {
+    margin: 0;
+    padding: 0;
+}
