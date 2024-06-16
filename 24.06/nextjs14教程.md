@@ -805,3 +805,108 @@ export default function SearchBar() {
 }
 ```
 ## 4.3 交叉使用的注意事项
+前面提到了客户端组件的传染性，所以最好在组件树`low level`去使用客户端组件，例如如果在`app/layout.js`中使用`use client`指令，就不是一个明智的选择，会导致所有组件都会变成客户端组件，所有服务端功能都无法使用了。
+
+但是有时候客户端组件的功能就是比较靠上才行，例如`react的Context`组件，需要用`useContext`，即只能用客户端组件，而`Context`又是一个比较靠上的功能，这种时候就需要用一个特殊的技巧，来躲过“客户端组件import的组件都会变成客户端组件”这条规律。那就是使用`props`作为属性传入，例如最常用的就是作为`children`传入，就不会有`import`引入了。
+
+使用`props`例如`children`，这样就能实现：服务端组件内引客户端组件，客户端组件再用`children`嵌套服务端组件，伪代码如下：
+```js
+<ServerComponent1>
+    <ClientComponent1>
+        <ServerComponent2><ServerComponent2>
+    </ClientComponent1>
+</ServerComponent1>
+```
+常见的例如`XXProvider` `XXContext`都可以借鉴这个用法，我们以`react`的`Context`为例，首先安装一个`js-cookie`的库，方便在浏览器端读写`cookie`
+```bash
+npm i js-cookie
+```
+```js :page.js
+import Context from "./context"
+import ServerComponent from './server'
+import ClientComponent from './client'
+
+
+// 这个例子中，服务端客户端组件交错使用：
+// 当前页面App是服务端组件
+// Context是一个客户端组件，使用了reactContext
+// ServerComponent是一个服务端组件
+// ClientComponent是一个客户端组件
+export default function App() {
+   return <>
+    <Context>
+        <ServerComponent></ServerComponent>
+        <hr />
+        <ClientComponent></ClientComponent>
+    </Context>
+   </>
+}
+```
+```js :context.js
+'use client'
+
+import Cookies from "js-cookie";
+import { createContext, useEffect, useState } from "react"
+
+export const ThemeContext = createContext('light');
+export default function Context({children}) {
+    const [theme, setTheme] = useState("light");
+
+    useEffect(()=>{
+        Cookies.set('theme', theme);
+    }, [theme])
+
+    const switchTheme = () => setTheme(
+        theme == 'light' ? 'dark' : 'light')
+
+    return <ThemeContext.Provider value={theme}>
+        <button onClick={switchTheme}>切换</button>
+        <div>
+            Context组件 客户端组件 theme={theme}
+        </div>
+        <hr/>
+        {children}
+    </ThemeContext.Provider>    
+}
+```
+```js :server.js
+import { cookies } from "next/headers";
+
+export default function ServerComponent() {
+    const cs = cookies()
+    const theme = cs?.get('theme')?.value;
+    return <div>ServerComponent theme from cookie theme={theme}</div>
+}
+```
+
+```js :client.js
+'use client'
+
+import { useContext } from "react";
+import { ThemeContext } from "./context";
+
+export default function Client() {
+    const theme  = useContext(ThemeContext)
+    return <>
+        客户端组件：点击展示当前的Context
+        <div>
+            <button onClick={()=>alert(theme)}>展示</button>
+        </div>
+    </>
+}
+```
+接下来打开主页，分别展示了三个组件 Client-Server-Client交错，客户端组件因为`theme`赋值了初值light，直接展示出来了；而服务端组件是请求的时候读取的`cookie`，前面组件是在`useEffect`赋值的`cookie`，因而请求直接来的时候`cookie`是空的，所以没有值；cookie在页面加载完之后，theme=light。
+
+![image](https://i.imgur.com/gCpjL9Z.png)
+
+此时点击展示按钮，显示`light`，直接从`context`中读取的内容，虽然中间交错隔了个`ServerComponent`但是仍然能获取到。
+
+![image](https://i.imgur.com/f65T09m.png)
+
+然后点击切换按钮，然后再点击展示，`theme`上下文的值，会被修改，并且会触发`ClientComponent`组件的渲染，点击显示的值是更新后的`dark`
+
+![image](https://i.imgur.com/KOSiKTY.png)
+
+此时刷新页面，`cookie`的值会传到服务端，此时是`dark`所以服务端组件显示`dark`。但是客户端组件，因为重新刷新，被设置了初值`light`展示`light`。
+
+![img](https://i.imgur.com/n91zZWb.png)
