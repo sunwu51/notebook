@@ -1,5 +1,6 @@
 ---
 title: vercel依赖大小超250M解决
+date: 2024-06-09 23:17:00+8
 tags:
     - vercel
     - blog

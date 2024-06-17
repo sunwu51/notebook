@@ -13,6 +13,7 @@ import rehypeTocExt from '@/rehypePlugins/rehype-toc-ext.mjs'
 import { bundleMDX } from 'mdx-bundler'
 import { getMDXComponent } from 'mdx-bundler/client'
 import readingTime from 'reading-time';
+import moment from 'moment-timezone';
 import querystring from 'querystring';
 import Discussion from '@/app/components/Discussion';
 import { Button, Card, Tooltip, DirectoryTree } from '@/app/components/Antd';
@@ -22,11 +23,6 @@ import AsciinemaPlayer from '@/app/components/AsciinemaPlayer';
 export default async function Post({ params }) {
   let { month, slug } = params;
   slug = querystring.unescape(slug);
-
-  // if (slug.endsWith(".md") || slug.endsWith(".mdx") || slug.endsWith(".html")) {
-  //   slug = slug.replace(/\.(md|mdx|html)$/, '');
-  // }
-
   var mdxPath = path.join(process.cwd(), month, `${slug}.mdx`);
   var mdPath = path.join(process.cwd(), month, `${slug}.md`);
   let mdxSource;
@@ -75,7 +71,7 @@ export default async function Post({ params }) {
         <h1>{frontmatter.title || slug}</h1>
         {frontmatter.description && <p>{frontmatter.description}</p>}
         <div className='flex gap-4'>
-          <span>{readingTimeText  + (frontmatter.created ? (" created at " + frontmatter.created):  "")}</span>
+          <span>{readingTimeText  + (frontmatter.date ? (",created at " + moment(frontmatter.date).format('YYYY-MM-DD')):  "")}</span>
           <div>
             {tags.length>0 && tags.map((tag, i) => 
               <span key={i} className=' bg-[var(--w-green-dark)] text-white px-2 py-1 rounded-md mr-1 text-sm'>

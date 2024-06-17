@@ -1,31 +1,33 @@
 'use client'
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import './Tabs.css'
 import { cn } from "./cn";
 
-const useTabs = (initialTab, allTabs) => {
-    const [currentIndex, setCurrentIndex] = useState(initialTab);
-    return {
-        currentIndex,
-        currentItem: allTabs[currentIndex],
-        changeItem: setCurrentIndex  // (*2)
-    };
-};
 function Item({ title, children }) {
     return <div>{children}</div>
 }
-function Tabs({ children, ...props }) {
+function Tabs({ children, defaultIndex, fixedIndex, handleChange, ...props }) {
     if (!Array.isArray(children)) {
         children = [children]
     }
-    const { currentIndex, currentItem, changeItem } = useTabs(0, children);
+    const [currentIndex, setCurrentIndex] = useState(defaultIndex===undefined ? -1 : defaultIndex)
+
+    useEffect(() => {if (fixedIndex !== undefined) setCurrentIndex(fixedIndex)})
+
     return (
         <div className='tabs-container'>
             <div className={cn('tabs-button-container ',props.className)} >
                 {children.map((item, index) => (
                     <button
                         className={(index == currentIndex ? 'tabs-button-selected ' : "tabs-button ") + props.tabBtnClassName??""}
-                        key={index} onClick={() => changeItem(index)}>
+                        key={index} onClick={() => { 
+                            console.log('click', index)
+                            if (fixedIndex === undefined) {
+                                setCurrentIndex(index)
+                            } else {
+                                handleChange && handleChange(index)
+                            }
+                        }}>
                         {item.props.title}
                     </button>
                 ))}

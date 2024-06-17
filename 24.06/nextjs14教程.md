@@ -1,6 +1,7 @@
 ---
 title: next.js教程
 description: 基于next.js14的教程
+date: 2024-06-15 15:00:00+8
 tags:
     - next.js
     - 教程
@@ -146,7 +147,7 @@ import './globals.css';
 
 ![image](https://i.imgur.com/DlC8mMW.png)
 
-<iframe width="484" height="861" src="https://www.youtube.com/embed/Ml13-D4C8RU" title="Next.js 14 App Router in 1 minute" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="484" height="861" src="https://www.youtube.com/embed/Ml13-D4C8RU" title="Next.js 14 App Router in 1 minute" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen></iframe>
 
 ## 2.5 `_dir`私有目录
 `app/a`会被暴露到`/a`路径下，而`_`开头的目录名默认不会被创建为路径，例如`_dir/page.js`并不能通过`/_dir`访问到，可以用来放置一些与`UI`无关的代码，比如一些server端的文件操作等。

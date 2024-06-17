@@ -1,4 +1,4 @@
-import { Item, Tabs } from "./components/Tabs";
+import {YearsTabs, Item} from './components/YearsTabs'
 import Details from "./components/Details";
 import fs from "fs";
 import matter from 'gray-matter'
@@ -10,7 +10,8 @@ var filenames = fs.readdirSync(POSTS_PATH);
 const monthes = filenames.filter(item => item.match(/\d\d\.\d\d?/));
 
 const posts = monthes.flatMap((month) => {
-  const filenames = sortFilesByCreationTime(path.join(POSTS_PATH, month));
+  // const filenames = sortFilesByCreationTime(path.join(POSTS_PATH, month));
+  const filenames = fs.readdirSync(path.join(POSTS_PATH, month));
   const _posts = filenames.filter(item => item.match(/\.mdx?$/))
     .map(item => {
       // 
@@ -24,39 +25,29 @@ const posts = monthes.flatMap((month) => {
           tags = frontmatter.tags
         }
       }
-      return {item, tags};
+      let createTime = fs.statSync(path.join(POSTS_PATH, month, item)).birthtimeMs;
+      if (frontmatter.date) {
+        createTime = frontmatter.date.getTime();
+      }
+      return {item, tags, createTime};
     })
+    .sort((a,b)=> a.createTime - b.createTime)
     .map(({item, tags}) => {
       const slug = item.replace(/\.mdx?$/, '');
       return { slug, month, tags };
     });
   return _posts;
 })
-var year2Month = {}, month2Posts = {}, years = [];
+var year2Month = {}, month2Posts = {};
 posts.forEach(({ slug, month, tags }) => {
   const year = '20' + month.substring(0, 2);
   year2Month[year] = year2Month[year] || []; year2Month[year].push(month);
   year2Month[year] = [...new Set(year2Month[year])].sort((a, b) => (a.split('.')[1] - b.split('.')[1]));
   month2Posts[month] = month2Posts[month] || []; month2Posts[month].push({slug, tags});
 });
-years = Object.keys(year2Month).sort((a, b) => b - a)
-
-// 获取目录下所有文件的详细信息
-function getFilesWithStats(dir) {
-  const files = fs.readdirSync(dir);
-  return files.map(file => {
-    const filePath = path.join(dir, file);
-    const stats = fs.statSync(filePath);
-    return { file, stats };
-  });
-}
-
-// 按照创建时间排序文件，结果next上是拉取代码的时间，实际没起到应有的作用
-function sortFilesByCreationTime(dir) {
-  const filesWithStats = getFilesWithStats(dir);
-  filesWithStats.sort((a, b) => a.stats.birthtimeMs - b.stats.birthtimeMs);
-  return filesWithStats.map(item => item.file);
-}
+var years = Object.keys(year2Month).sort((a, b) => b - a)
+// 最近的一年，月份反排序
+year2Month[years[0]] = year2Month[years[0]].sort((a, b) => (b.split('.')[1] - a.split('.')[1]))
 
 export default function Home() {
   return (
@@ -67,7 +58,7 @@ export default function Home() {
         </h1>
       </div>
       <div className="flex flex-col items-center justify-center w-full">
-        <Tabs>
+        <YearsTabs>
           {
             years.map(year => (
               <Item key={year} title={year}>
@@ -94,7 +85,7 @@ export default function Home() {
               </Item>
             ))
           }
-        </Tabs>
+        </YearsTabs>
       </div>
     </main >
   );
