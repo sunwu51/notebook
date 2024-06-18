@@ -197,9 +197,27 @@ nav>ol.toc-level-1 {
     border: 1px solid;
     box-shadow: var(--w-box-shadow);
 }
+
 .toc-wrapper .toc a {
     font-weight: 700;
+    position: relative;
     color: var(--w-indigo-light);
+}
+.toc-wrapper .toc a.active{
+    color: var(--w-red-light);
+    font-size: 1.2rem;
+}
+
+.toc-wrapper .toc a.active::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -1rem;
+    transform: translateY(-50%);
+    border-width: 10px;
+    border-style: solid;
+    border-color: transparent transparent transparent var(--w-red-light);
+    position: absolute;
 }
 
 .markdown-body .ap-player pre {

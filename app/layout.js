@@ -25,8 +25,8 @@ export default function RootLayout({ children }) {
         <link href="https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
       </head>
       <body className={inter.className + '  container mx-[auto] max-w-[80%]'}>
-        <div className="relative w-full flex items-center justify-center bg-yellow-400">
-          <NavBar className="top-0" />
+        <div className="sticky w-fit flex items-center justify-center z-10 top-[-45px] mx-auto hover:top-0 transition-all ease-in-out">
+          <NavBar className="w-full" />
         </div>
         <div className="markdown-body mt-20">{children}</div>
       </body>

@@ -116,7 +116,7 @@ export default function Navbar({ className }) {
     const [active, setActive] = React.useState(null);
     return (
         <div
-            className={cn("fixed inset-x-0 max-w-[25rem] mx-auto z-50", className)}
+            className={cn("inset-x-0 max-w-[25rem] mx-auto z-50", className)}
         >
             <Menu setActive={setActive}>
                 <Link href="/" className="text-white flex items-center">
