@@ -96,28 +96,39 @@ $ export MALLOC_ARENA_MAX=1 && java -Xmx2g -Xms2g -XX:+PrintGC Main
 ![image](https://i.imgur.com/qSKFFC4.png)
 
 ## 2.3 Jemalloc
-`jemalloc`是一种有着更好性能表现的`malloc`实现，可以替换`libc`的`ptmalloc`，到`github`下载最新[release版本的代码](https://github.com/jemalloc/jemalloc/releases)。
+`jemalloc`是一种有着更好性能表现的`malloc`实现，可以替换`libc`的`ptmalloc`，在内存分配上可以更好的避免内存碎片，提高内存利用率，一定程度上能缓解jvm占用过多内存。
 
-```bash
-$ ./configure --enable-prof --enable-stats --enable-debug --enable-fill
+```bash {5}
+$ wget https://github.com/jemalloc/jemalloc/archive/5.3.0.tar.gz
+$ tar zxvf 5.3.0.tar.gz
+$ cd jemalloc-5.3.0/
+$ ./autogen.sh
+$ ./configure --prefix=/usr/local/jemalloc-5.3.0 --enable-prof
 $ make
 $ make install
 ```
-![image](https://i.imgur.com/o2bRCnu.png)
-启动java进程
+指定环境变量`LD_PRELOAD` `MALLOC_CONF`的同时，启动java进程，这个shell指令下，环境变量只对java进程生效，如果想要整个OS都替换为`jemalloc`，也可以直接`export LD_PRELOAD=/usr/local/jemalloc-5.3.0/lib/libjemalloc.so.2`。
 ```bash
-$ export LD_PRELOAD=/usr/local/lib/libjemalloc.so
-
-$ java -Xmx2g -Xms2g -XX:+PrintGC Main
+$ LD_PRELOAD=/usr/local/jemalloc-5.3.0/lib/libjemalloc.so.2 MALLOC_CONF="prof:true,lg_prof_interval:20" java Main
 ```
 `pmap`查看确实使用了`jemalloc.so.2`
 
 ![img](https://i.imgur.com/hhwM3dm.png)
 
-运行1 1 0 1 1 0，折腾一圈之后发现内存时`2015M`，比之前的`2.2G`也要少一点。
+运行1 1 0 1 1 0，折腾一圈之后发现内存时`1834M`，比之前的`2.2G`也要少一点。
 
-![img](https://i.imgur.com/kcUC1Yi.png)
+![img](https://i.imgur.com/z6HaZKy.png)
 
 可以看到`malloc`相关的两个策略，对于内存的缩小，表现非常有限，但是你会发现在网上搜索各种资料，最后都会指向这两者，因为他们确实还是有一点效果的，并且可能针对不同的程序环境，效果会有不同，只能说我这个简单场景下表现一般。
 
-`jemalloc`还可以追踪内存`profiling`我们以后有机会再去展开讲。
+# 2.4 jemalloc的profile
+上面构建的时候选了`with-prof`参数才能进行`profiling`，同时我们运行java进程的时候指定了`MALLOC_CONF="prof:true,lg_prof_interval:20`，含义是`porf`开启，然后`lg_prof_interval`是采样的频率，每2^20字节，也就是1M内存，所以这时候看当前目录下，其实有几百个文件了。但是没到几千个，说明这个值也是个估值。
+
+修改`MALLOC_CONF="prof:true,lg_prof_interval:30`可以降低采样频率，30就是1G，也就是每申请1G会有一个文件，但是这个参数在上面2G的内存的时候，没有生成文件。实际的采样过程中，`jemalloc` 使用的是概率方法来决定是否记录采样信息，而不是严格按每 1 GiB 进行一次采样。
+
+对于上述程序最后使用`MALLOC_CONF="prof:true,lg_prof_interval:27`可以得到较少的文件，接下来对生成的`heap`文件分析（在当前目录下生成的）
+```bash
+$ apt-get install graphviz
+$ jeprof /root/.sdkman/candidates/java/8.0.412-zulu/bin/java jeprof.69365.0.i0.heap
+$ top20
+```

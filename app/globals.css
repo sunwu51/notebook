@@ -86,7 +86,7 @@ body h1 {
     overflow: auto;
 }
 
-li {
+.toc-wrapper li {
     list-style: none;
 }
 
