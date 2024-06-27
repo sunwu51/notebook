@@ -90,6 +90,10 @@ body h1 {
     list-style: none;
 }
 
+body .content-wrapper li {
+    list-style: auto;
+}
+
 main .wave {
     position: relative;
     background: linear-gradient(90deg, var(--w-indigo-dark) 0%, #282a36 100%);
