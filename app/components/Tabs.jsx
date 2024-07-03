@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import './Tabs.css'
 import { cn } from "./cn";
 
-function Item({ title, children }) {
+function Item({ children }) {
     return <div>{children}</div>
 }
 function Tabs({ children, defaultIndex, fixedIndex, handleChange, ...props }) {
