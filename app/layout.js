@@ -3,6 +3,7 @@ import NavBar from "@/app/components/NavbarMenu";
 import DocSearch from "@/app/components/DocSearch"
 import "./globals.css";
 import "./prism-dracula.css";
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }) {
           <NavBar className="w-full" />
         </div>
         <div className="markdown-body mt-20">{children}</div>
+        <Analytics />
       </body>
     </html>
   );
