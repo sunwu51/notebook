@@ -159,10 +159,16 @@ div .pre-with-code {
 
 .remark-code-container {
     width: 100%;
+    max-width: 65vw;
     box-shadow: var(--w-box-shadow);
     border-radius: 0.3em;
     background: #282a36;
     position: relative;
+}
+@media (max-width: 999px) {
+    .remark-code-container {
+        max-width: 80vw;
+    }
 }
 
 .remark-code-container .remark-code-title {
