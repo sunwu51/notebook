@@ -790,4 +790,476 @@ classNode.accept(cw);
 
 ![img](https://i.imgur.com/w2iJpo0.png)
 
-那么接下来我们实现这个功能，
+那么接下来我们实现这个功能，我们可以使用`asm-tree`也可直接使用`core`的`visitor`，逻辑都是类似的，这里对于入参的处理`AdviceAdapter`中提供了方便的函数，所以我们选择用`core` + `AdviceAdapter`，这样代码会更精简一些。
+
+我们拆开讲解三个部分，首先在函数进入的时候定义四个变量，`startTime` `params` `resultStr` `exceptionStr`，然后定义了几个`Label`，使用`visitTryCatchBlock`将`label`进行编排，成为`try-catch`代码块。需要注意的点：
+- 变量一定记得初始化，即使是没有值，也要初始化一个NULL
+- `loadArgArray`是`AdviceAdapter`内置的方法，可以点进去看一下实现，他会将参数包装成数组放在栈顶。
+- `try-catch`的tryStart直接在这里开始，代表了`try {`这段代码。
+- `visitTryCatchBlock`最后一个参数是异常类型，他会在`catchStart`这个`label`开始的时候，在栈顶塞入一个异常的对象，要记得处理。
+```java
+ClassReader cr = new ClassReader("com.example.demo.MyRunnable");
+ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+
+cr.accept(new ClassVisitor(ASM9, cw) {
+    @Override
+    public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[exceptions) {
+        MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
+        if (name.equals("a")) {
+            return new AdviceAdapter(ASM9, mv, access, name, descriptor) {
+                int startTimeIndex;
+                int paramsIndex;
+                int resultStrIndex;
+                int exceptionStrIndex;
+
+                Label tryStart;
+                Label tryEnd;
+                Label catchStart;
+                Label catchEnd;
+                @Override
+                protected void onMethodEnter() {
+                    // 添加四个参数的初始化
+                    startTimeIndex = newLocal(Type.LONG_TYPE);
+                    mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "currentTimeMillis", "()J", false);
+                    mv.visitVarInsn(LSTORE, startTimeIndex);
+
+                    paramsIndex = newLocal(Type.getType("[java/lang/Object"));
+                    loadArgArray();
+                    mv.visitVarInsn(ASTORE, paramsIndex);
+
+                    resultStrIndex = newLocal(Type.getType(String.class));
+                    mv.visitInsn(ACONST_NULL);
+                    mv.visitVarInsn(ASTORE, resultStrIndex);
+
+                    exceptionStrIndex = newLocal(Type.getType(String.class));
+                    mv.visitInsn(ACONST_NULL);
+                    mv.visitVarInsn(ASTORE, exceptionStrIndex);
+
+                    // 添加trycatch代码块，将原方法包裹到try，try-catch块可以提前定义，也可以最后定义，效果同
+                    tryStart = new Label();
+                    tryEnd = new Label();
+                    catchStart = new Label();
+                    catchEnd = new Label();
+                    mv.visitTryCatchBlock(tryStart, tryEnd, catchStart, "java/lang/Throwable");
+
+                    // try {
+                    mv.visitLabel(tryStart);
+                    super.onMethodEnter();
+                }
+
+                @Override
+                protected void onMethodExit(int opcode) {
+                    // 后面展开
+                }
+
+                @Override
+                public void visitMaxs(final int maxStack, final int maxLocals) {
+                    // 后面展开
+                }
+            };
+        } else {
+            return mv;
+        }
+    }
+}, ClassReader.EXPAND_FRAMES);
+```
+
+接下来是第二部分`onMethodExit`函数退出时候的处理，注意`catch`的代码不是放到这里，之前我们说过`methodEnter`是只有一个进入的点，但是`methodExit`是可能有多个退出点的，不同的判断分支都可能`return`或`throw`，所以函数退出这里的主要逻辑，是记录正常`return`数据时候的返回值，我们采用`toString`方法来记录，这里需要注意的就是基础类型作为返回值的时候，是没法调用`toString`，须分别进行`box`装箱处理。
+```java
+@Override
+protected void onMethodExit(int opcode) {
+    if (opcode == ATHROW) {
+        super.onMethodExit(opcode);
+        return;
+    }
+
+    // 根据当前函数的描述符，解析返回值类型
+    Type returnType = Type.getReturnType(descriptor);
+    // 如果是基础类型，则box成对象类型，
+    switch (returnType.getSort()) {
+        // LONG/DOUBLE要dup2，因为占2帧
+        case Type.DOUBLE:
+        case Type.LONG:
+            mv.visitInsn(DUP2);
+            box(returnType);
+            break;
+        // 其他基础类型
+        case Type.BOOLEAN:
+        case Type.CHAR:
+        case Type.INT:
+        case Type.FLOAT:
+        case Type.SHORT:
+        case Type.BYTE:
+            mv.visitInsn(DUP);
+            box(returnType);
+            break;
+        // 除了基础类型就是void/对象类型了
+        case Type.VOID:
+            mv.visitInsn(Opcodes.ACONST_NULL);
+        default:
+            mv.visitInsn(DUP);
+    }
+    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+    mv.visitVarInsn(ASTORE, resultStrIndex);
+    super.onMethodExit(opcode);
+}
+```
+在`return/throw`函数退出之后，下一步的生命周期是到了`visitMaxs`，所以我们把`catch`的代码块放到这个钩子里。
+```java
+@Override
+public void visitMaxs(final int maxStack, final int maxLocals) {
+    mv.visitLabel(tryEnd);
+    // } catch (Throwable e) {
+    mv.visitLabel(catchStart);
+    mv.visitInsn(DUP); //也可以直接dup(), 是adapter提供的简化版本
+    mv.visitMethodInsn(INVOKESTATIC, "java/lang/String", "valueOf", "(Ljava/lang/Object;)Ljava/lang/String;", false);
+    mv.visitVarInsn(ASTORE, exceptionStrIndex);
+    //   System.out.printf
+    mv.visitFieldInsn(GETSTATIC, "java/lang/System", "out", "Ljava/io/PrintStream;");
+    //   第一个参数
+    mv.visitLdcInsn("cost: %d, req: %s, res: %s, exp: %s%n");
+    //   第二个参数 其实是个数组，需要挨着赋值，这段代码比较长；
+    // new Object[4]
+    push(4); // 这是ldc简化版函数封装
+    mv.visitTypeInsn(ANEWARRAY, "java/lang/Object");
+
+    // arr[0] = System.currentTimeMillis() - startTime
+    dup();
+    push(0);
+    mv.visitMethodInsn(INVOKESTATIC, "java/lang/System", "currentTimeMillis", "()J", false);
+    mv.visitVarInsn(LLOAD, startTimeIndex);
+    mv.visitInsn(LSUB);
+    mv.visitMethodInsn(INVOKESTATIC, "java/lang/Long", "valueOf", "(J)Ljava/lang/Long;", false);
+    mv.visitInsn(AASTORE);
+    // arr[1] = Arrays.toString(params)
+    dup();
+    push(1);
+    mv.visitVarInsn(ALOAD, paramsIndex);
+    mv.visitMethodInsn(INVOKESTATIC, "java/util/Arrays", "toString", "([Ljava/lang/Object;)Ljava/lang/String;", false);
+    mv.visitInsn(AASTORE);
+    // arr[2] = resultStr
+    dup();
+    push(2);
+    mv.visitVarInsn(ALOAD, resultStrIndex);
+    mv.visitInsn(AASTORE);
+
+    // arr[3] = expStr
+    dup();
+    push(3);
+    mv.visitVarInsn(ALOAD, exceptionStrIndex);
+    mv.visitInsn(AASTORE);
+
+    mv.visitMethodInsn(INVOKEVIRTUAL, "java/io/PrintStream", "printf", "(Ljava/lang/String;[Ljava/lang/Object;)Ljava/io/PrintStream;", false);
+    pop();
+
+    // 栈顶还剩一个exception，给他throw出去
+    mv.visitInsn(ATHROW);
+    mv.visitLabel(catchEnd);
+    //}
+
+    super.visitMaxs(maxStack, maxLocals);
+
+}
+```
+![img](https://i.imgur.com/SHfXVcG.png)
+
+生成代码没有问题，加载和运行也没有报错。
+
+## 3.2 加密返回结果
+现在有这样一个需求，是对某个返回值为`String`的函数进行增强，将返回结果进行加密后返回，加密函数是已经提供好的，假设是下面一段函数，当然实际可能是对称加密，这里只是一个demo.
+```java
+public class Demo {
+    // 这是要增强的方法
+    public String getSecret() {
+        return UUID.randomUUID().toString();
+        // 期望代码被改成
+        // return encrypt(UUID.randomUUID().toString());
+    }
+
+    // 这是加密的函数
+    public static String encrypt(String str) {
+        for (int i = 0; i < 10; i++) {
+            str = Base64.getEncoder().encodeToString(str.getBytes());
+        }
+        return str;
+    }
+}
+```
+同样使用`core` + `Adapter`，只需要在`Exit`的地方插入这个函数即可，以为该函数消耗掉栈顶原来的返回值，又把自己的返回值放到栈顶
+```java
+ClassReader cr = new ClassReader("com.example.demo.Demo");
+ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+
+cr.accept(new ClassVisitor(ASM9, cw) {
+    @Override
+    public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+        MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
+        if (name.equals("getSecret")) {
+            return new AdviceAdapter(ASM9, mv, access, name, descriptor) {
+                @Override
+                protected void onMethodExit(int opcode) {
+                    if (opcode == ATHROW) {
+                        super.onMethodExit(opcode);
+                        return;
+                    }
+                    mv.visitMethodInsn(INVOKESTATIC, "com/example/demo/Demo", "encrypt", "(Ljava/lang/String;)Ljava/lang/String;", false);
+                    super.onMethodExit(opcode);
+                }
+            };
+        } else {
+            return mv;
+        }
+    }
+}, ClassReader.EXPAND_FRAMES);
+```
+## 3.3 高阶！内连
+现在我们想要修改一下3.2需求，我们想要实现内连，即把`encrypt`这个函数的内容，直接插入到`getSecret`方法中，而不是通过函数调用的方式。这就需要读取整个`encrypt`方法的所有指令，然后把这些指令搬到`getSecret`的`return`之前。此时需要将大片的指令进行复制，这种情况下用`core`直接实现的代码会比较复杂，可以想象一下如果还用上述代码方式，其结构大概如下，嵌套的`accept`，这样代码晦涩难懂，并且注释部分的代码会非常复杂。
+```java
+cr.accept(new ClassVisitor(ASM9, cw) {
+    @Override
+    public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+        MethodVisitor outerMv = super.visitMethod(access, name, descriptor, signature, exceptions);
+        if (name.equals("getSecret")) {
+            return new AdviceAdapter(ASM9, outerMv, access, name, descriptor) {
+                        
+                @Override
+                protected void onMethodExit(int opcode) {
+                    if (opcode == ATHROW) {
+                        super.onMethodExit(opcode);
+                        return;
+                    }
+                    cr.accept(new ClassVisitor(ASM9){
+                        @Override
+                        public MethodVisitor visitMethod(int access, String name, String descriptor, String signature, String[] exceptions) {
+                            if (name.equals("encrypt")) {
+                                return new MethodVisitor(ASM9) {
+                                    // 这里要重写所有的xxxInsn指令的hook 还有其他一些必须的hook try-catch等等
+                                    // hook中运行，outerMv.xxxInsn() 
+                                }
+                            }
+                            
+                            return super.visitMethod(access, name, descriptor, signature, exceptions);
+                        }
+                    }, ClassReader.EXPAND_FRAMES);
+                    super.onMethodExit(opcode);
+                }
+            };
+        } else {
+            return outerMv;
+        }
+    }
+}, ClassReader.EXPAND_FRAMES);
+```
+要用到批量的搬家，那么用`tree`提供的`Node`就可以简化很多，因为他会把`method`的内容打包成`MethodNode`，我们只需要面向对象的操作`Node`，但是不得不提醒一下的是，内连操作可不是一个简单的操作。下面代码实现了当前这个函数的内连。主要思路是，用两个`ClassNode`把目标函数和加密函数所在的类读取出来，这里是同一个类；然后找到这俩方法`MethodNode`。
+
+之后的主要想法就是把加密函数的指令`instructions`直接塞到目标函数的`ARETURN`指令前面，但是内连最大的问题是解决局部变量索引的冲突。即两个函数各自的局部变量都是从0开始的，我们要把加密函数自己的局部变量下标，排到目标函数的最后一个局部变量下标之后，有两类指令涉及到了局部变量的操作`Load/Store`存取相关的`VarInsn`指令，和`Int++`相关的`IincInsn`(注意long/short等，没有专门的++指令)。
+
+处理好了变量索引之后，就需要把原函数返回值，映射成加密函数的第一个入参。这里的操作是，原函数返回值存到`maxLocals`也就是新增的一个局部变量上，而这个下标正好对应加密函数的入参，于是完成传递。
+```java
+ClassReader cr = new ClassReader("com.example.demo.Demo");
+ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
+ClassNode node1 = new ClassNode();
+ClassNode node2 = new ClassNode();
+cr.accept(node1, ClassReader.EXPAND_FRAMES);
+cr.accept(node2, ClassReader.EXPAND_FRAMES);
+
+// 找到这俩方法Node
+MethodNode getSecretMethod = node1.methods.stream().filter(it->it.name.equals("getSecret")).findFirst().get();
+MethodNode encryptMethod = node2.methods.stream().filter(it->it.name.equals("encrypt")).findFirst().get();
+
+// getSecretMethod中变量序号 var_0（this） var_1 var_2 ... var_maxLocals-1
+// encryptMethod中变量序号，因为static所以 0是入参var_0(params[0]) var1 var2...
+// 需要对encrypt做映射 var_0 -> var_maxLocals, var_1 -> var_maxLocals+1 ....即增加一个偏移量
+for (AbstractInsnNode instruction : encryptMethod.instructions) {
+    if (instruction instanceof VarInsnNode) {
+        ((VarInsnNode) instruction).var += getSecretMethod.maxLocals;
+    } else if (instruction instanceof IincInsnNode) {
+        ((IincInsnNode) instruction).var += getSecretMethod.maxLocals;
+    }
+}
+
+// getSecretMethod中，需要把原来的返回值存到maxLocals这个变量中，对应上面代码，会成为内连代码的入参。
+InsnList list = new InsnList();
+for (AbstractInsnNode instruction : getSecretMethod.instructions) {
+    if (instruction instanceof InsnNode && instruction.getOpcode() == ARETURN) {
+        list.add(new VarInsnNode(ASTORE, getSecretMethod.maxLocals));
+        list.add(encryptMethod.instructions);
+    } else {
+        list.add(instruction);
+    }
+}
+// getSecretMethod.tryCatchBlocks.addAll(encryptMethod.tryCatchBlocks);
+node1.accept(cw);
+```
+![img](https://i.imgur.com/IAKja9z.png)
+
+内连最麻烦的就是局部变量和参数传递，上面代码已经把这部分处理好了，但是还不够完善，因为函数体中`Insn`虽说是最主要的，但是还有一个很重要的东西不能忽略，那就是`try-catch`，上面没有用到`try-catch`所以没有什么问题。
+
+如果将`encrypt`函数修改如下，就会发现生成的代码有问题，这就是因为在复制方法内容的时候除了`insn`一定记得还要复制`tryCatch`
+
+![img](https://i.imgur.com/R66evSx.png)
+
+上面代码，增加如下这3行即可。
+```java
+if (encryptMethod.tryCatchBlocks != null) {
+    getSecretMethod.tryCatchBlocks.addAll(encryptMethod.tryCatchBlocks);
+}
+```
+![img](https://i.imgur.com/ds9ZwJF.png)
+
+这里会有读者展开思考，`insn`和`trycatch`之外，`methodNode`中还有其他的诸多元素，不需要拷贝过来吗？
+
+答案是不需要，其他的内容大部分是方法签名里的，想注解、入参信息，这些复制过来反而会导致目标方法损坏。另外有个局部变量的表，很多同学任务需要复制过来，但是实际上他只和`debug`调试相关，不影响代码运行，复制过来后如果有和目标函数刚好同名的局部变量的话，反而会带来一些困扰，干脆也不要复制过来。
+
+## 3.4 子函数内连
+现在重新准备`batchEncrypt`函数和`encrypt`函数如下，并且希望把加密函数内连到`batchEncrypt`目标函数，注意此时不再是返回值处进行内连，而是子函数调用的内连，这个内连就需要更深一步理解`asm`框架了。
+
+![img](https://i.imgur.com/PP6mdyl.png)
+
+与之前一样我们需要找到这两个`MethodNode`;因为这里可能要拷贝多次，并且`InsnNode`都是引用类型，并且是双向链表，直接拷贝过程中是可能会出现问题的，尤其是死循环问题，上面的内连的例子中我们直接用俩个`ClassNode`避开了这个问题，这里我们直面一下这个问题，即需要每个节点进行深拷贝。
+
+`Node`深拷贝的步骤是调用`clone(Map<LabelNode,LabelNode>)`方法，这里就需要先提供一份`srcToTarget`的克隆前后的`Label`的map，所以我封装了函数`cloneLabels(encryptMethod.instructions);`先进行`label`的克隆，以辅助后续操作，注意这一步一定要提前执行，而不能运行时执行，因为有的`label`声明可能顺序靠后，导致某些`node.clone`出现空指针，总之按照我的代码步骤是没错的。
+
+同时这里还需要注意，每个内连结束之后`curMaxLocals`都要进行一次`+= encryptMethod.maxLocals;`，这样下次内连的变量index就继续后移。
+```java
+ClassReader cr = new ClassReader("com.example.demo.Demo");
+ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES |ClassWriter.COMPUTE_MAXS);
+ClassNode classNode = new ClassNode();
+cr.accept(classNode, ClassReader.EXPAND_FRAMES);
+
+// 找到这俩方法Node
+MethodNode batchEncryptMethod = classNode.methods.stream().filter(it->it.name.equals("batchEncrypt")).findFirst().get();
+MethodNode encryptMethod = classNode.methods.stream().filter(it->it.name.equals("encrypt")).findFirst().get();
+
+InsnList list = new InsnList();
+// 内连变量下标从maxLocals开始
+int curMaxLocals = batchEncryptMethod.maxLocals;
+for (AbstractInsnNode instruction : batchEncryptMethod.instructions) {
+    if (instruction instanceof MethodInsnNode) {
+        MethodInsnNode methodInsnNode = (MethodInsnNode) instruction;
+        if (methodInsnNode.getOpcode() == INVOKESTATIC && methodInsnNode.name.equals("encrypt")) {
+            // 要插入的encrypt的指令列表
+            InsnList enList = new InsnList();
+            // 先把栈顶的操作数，转换为局部变量，因为encrypt函数里是局部变量访问参数的
+            transArgsToVars(methodInsnNode.desc, curMaxLocals, list);
+            // 指令可能拷贝多份，所以需要用深拷贝，深拷贝的第一步是把label先拷贝一份。
+            Map<LabelNode, LabelNode> labels = cloneLabels(encryptMethod.instructions);
+
+            // 先存个null值作为结果
+            enList.add(new InsnNode(ACONST_NULL));
+            enList.add(new VarInsnNode(ASTORE, curMaxLocals + encryptMethod.maxLocals));
+            // 这是主要的 拷贝逻辑
+            for (AbstractInsnNode enInsn : encryptMethod.instructions) {
+                // 对于return相关的指令直接删除，因为内连return会导致目标函数直接返回，只需要删除将return的值放到栈顶即可。
+                if (enInsn instanceof InsnNode && enInsn.getOpcode() >= IRETURN && enInsn.getOpcode() <= RETURN) {
+                    enList.add(new VarInsnNode(ASTORE, curMaxLocals + encryptMethod.maxLocals));
+                    continue;
+                }
+                // 因为返回值要放到栈顶，抛出异常就打破结构了，只能吞了异常，放个默认值
+                if (enInsn instanceof InsnNode && enInsn.getOpcode() == ATHROW) {
+                    enList.add(new InsnNode(POP));
+                    continue;
+                }
+                // 行号是不准的，有干扰，应该删掉
+                if (enInsn instanceof LineNumberNode) {
+                    continue;
+                }
+                if (enInsn instanceof LabelNode) {
+                    LabelNode t = labels.get(enInsn);
+                    enList.add(t);
+                    continue;
+                }
+                // 变量序号的问题，需要将VarInsnNode IincInsnNode两类指令的，VarIndex修改
+                if (enInsn instanceof VarInsnNode) {
+                    VarInsnNode newInsn = (VarInsnNode)enInsn.clone(labels);
+                    newInsn.var += curMaxLocals;
+                    enList.add(newInsn);
+                    continue;
+                }
+                if (enInsn instanceof IincInsnNode) {
+                    IincInsnNode newInsn = (IincInsnNode)enInsn.clone(labels);
+                    newInsn.var += curMaxLocals;
+                    enList.add(newInsn);
+                    continue;
+                }
+                // 其他直接添加深拷贝的节点。
+                enList.add(enInsn.clone(labels));
+            }
+            enList.add(new VarInsnNode(ALOAD, curMaxLocals + encryptMethod.maxLocals));
+            // 将enList加到目标list中
+            list.add(enList);
+
+            // 修改最大局部变量的数量，以备下次再次内连的时候
+            curMaxLocals += encryptMethod.maxLocals + 1;
+            if (encryptMethod.tryCatchBlocks != null) {
+                batchEncryptMethod.tryCatchBlocks.addAll(encryptMethod.tryCatchBlocks.stream()
+                        .map(b -> new TryCatchBlockNode(labels.get(b.start),
+                                labels.get(b.end), labels.get(b.handler),
+                                b.type))
+                        .collect(Collectors.toList()));
+            }
+            continue;
+        }
+    }
+    list.add(instruction);
+}
+batchEncryptMethod.instructions.clear();
+batchEncryptMethod.instructions.add(list);
+
+classNode.accept(cw);
+```
+上面代码依赖的两个函数实现，提一句`transArgsToVars`中变量的加载顺序是反的，因为栈顶是最后一个参数，依次往前的。
+```java
+private static void transArgsToVars(String desc, int curMaxLocals, InsnList enList) {
+    Type[] argumentTypes = Type.getArgumentTypes(desc);
+    // 栈是先入后出，把操作数栈上的入参赋值到局部变量
+    for (int i = argumentTypes.length - 1; i >= 0; i--) {
+        Type t = argumentTypes[i];
+        switch (t.getSort()) {
+            case Type.INT:
+            case Type.SHORT:
+            case Type.BYTE:
+            case Type.BOOLEAN:
+            case Type.CHAR:
+                enList.add(new VarInsnNode(ISTORE, curMaxLocals + i));
+                break;
+            case Type.FLOAT:
+                enList.add(new VarInsnNode(FSTORE, curMaxLocals + i));
+                break;
+            case Type.DOUBLE:
+                enList.add(new VarInsnNode(DSTORE, curMaxLocals + i));
+                break;
+            case Type.LONG:
+                enList.add(new VarInsnNode(LSTORE, curMaxLocals + i));
+            break;
+            case Type.ARRAY:
+            case Type.OBJECT:
+                enList.add(new VarInsnNode(ASTORE, curMaxLocals + i));
+                break;
+            default:
+                throw new RuntimeException("Unsupport type");
+        }
+    }
+}
+
+private static Map<LabelNode, LabelNode> cloneLabels(InsnList instructions) {
+    Map<LabelNode, LabelNode> labels = new HashMap<>();
+    for (AbstractInsnNode enInsn : instructions) {
+        if (enInsn instanceof LabelNode) {
+            LabelNode cloned = new LabelNode();
+            labels.put((LabelNode) enInsn, cloned);
+        }
+    }
+    return labels;
+}
+```
+![img](https://i.imgur.com/KP95mN4.png)
+
+但是这里一定要注意，如果内连的函数有多个分支有返回值，或者有`try-catch`都会导致结构不合法。以最简单的`if`判断分支为例。通过上述代码增强后发现`if-else`会有问题，主要体现在在判断分支中进行`return`，因为我们把`return`的指令干掉了，`return`有立即停止代码后续运行的作用，直接删掉会导致分支`return`的逻辑错误，就像下面的，字节码本来是在`if(){}`中return的，因为我们把return干掉了，所以会继续往下运行。
+
+![img](https://i.imgur.com/vto5gaK.png)
+
+所以干掉`return`实现内连一定是有一些限制的，比如不能有多个返回的出口，不能有`try-catch`。
+
+# 4 热替换字节码
+我们学会了生成，修改字节码，他最大的作用是运行时热替换字节码，这要配合`Java Instrumentation`技术。就可以热修改字节码了，这部分在之前的文章中已经讲过。不在赘述。
