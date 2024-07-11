@@ -170,11 +170,20 @@ div .pre-with-code {
         max-width: 80vw;
     }
 }
+
+.markdown-body main table {
+    max-width: calc(65vw - 10px);
+}
 .markdown-body main p img {
     max-width: calc(65vw - 10px);
 }
 @media (max-width: 999px) {
     .markdown-body main p img {
+        max-width: calc(80vw - 10px);
+    }
+}
+@media (max-width: 999px) {
+    .markdown-body main table {
         max-width: calc(80vw - 10px);
     }
 }
