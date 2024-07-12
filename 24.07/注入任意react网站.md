@@ -17,7 +17,7 @@ tags:
 var OldWs = window.WebSocket;
 
 function NewWs(url, protocols) {
-    const wsInstance = OldWs(url, protocals);
+    const wsInstance = OldWs(url, protocols);
     // 实现原来功能之后，把全局变量ws赋值
     window.ws = wsInstance;
     return wsInstance;
