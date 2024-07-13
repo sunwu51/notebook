@@ -918,6 +918,10 @@ private static InsnList generateInsnList(MethodNode methodNode, boolean isStatic
             insnList.add(new JumpInsnNode(GOTO, finishInject));
             continue;
         }
+        if (instruction instanceof LabelNode) {
+            insnList.add(labelMap.get((LabelNode)instruction));
+            continue;
+        }
         // 变量相关的序号增加偏移量
         if (instruction instanceof VarInsnNode) {
             VarInsnNode newNode = (VarInsnNode) instruction.clone(labelMap);
