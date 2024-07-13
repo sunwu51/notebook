@@ -15,7 +15,7 @@ trans(){
     else
       echo "will trans ${j%.*}.md"
       ghmd ${j%.*}.md
-      echo '<style>body{ padding: 100px 50px }</style><script>window.location.href = "https://xiaogenban1993.com" + window.location.pathname.replace(".html", '');</script>' >> ${j%.*}.html
+      echo '<style>body{ padding: 100px 50px }</style><script>window.location.href = "https://xiaogenban1993.com" + window.location.pathname.replace(".html", "");</script>' >> ${j%.*}.html
     fi
   done
   cd ..
