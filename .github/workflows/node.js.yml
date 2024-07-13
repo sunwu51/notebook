@@ -20,14 +20,15 @@ jobs:
       image: node:12
     steps:
     - uses: actions/checkout@v2
-    - run: npm i -g github-markdown
-    - run: rm -rf .git
-    - run: bash ./bootstrap.sh
-    - run: git init
-    - run: git config user.name "frank"
-    - run: git config user.email "sunwu51@126.com"
-    - run: git add .
-    - run: git commit -m "update note"
-    - env:
-        TOKEN: ${{ secrets.TOKEN }}
-      run: git push --force https://$TOKEN@github.com/xiaogenban1993/xiaogenban1993.github.io.git master
+    - run echo "finish, never sync to the original repo"
+    # - run: npm i -g github-markdown
+    # - run: rm -rf .git
+    # - run: bash ./bootstrap.sh
+    # - run: git init
+    # - run: git config user.name "frank"
+    # - run: git config user.email "sunwu51@126.com"
+    # - run: git add .
+    # - run: git commit -m "update note"
+    # - env:
+    #     TOKEN: ${{ secrets.TOKEN }}
+    #   run: git push --force https://$TOKEN@github.com/xiaogenban1993/xiaogenban1993.github.io.git master
