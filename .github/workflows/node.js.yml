@@ -20,7 +20,7 @@ jobs:
       image: node:12
     steps:
     - uses: actions/checkout@v2
-    - run echo "finish, never sync to the original repo"
+    - run: echo "finish, never sync to the original repo"
     # - run: npm i -g github-markdown
     # - run: rm -rf .git
     # - run: bash ./bootstrap.sh
