@@ -19,6 +19,7 @@ import Discussion from '@/app/components/Discussion';
 import { Button, Card, Tooltip, DirectoryTree } from '@/app/components/Antd';
 import { Tabs, Item } from '@/app/components/Tabs';
 import AsciinemaPlayer from '@/app/components/AsciinemaPlayer';
+import Slider from "@/app/components/Slider";
 
 export default async function Post({ params }) {
   let { month, slug } = params;
@@ -89,7 +90,8 @@ export default async function Post({ params }) {
           DirectoryTree,
           Tabs,
           Item,
-          AsciinemaPlayer
+          AsciinemaPlayer,
+          Slider
         }} />
       </main>
       <div className='container mx-auto max-w-[1200px] py-12 px-0'>
