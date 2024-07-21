@@ -228,3 +228,13 @@ nav>ol.toc-level-1 {
     margin: 0;
     padding: 0;
 }
+
+.w-width,iframe {
+    width: 65vw;
+}
+
+@media (max-width: 999px) {
+    .w-width,iframe {
+        width: 85vw;
+    }
+}
