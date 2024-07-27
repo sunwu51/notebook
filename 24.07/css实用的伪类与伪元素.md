@@ -47,12 +47,9 @@ tags:
 
 下面展示了基本的用法，这个例子中有个重要的应用场景，就是用一个元素的状态`div2`被hover的时候，会导致`fixed`元素的隐藏和展示，这是之前需要用`js`才能实现的效果，现在css就可以胜任了。`has not`这两个伪类给css带来了新的可能。
 
-<iframe src="https://codesandbox.io/embed/ldmhwd?module=%2Fstyles.css"
-     style={{"height": "500px"}}
-     title="musing-water"
-     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
-   ></iframe>
+<iframe src="https://sunwu51.github.io/HtmlPlaygroud/?js=eJwDAAAAAAE%3D&css=eJx9kEFLwzAUx%2B%2BFfocc7cBVr92nmW22BmtS0igVEQT1ICrbwbE5dpgwwYuKQ%2BbUgV9mSdeTX8E0qeuU6iWQl%2Fd%2Bv%2F%2BLXRHnt2JwhhjcEcMXPmt9zi7462Q%2BvRK9x7Tzwe%2FbFds0qlmD00A0YuuujwIPHJgGAC4JCHUAhV7NNA5NwzTsv4Hz6WUJExO2tgq2fpCbFEJcsOUkPz1OnodifCMlPtmD9BfKr0fyyB6sHEV2WYAwdMBmGAOPMFakrTZQDPNdQhIhhgh2gCrWshojoRzbCGN1o6jps%2BU9j6TUMotGLQPKrVUhfe8tHkZpv73otoqkWUg9YIHVDB6KwqC%2B7wBMMNSO%2Fwx8cKc2TfonojvhR9ffVt3BnzrJ6K3Uqn%2Bo3L0VEHdby78AQq7ftA%3D%3D&html=eJyzSckss%2BPlUgACGyBTITknsbjYVimzJDVXCSaeYWgHlDK00QcysArZ6ENMIWCCEaYJKEJIutMyK1JTYNph6sGCyBpg1oJpAJWyM1Q%3D" height="730"
+        allow="clipboard-write"
+        sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-clipboard-write"></iframe>
 
 # 伪元素
 伪元素有20来个，但是很多都是试验性阶段，最常见的其实就是两个`::before`和`::after`，用来在元素前后添加元素，实现一些标记的功能。简单说几个可能会用到的其他伪类：
@@ -65,13 +62,9 @@ tags:
 ## after/before的妙用
 1 可以在元素前后添加元素，实现一些标记的功能，比如下拉下拉菜单的箭头，下面的例子中用`hover`和`click`两种方式的纯css实现了dropdown的效果，其中`click`方式有很多借鉴意义，他是巧妙使用了`label` + `checkbox`的`checked`状态，来实现了点击触发的逻辑。
 
-<iframe src="https://codesandbox.io/embed/554fcg?module=%2Fstyles.css"
-     style={{height: "500px"}}
-     title="css-dropdown"
-     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
-   ></iframe>
-
+<iframe src="https://sunwu51.github.io/HtmlPlaygroud/?js=eJwDAAAAAAE%3D&css=eJyNks9OAjEQxu%2Bb7DtM8AIkgAdO3YR36baFnWxpa7cLMcYLMTGGgxdPXvQBjDejRnwbWa4%2BgrCFhCwb5NZpvt%2F8%2BWZ6bShmL8Xb68%2FHvJjfrR5viuf35eIe2r0w6CZ6ImyHW224niq4CgOAKXKXEBii6zCtnFAuCoPrQ%2FEAKCF06IT13FZMoPH79PDdqIVIGR5HF0fRbpbHY6FyD3LMjKSXBGKpWbrl6hVKKxFtfozO0KFWBKyQ1OHEf0sxXDdwXr6dNrunoZyjGu3CMbUjVD7arzUAieVYvsuydExZOrI6V3xtpNSWwFm%2F34%2F8wGU8TdAJnykMem1YzT6Xt1%2B1m2ISWXrqpipiVCZ39XYcqonSrkkSmjVLjLBEsFTwVgskjYU8YeWVfJjVpxtsE%2F57B5VpPLXnM8tttnHTaFzjNqr3nl7kdGd1tcXD9k64sz%2FkYSK%2F&html=eJyzScpPqbTj5VIAApsMQ7uM%2FLLUoqfr5j3v25BSlF%2BQkl%2BeZ6MPFIeqSMksU0jOSSwutlUCq9SFKVKCqgCqSVTIKEpNs1VSVrJ71rTm2dZ1z%2BYvfT6n20Y%2FEaGmNAdmTHFpUm5qXilCP1A2J9MO2ZSnaye86J%2FztHfqy4U7FQxB5tjoA5UQqcGIVA3GGBps9EtzYCGgDwwCpPB63rTzaftuogIsOSczORtbgGXmFZSWKGSmAJVkpCZnJ%2BVXKCmUVBakIvP1EcpzEpNScxTS8ouQ5O0UIA6BBDXQlWBFwyq8bfTBSRUAIuLlkw%3D%3D" height="730"
+                allow="clipboard-write"
+                sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-clipboard-write"></iframe>
 
 2 一些装饰性的元素，例如`camel-ui`中下拉框右上角有个烟囱的形状，就是使用`:before`伪元素充当的。
 

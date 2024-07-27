@@ -14,12 +14,8 @@ tags:
 - `sticky`粘性定位，与`fixed`类似，方向css是相对于视图的位置，不同的是`sticky`的方向偏移量是最小偏移的概念。例如`top: 10px`是指最小位于可见范围距离最上方10px的位置。如果当前位置在距离上方超过10px，那么就在当前位置不动，当小于10px的时候，才会固定在10px。
 - `absolute`绝对定位，方向css是相对于最近的非static祖先元素的移动，例如`top: 10px`是相对于最近的非static祖先元素往下移动10px。注意相对定位和绝对定位是相比dom元素的偏移，而非视图。
 
-<iframe src="https://codesandbox.io/embed/3dxpvf?module=%2Findex.html"
-     style={{height: "500px"}}
-     title="zen-lamport"
-     allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking"
-     sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
-   ></iframe>
+<iframe src="https://sunwu51.github.io/HtmlPlaygroud/?js=eJwDAAAAAAE%3D&css=eJyFkc8OwiAMh%2B9L9g5cPGqmiZeZ%2BC4MKjY2dOmYuhjfXR3M%2BW%2BRE%2F2VfB%2BUhWEfNHoQtVUWj%2BqSZ%2Bq%2B9oBuH0q1LIr6vMmza54tmqADmuFEzQ0GZF%2BqmG9iXGlzcMKtt3PDxFIqepCc6C5hBOh%2B%2FgjfoKGTUIHrUq2i%2F1ET7MJbMOGqqIXk0lXD1IYfrqHz6loXs1RKfP36r8sJgE%2ByHZ7BRtPo6cOe0SuKfpvwsZggGxZNz8mjOXSf6Ji%2BsNNlp67KZMEL2w6I%2BJTQ4%2F9%2F%2F%2Fz4%2Blpbi949p3%2B9ASTdq%2BA%3D&html=eJyVVMtu2kAU3VfqP1jsK7LJzuVfCDgqKgEETpR0BUlDotRgRIN4GDekgZJGrU0kkjgGk4%2Fp3LG96i%2F0msHGtEVpvcBo5sw55957xvxWNnkQe%2FmCw4dPpva4RDpeKLyOJLIZMZ7KCPnIYnN1uyDGxVQiEmNv2tLdScvR%2BlCc%2FpxKxKg4oyPaGNud98Sq2JYGo1vEMDAfRZ6%2FkuaFNAL2hKUkx%2FlreNxWDNAfGSGqOCc38HAL1QuqDgIhYnWJYcKFCSflH8VDPEL1c%2Fr9CgyDAdLCtri5seQXs7nNDWSzz6%2BJWWUSjDngdJ4U51KCkmwPJ4HttUVsp%2FaFZLgCPhebr4FigtZxL%2B9c9XNQBMi6MyyhlH3TBPnqN%2Ft8NLdKxFwyJnr4jd5peBS6Jm3rYex6dwUcwNuDsD224mgzNITN8HoBNYn2HhbWmC%2FflLdrfUQcjGR0soHytHkPxbY39mnHncjEksmTSqXSsqtkNnRmj7QnwxeciAZWA7dwLvO2ELNPzDpVxiB%2FgIH1fAnxrUI2vSuupMRfsydqOCJkMnDVTyx26DQXzwsZcaWW4y6YDczWG3EnDcdH9rj3Lz1k2Q%2F38L9vQXiseSHExXHvXqUySWHfuT%2BD%2FhB%2FXbVHjDOvm5jOmgTlNnSvoVbFHCG1v6uEKfxbA3XJb83yApnVZHaHFctCjdQsoXWJpSHAOsMyKDMf9ZyEl8U51G7P4LTs3byWvpthBXOs%2B17U%2Fd0%2FdOG0jSeYKALXKy7g8xowdixw7FMQ1OYpfTXd5tiXIUbVd4qzgUoP0%2BkjQkJ4kUIDCcfA%2F89HFx%2FNX%2BBYnmE%3D" height="730"
+                sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts allow-clipboard-write"></iframe>
 
 - `z-index`越大越靠上，相同写在后面的靠上；
 - `relative`和`absolute`是相对于dom元素偏移，`fixed`和`sticky`是相对视图偏移；
