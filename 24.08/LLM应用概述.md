@@ -15,7 +15,7 @@ tags:
 
 前者的好处是完全是本地的，坏处则是稍大的模型需要显卡，后者10b以下的模型全是免费调用的，不需要本地任何硬件条件，但是坏处是你不知道他们有没有存储你的对话数据。
 ## 1.1 ollama
-ollama的下载渠道没有被墙，所以对于国内用户来说是更友好的，他的安装同样简单，从下载页下载双击安装[https://ollama.com/download](https://ollama.com/download)，安装完打开后没有图形化界面，只是在系统中注入了`ollama`指令，
+ollama的下载渠道没有被墙，所以对于国内用户来说是更友好的，他的安装简单，从下载页下载双击安装[https://ollama.com/download](https://ollama.com/download)，安装完打开后没有图形化界面，只是在系统中注入了`ollama`指令，
 ```bash
 $ ollama list # 查看下载好的模型
 $ ollama pull {模型名} # 下载模型
@@ -33,12 +33,12 @@ $ ollama run {模型名} # run模型，如果没有则会先下载
 
 ![img](https://i.imgur.com/GSLA9Zf.gif)
 
-而对于`rest`接口，`ollama`则是默认已经启动了rest服务，在11434端口，我们只需要把端口更换即可。
+而对于`rest`接口，`ollama`则是默认已经启动了rest服务，在11434端口，如下可以访问该接口。
 
 ![img](https://i.imgur.com/NG8IloX.png)
 
 ## 1.2 LM studio
-这里图形化界面比较好的`Lm studio`为例，`ollama` `gpt4all`也是类似的产品。我们从[https://lmstudio.ai/](https://lmstudio.ai/)官网下载，双击安装即可。
+图形化界面比较好的`Lm studio`，与`ollama` `gpt4all`是类似的产品。我们从[https://lmstudio.ai/](https://lmstudio.ai/)官网下载，双击安装即可。
 
 ![img](https://i.imgur.com/jwMIKEI.png)
 
@@ -46,7 +46,20 @@ $ ollama run {模型名} # run模型，如果没有则会先下载
 
 ![img](https://i.imgur.com/dEQvqMe.png)
 
-下载过程，可能比较慢甚至失败，因为他是从`huggingface`上下载的，如果不会翻墙可以换成下面介绍`ollama`工具。
+下载过程，可能比较慢甚至失败，因为他是从`huggingface`上下载的，如果不会翻墙可以换成上面介绍`ollama`工具，或者使用`hf-mirror.com`的国内镜像，具体做法如下。
+
+![img](https://i.imgur.com/CZuJLiM.png)
+
+默认下载速度有点慢，但起码能下载，如果有NDM下载器，速度大概在`1M/s`，下载完成后，需要到`LM studio`存放模型的目录
+
+![img](https://i.imgur.com/6VOfb5J.png)
+
+
+![img](https://i.imgur.com/Fso5EqD.png)
+
+将模型文件放到这个模型目录下，并且需要创建对应的目录名，如下
+
+![img](https://i.imgur.com/NjUWO9c.png)
 
 下载完成，就可以装载模型，开始聊天了。
 
@@ -195,4 +208,11 @@ openai的官方3-small模型：
 
 ![img](https://i.imgur.com/9Uh1UbF.png)
 
-## 2.3 
+我们知道了嵌入`embedding`可以将各种数据给转成多维向量。如果有一本中华上下五千年，我可能需要每一章运行一次嵌入，最后得到10个向量，然后把要查询的问题也`embedding`以下得到一个向量，看这个向量和10个已有的向量哪个最相近。这里就引出了3个问题：
+- 1 切分方式：章节切分不一定是一个好的切分方式，获取按照段落或句子切分，或者更复杂的其他切分方式。
+- 2 向量数据库：章节的向量数据，每次都要用，应该提前存储，这就是`知识库`，存储的数据库可以用普通的数据库，因为主要存储和计算向量距离，也可以用专门的向量数据库。
+- 3 排序方式：计算相似度和排序的方式，或者叫`rank`，也有很多，比如最简单的使用欧氏距离然后排序。
+
+## 2.2 vectorDB
+向量数据库，主要目的就是存储上面数据本身，和数据生成的向量值；另外还需要提供快速的根据向量相似度的查询能力。向量数据库显然不是必须的，我们也可以将数据存到传统数据库，例如`mysql`中，但是这样计算相似度就要把数据拿出来自己计算了。
+
