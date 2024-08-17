@@ -213,6 +213,150 @@ openai的官方3-small模型：
 - 2 向量数据库：章节的向量数据，每次都要用，应该提前存储，这就是`知识库`，存储的数据库可以用普通的数据库，因为主要存储和计算向量距离，也可以用专门的向量数据库。
 - 3 排序方式：计算相似度和排序的方式，或者叫`rank`，也有很多，比如最简单的使用欧氏距离然后排序。
 
-## 2.2 vectorDB
+## 2.2 vector DB
 向量数据库，主要目的就是存储上面数据本身，和数据生成的向量值；另外还需要提供快速的根据向量相似度的查询能力。向量数据库显然不是必须的，我们也可以将数据存到传统数据库，例如`mysql`中，但是这样计算相似度就要把数据拿出来自己计算了。
 
+向量数据库的选型有很多，例如`chroma` `milvus` `qdrant`等，还有传统的`postgres` `elasticsearch`的增强插件，这里我们只是介绍向量数据库的作用，所以就选择内存中运行的`chromaDB`来做演示，这是最简单的。至于各种其他db之间的区别和优劣，我们以后单开文章去记录。
+
+本地安装该数据库，`pip install chromadb`，插入数据和查询的过程非常简单，如下。
+```python
+import chromadb
+# 创建连接
+chroma_client = chromadb.Client()
+
+# 创建collection
+collection = chroma_client.create_collection(name="my_collection")
+
+# 添加数据
+collection.add(
+    documents=[
+        "php是世界上最好的编程语言",
+        "youtube是最好的视频网站",
+        "北京教委：探索打造京蒙教育协作新品牌",
+        "七项机制助力北京CBD法治化营商环境建设",
+        "第十届京津冀青年科学家论坛举办"
+    ],
+    ids=['1','2','3','4','5']
+)
+
+# 查询最相似的一条
+results = collection.query(
+    query_texts=["开源社区中最活跃的是c/c++"],
+    n_results=1
+)
+
+print(results)
+```
+这里没有指定采用什么`embedding`算法，运行该文件的时候会看到默认会先下载`all-MiniLM-L6-v2`，即默认采用的就是你这个嵌入算法，这个算法非常小巧模型只有不到`80M`，维度有`300+`，只不过整体的效果有点拉，上面的数据得到的最相近的结果是4，什么环境建设，但是明眼人都应该知道其实应该是1.
+```python
+{'ids': [['4']], 'distances': [[1.0054192543029785]], 'metadatas': [[None]], 'embeddings': None, 'documents': [['七项机制助力北京CBD法治化营商环境建设']], 'uris': None, 'data': None, 
+'included': ['metadatas', 'documents', 'distances']}
+```
+`chromaDB`接入的代码非常的简单，他屏蔽了很多很多细节，比如
+- 内存中运行，进程结束，数据就没了。
+- `embedding`算法默认就用了一个非常小巧的模型，不需要设置。
+- 求出的向量的值，以及如何比较两个向量的距离，这些也都默认屏蔽了。
+
+替换成上面我们用的“大”模型，写法如下：
+```bash
+$ pip install requests
+```
+```python
+import chromadb
+import requests
+import json
+########## 定义embedding函数，直接请求lm studio ###################
+def embedding(input):
+    url = "http://localhost:1234/v1/embeddings"
+    payload = {
+        "input": input,
+        "model": "nomic-ai/nomic-embed-text-v1.5-GGUF/nomic-embed-text-v1.5.Q8_0.gguf"
+    }
+    headers = {
+        "Content-Type": "application/json",
+    }
+    response = requests.post(url, headers=headers, data=json.dumps(payload))
+    return response.json()['data'][0]['embedding']
+####################################################################
+
+chroma_client = chromadb.Client()
+collection = chroma_client.create_collection(name="docs")
+
+documents=[
+    "php是世界上最好的编程语言",
+    "youtube是最好的视频网站",
+    "北京教委：探索打造京蒙教育协作新品牌",
+    "七项机制助力北京CBD法治化营商环境建设",
+    "第十届京津冀青年科学家论坛举办"
+]
+
+ids = [str(i+1) for i,doc in enumerate(documents)]
+embeddings = [embedding(doc) for doc in documents]
+
+collection.add(
+    documents=documents,
+    embeddings=embeddings,
+    ids=ids
+)
+query_text="开源社区中最活跃的是c/c++"
+
+# 查询最相似的一条
+results = collection.query(
+    query_embeddings=embedding(query_text),
+    n_results=1
+)
+
+print(results)
+# 打印结果：
+# {'ids': [['1']], 'distances': [[1.1179535388946533]], 'metadatas': [[None]], 'embeddings': None, 'documents': [['php是世界上最好的编程语言']], 'uris': None, 'data': None, 'included': ['metadatas', 'documents', 'distances']}
+```
+使用`lm studio`的嵌入算法，结果就更合理了，也可以将上面的url地址改成本地的`ollama`测试之前下载的`bge-m3`模型的效果，其实也是返回第一条。
+
+这就是一个简单的代码例子了，`chroma`存内存的方式会导致数据容易丢失，可以采用持久化的方法代码类似下面。
+```python
+import chromadb
+from chromadb.config import Settings
+client = chromadb.Client(Settings(chroma_db_impl="sqlite",
+                                    persist_directory="db/"
+                                ))
+```
+
+这里建议大家去了解一下上面列出的其他几个db，他们大都是持久化存储，并且开源的同时，提供了一定额度的云服务，对于个人开发者或者初学者是肯定够用的。
+
+这里稍微一提，关于两个向量的相似度是怎么求的，简单的有以下三种，其中余弦相似度是`chromadb`默认使用的，相似度的算法不是特别重要，因为各种算法求出来的相似度排序大致是一致的。
+- 曼哈顿距离，`|a1-a2| + |b1-b2|`，每个位置差值的绝对值，求和，`绝对值的和=>L1范数`
+- 欧几里得距离，`(a1,b1)`和`(a2,b2)`的欧距就是 `[(a1-a2)^2 + (b1-b2)^2]^(1/2)`，也就是常见的几何距离，`平方和开方=>L2范数`
+- 余弦相似度，`(a1*b1 + a2*b2) / ((a1^2 + b1^2)^(1/2) + (a2^2 + b2^2)^(1/2))`，分子是`点乘`结果，分母是两个向量自身的`L2范数求和`
+# 3 RAG in prod
+接下来看几个整合了`RAG`的工具，然后分析他们的实现原理，来理解每个步骤的细节。
+## 2.3 AnythinLLM
+那么第一个超级整合软件就是[AnythingLLM](https://anythingllm.com/)，下载安装后。他需要选择默认的聊天模型是请求哪里，可供选择的有供应商有很多，我们选择`LM studio`，因为这个软件会打印请求和返回的参数，这对于我们了解`RAG`的过程是非常有帮助的，这个供应商也可以在我们创建完工作区之后，单独配置，如下，我指定了`LM studio`中的`qwen1.5-7B`模型。
+
+![img](https://i.imgur.com/j7F2i9c.png)
+
+然后配置向量数据库为[zilliz](https://cloud.zilliz.com/)，这里需要先到这个网站注册一个免费的账号，创建免费的一个`cluster`，拿到`endpoint`和`token`，如下图，复制过来即可。为什么选这个而不是`chromadb`或者默认的本地的`lancedb`呢，也是因为他是个云端服务有图形化页面，更方便我们知道底层原理。
+
+![img](https://i.imgur.com/PYBcqJ8.png)
+
+然后配置`embedding`模型是`ollama`的`bge-m3`，这里也可以用默认自带的，至于为什么不用`lm studio`，主要是我电脑这里选了之后，识别不出可用的`embedding`模型。
+
+![img](https://i.imgur.com/TkL5506.png)
+
+接下来我们来配置`rag`的数据，先用最简单的爬一个网页的数据作为一个doc，这里可能稍微慢一点，需要几秒才能完成，因为使用了云端的向量数据库，而且服务器在美国。
+
+![img](https://i.imgur.com/kWK6wTm.png)
+
+上面步骤就是知识库向量化，然后存入向量数据库的过程，他会
+- 先调用`文本分割`，按照`1000`字符切分文档，这里我们的网站非常简单不需要切分；
+- 然后对切分后每个块，进行embedding，使用的是配置好的`bge-m3`
+- 然后将结果保存到`zilliz`
+
+![img](https://i.imgur.com/h5mlHkK.png)
+
+问一个关于我们博客首页的简单问题，然后查看`lm studio`的入参打印，忽略这里有bug，模型打印的是错误的，其实是`qwen`.
+
+可以看到，索引出来的结果会作为`prompt`中追加的一部分，以`[CONTEXT 0]:xxxx[END CONTEXT 0]`的形式，如果有多个doc命中，这里就会有多条。
+
+![img](https://i.imgur.com/QGHbd6j.png)
+
+所以到这里我们知道了，`RAG`检索后的结果，是作为了提示词，再发送给`LLM`进行总结的。
