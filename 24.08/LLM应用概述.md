@@ -334,29 +334,32 @@ client = chromadb.Client(Settings(chroma_db_impl="sqlite",
 
 ![img](https://i.imgur.com/j7F2i9c.png)
 
-然后配置向量数据库为[zilliz](https://cloud.zilliz.com/)，这里需要先到这个网站注册一个免费的账号，创建免费的一个`cluster`，拿到`endpoint`和`token`，如下图，复制过来即可。为什么选这个而不是`chromadb`或者默认的本地的`lancedb`呢，也是因为他是个云端服务有图形化页面，更方便我们知道底层原理。
-
-![img](https://i.imgur.com/PYBcqJ8.png)
+然后配置向量数据库为默认`lancedb`即可，或者别的也可以，只是一个数据存储，这里我改成了本地的`qdrant`，他会在控制台打印请求日志有助于理解发生了什么。
 
 然后配置`embedding`模型是`ollama`的`bge-m3`，这里也可以用默认自带的，至于为什么不用`lm studio`，主要是我电脑这里选了之后，识别不出可用的`embedding`模型。
 
 ![img](https://i.imgur.com/TkL5506.png)
 
-接下来我们来配置`rag`的数据，先用最简单的爬一个网页的数据作为一个doc，这里可能稍微慢一点，需要几秒才能完成，因为使用了云端的向量数据库，而且服务器在美国。
+接下来我们来配置`rag`的数据，点击上传按钮，把本地的4篇java相关的md文档传上去
 
-![img](https://i.imgur.com/kWK6wTm.png)
+![img](https://i.imgur.com/WsFQ9Wr.png)
 
 上面步骤就是知识库向量化，然后存入向量数据库的过程，他会
 - 先调用`文本分割`，按照`1000`字符切分文档，这里我们的网站非常简单不需要切分；
 - 然后对切分后每个块，进行embedding，使用的是配置好的`bge-m3`
-- 然后将结果保存到`zilliz`
+- 然后将结果保存到向量数据库
 
 ![img](https://i.imgur.com/h5mlHkK.png)
 
-问一个关于我们博客首页的简单问题，然后查看`lm studio`的入参打印，忽略这里有bug，模型打印的是错误的，其实是`qwen`.
+问一个关于我们博客首页的简单问题，然后查看`lm studio`的入参打印.可以看到，索引出来的结果会作为`prompt`中追加的一部分，以`[CONTEXT 0]:xxxx[END CONTEXT 0]`的形式，如果有多个doc命中，这里就会有多条。
 
-可以看到，索引出来的结果会作为`prompt`中追加的一部分，以`[CONTEXT 0]:xxxx[END CONTEXT 0]`的形式，如果有多个doc命中，这里就会有多条。
+![img](https://i.imgur.com/HngztG4.png)
 
-![img](https://i.imgur.com/QGHbd6j.png)
+把提示词复制出来，可以看到三段上下文。均来自我们上传的文档中的片段。
+
+![img](https://i.imgur.com/tdHbFHw.gif)
 
 所以到这里我们知道了，`RAG`检索后的结果，是作为了提示词，再发送给`LLM`进行总结的。
+
+## 2.4 QAnything
+`QAnything`是有道开源的
