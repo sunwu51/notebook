@@ -39,7 +39,7 @@ function rehypeImageSrcModifier() {
                 // 如果本地启动无法翻墙，本地build请注释掉下面imgur这段代码
                 else if (process.env.NODE_ENV === 'production' && src.startsWith('https://i.imgur.com/')) {
                     // let picName = src.replace('https://i.imgur.com/', '/api/imgur?filename=');
-                    let picName = src.replace('https://i.imgur.com/', 'https://raw.githubusercontent.com/sunwu51/notebook/gh-pages/');
+                    let picName = src.replace('https://i.imgur.com/', 'https://sunwu51.github.io/notebook/');
                     node.properties.src = picName;
                 }
             }
