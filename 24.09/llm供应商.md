@@ -173,7 +173,7 @@ tags:
 | silicon cloud | 国内 | 快 | 本土稳定 | ❌ | ❌ | llama,qwen,deepseek,mistral等 | llama3.1-70B-inst: ￥4.13/M |
 | together ai | 海外 | 慢 | 不稳定，官网好像被墙了 | ❌ | ❌ | llama等 | llama3.1-70B-inst: ￥6/M 但是有部分税 |
 | groq cloud | 海外 | 快 | 目前稳定 | ❌ | ❌ | llama等 | llama3.1-70B-inst: ￥5.6/M |
-| open router | 海外 | 快 | 目前稳定 | ✔️ | ✔️ | llama等200多个 | 4o: ￥70/M 4o-mini:￥4.2/M llama3.1-70B-inst: ￥2/M |
+| open router | 海外 | 快 | 目前稳定 | ✔️ | ✔️ | llama等200多个 | 4o: ￥105/M 4o-mini:￥4.2/M llama3.1-70B-inst: ￥2/M |
 | chatanywhere | 国内(但机器海外) | 快 | 目前稳定 | ✔️ | ✔️ | - | 4o: ￥105/M 4o-mini:￥4.2/M |
 | V3 api | 国内(但机器海外) | 快 | 目前稳定 | ✔️ | ✔️ | qwen等 | 4o: ￥40左右/M 4o-mini:￥1.5左右/M |
 
