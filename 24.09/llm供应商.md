@@ -177,7 +177,7 @@ tags:
 | chatanywhere | 国内(但机器海外) | 快 | 目前稳定 | ✔️ | ✔️ | - | 4o: ￥105/M 4o-mini:￥4.2/M |
 | V3 api | 国内(但机器海外) | 快 | 目前稳定 | ✔️ | ✔️ | qwen等 | 4o: ￥40左右/M 4o-mini:￥1.5左右/M |
 
-个人比较推荐openrouter和v3。
+个人比较推荐openrouter和v3，如果有`RAG`需求的话，`embedding`和`rerank`接口建议使用`silicon cloud`，目前免费。
 
 
 

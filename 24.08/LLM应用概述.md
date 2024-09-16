@@ -329,7 +329,7 @@ client = chromadb.Client(Settings(chroma_db_impl="sqlite",
 - 余弦相似度，`(a1*b1 + a2*b2) / ((a1^2 + b1^2)^(1/2) + (a2^2 + b2^2)^(1/2))`，分子是`点乘`结果，分母是两个向量自身的`L2范数求和`
 # 3 RAG in prod
 接下来看几个整合了`RAG`的工具，然后分析他们的实现原理，来理解每个步骤的细节。
-## 2.3 AnythinLLM
+## 3.1 AnythingLLM
 那么第一个超级整合软件就是[AnythingLLM](https://anythingllm.com/)，下载安装后。他需要选择默认的聊天模型是请求哪里，可供选择的有供应商有很多，我们选择`LM studio`，因为这个软件会打印请求和返回的参数，这对于我们了解`RAG`的过程是非常有帮助的，这个供应商也可以在我们创建完工作区之后，单独配置，如下，我指定了`LM studio`中的`qwen1.5-7B`模型。
 
 ![img](https://i.imgur.com/j7F2i9c.png)
@@ -359,7 +359,75 @@ client = chromadb.Client(Settings(chroma_db_impl="sqlite",
 
 ![img](https://i.imgur.com/tdHbFHw.gif)
 
-所以到这里我们知道了，`RAG`检索后的结果，是作为了提示词，再发送给`LLM`进行总结的。
+所以到这里我们知道了，`RAG`检索后的结果，是作为了提示词，再发送给`LLM`进行总结的。当然这个要看不同工具链的实现，`coze`平台的知识库结果，是作为`user`输入信息，而不是`prompt`。
 
-## 2.4 QAnything
-`QAnything`是有道开源的
+## 3.2 QAnything
+`QAnything`是有道开源的一个检索系统，通俗讲就是一个`RAG`系统，我们在`AnyThingLLM`和文章之前的内容，介绍了`RAG`的基本流程：就是将数据拆分成chunk，然后给向量化`embedding`得到向量，存储到向量数据库，然后用户输入问题的时候，将问题也向量化，对比向量数据库中的数据，选出topK条相似度最高的。
+
+然而在实践中，会发现这种基础的检索，在数据量越来越大的时候，效果会变差，召回的数据准确率下降。
+
+基于这个角度，网易有道开源的`QAnything`对检索的流程进行了调整：
+
+![image](https://i.imgur.com/bYbFBE6.png)
+
+我们从这个图的右下角开始：
+- 输入的数据源是`txt` `word` `pdf`等文本数据，也有`png`等图片数据。
+- 异构数据接下来会进行转换`parser`，例如图片会ocr，`word pdf`也有专门的转文本能力。文本接下来会进行拆分成chunk，也就是`Spilitter`。
+- 对`chunk`文本进行向量化`embedding`存入向量数据库。
+
+这就是图片最下一行的步骤，与我们之前讲的基础的`RAG`是一样的。
+
+不同点：
+- 当用户查询的时候，基础流程是直接对`query`进行嵌入，召回database中的相似数据。而`QAnyThing`流程中，是左上角节点`Query UnderStand(LLM)`，即他使用特定的`prompt`和`LLM`对用户的`query`进行了理解和提炼，得到提炼的结果去`database`中去召回。
+- 召回的数据，没有直接喂给LLM，而是扩大了召回的数据量，对召回的数据进行了`rerank`再排序或者叫精排，精排后过滤出topK传给LLM。
+
+以上两个不同点，尤其是`rerank`对检索大数据量的精确度提高是非常有用的。
+
+那么什么是`rerank`，其实目前`rerank`和`embedding`一样也有很多模型了， 例如有道的`bce-reranker-base_v1`, BAAI的`bge-reranker-v2-m3`等。
+
+![image](https://i.imgur.com/5IKGRUr.png)
+
+# 4 memory
+LLM是无状态的，我们的上下文也都是通过把所有的会话重新传递给LLM，让他从前面的会话中，去了解我们的一些倾向的。
+
+例如我是一个java程序员，我想让gpt给我写一个代码，如果一开始没有说明我是javaer，他可能就用其他语言来写。经过我后续会话声明我是个java程序员之后，他就能按照java来回答了。但是当我再次开启一个新的编程会话的时候，LLM又会忘记我是一个java程序员了，这就是LLM没有状态，没有记忆的体现。
+
+更通用一点的，比如我要开发一个AI厨房应用，用户不吃香菜，但是每次问AI某某菜怎么做，AI都不会记得该用户是不吃香菜的。
+
+`memory`就是从这个角度出发，期望能解决大模型的记忆问题，具体怎么做的呢？我们以目前比较出名的开源`mem0`为例，我们直接使用`mem0.ai`提供的云平台来探究他的工作方式。
+
+我们直接在`playground`中问自己是哪国人，llm显然无法回答，然后我们告诉他自己是中国人，以及个人的一些喜好，可以看到右侧栏，提取出来了我们的国籍、职业和食物喜好信息，这些信息其实都存到了用户的标签中，可以在左上角user中查看到。
+
+![image](https://i.imgur.com/fjJFuSk.png)
+
+当然如果我们的对话中，没有个人的喜好和信息，比如我们就直接问，大气层有多高，他就不会提取任何信息到`mem0`中保存，当我们再次打开一个新的对话框的时候，就会发现，此时的`gpt`是有记忆的，他知道我们不喜欢奶酪了。有点像针对LLM的用户画像了。
+
+![img](https://i.imgur.com/oinFzTM.png)
+
+这个怎么实现的呢？
+## 4.1 提取(添加)用户标签
+到doc中查看代码接入教程，你会发现，在使用`mem0`的时候，需要配置`LLM`例如`openai`的key的，然后我们正常的和llm的对话内容，都需要传给`mem0`，让他来分析是否有可以提取的个人画像信息，下面是官方的例子，这是正常的和ai的对话内容，传给`mem0`后，他会用上面配置好的key调用大模型，让大模型从中解析用户画像的标签，然后将结果存储下来。这就是`add`的过程。
+
+![image](https://i.imgur.com/cP4eGml.png)
+
+这里让LLM提取用户信息的请求是mem0异步发送的，和当前会话并不冲突，提取个人信息的`prompt`也可以自定义，参考官方文档[https://docs.mem0.ai/features/custom-prompts](https://docs.mem0.ai/features/custom-prompts)
+## 4.2 存储方式
+混合存储，会同时往向量数据库、kv数据库、图数据库等多种形式的db中进行插入。
+
+![image](https://i.imgur.com/wErpoxv.png)
+
+可以用`neo4j`来存储图形关系，也可以不用，就不存入图数据库。
+
+![image](https://i.imgur.com/iBUAnok.png)
+
+## 4.3 检索
+那后续如何搜索的呢，也就是下面`search`接口，就是在和ai直接对话之前，需要调用`mem0#search`接口，这个接口就是`mem0`这个项目最核心的部分。
+
+![image](https://i.imgur.com/RmXyPD2.png)
+
+官方的解释是会在多个数据源上都运行查询，然后经过各种排序打分最后得到，当前会话可以用的上下文信息，然后将这些信息放到LLM的prompt中。
+
+![image](https://i.imgur.com/WqLnH3z.png)
+
+## 4.4 小结
+记忆算是一个锦上添花的功能，现阶段应用的较少，作用也不算大，因为收效不大，而且需要的存储成本提高、LLM成本基本翻倍。
