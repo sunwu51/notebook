@@ -1,0 +1,18 @@
+{
+    "pluginName": "简易翻译",
+    "description": "左右布局的翻译工具，使用Google翻译API",
+    "author": "Claude",
+    "version": "0.0.1",
+    "logo": "logo.png",
+    "main": "index.html",
+    "features": [
+        {
+            "code": "translator",
+            "explain": "简易翻译工具",
+            "cmds": [
+                "翻译",
+                "translate"
+            ]
+        }
+    ]
+}
