@@ -49,3 +49,5 @@ tags:
 ![image](https://i.imgur.com/Ll5Qqhe.gif)
 
 详细代码在[translate](https://github.com/sunwu51/notebook/tree/master/24.09/translate)目录下，只不过`script.js#L60`需要替换成自己的token。
+
+该工具开发完成，使用`claude-3.5`模型总共输入token数为200K，输出token数9K，花费`$0.3`大概2块钱，当然可以换更便宜的模型例如`gpt-4o-mini` `gemini-flash`或者开源的模型，只不过`claude-dev`中适配最好的还是`claude-3.5`模型。
