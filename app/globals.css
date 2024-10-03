@@ -196,6 +196,7 @@ nav>ol.toc-level-1 {
 }
 .markdown-body main img {
     max-width: calc(100% - 10px);
+    margin: 0 auto;
     padding: 5px;
     border-radius: 5px;
     border: 1px solid;
@@ -240,4 +241,17 @@ nav>ol.toc-level-1 {
 }
 .awssld--organic-arrows {
     margin-bottom: 3rem;
+}
+.remark-code-container:has(>svg) {
+    background-color: wheat;
+    margin-bottom: 5px;
+}
+.reveal section > img {
+    object-fit: contain;
+    aspect-ratio: 4 / 3;
+}
+.awssld img {
+    width: calc(100% - 10px);
+    object-fit: contain;
+    aspect-ratio: 16 / 9;
 }
