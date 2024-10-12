@@ -22,7 +22,6 @@ import AsciinemaPlayer from '@/app/components/AsciinemaPlayer';
 import Slider from "@/app/components/Slider";
 import Reveal from '@/app/components/Reveal'
 import mdxMermaid from 'mdx-mermaid'
-import {Mermaid} from 'mdx-mermaid/lib/Mermaid'
 
 export default async function Post({ params }) {
   let { month, slug } = params;
@@ -96,7 +95,6 @@ export default async function Post({ params }) {
           AsciinemaPlayer,
           Slider,
           Reveal,
-          Mermaid
         }} />
       </main>
       <div className='container mx-auto max-w-[1200px] py-12 px-0'>
