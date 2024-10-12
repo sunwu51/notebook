@@ -9,6 +9,7 @@ import remarkCodeTitles from "remark-flexible-code-titles";
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeCodeCopyButton from '@/rehypePlugins/rehype-code-copy-button.mjs'
 import rehypeImageSrcModifier from '@/rehypePlugins/rehype-image-src-modifier.mjs'
+import rehypeMermaid from '@/rehypePlugins/rehype-mermaid.mjs'
 import rehypeTocExt from '@/rehypePlugins/rehype-toc-ext.mjs'
 import { bundleMDX } from 'mdx-bundler'
 import { getMDXComponent } from 'mdx-bundler/client'
@@ -21,7 +22,7 @@ import { Tabs, Item } from '@/app/components/Tabs';
 import AsciinemaPlayer from '@/app/components/AsciinemaPlayer';
 import Slider from "@/app/components/Slider";
 import Reveal from '@/app/components/Reveal'
-import mdxMermaid from 'mdx-mermaid'
+import WrapperComponent from '@/app/components/WrapperComponent';
 
 export default async function Post({ params }) {
   let { month, slug } = params;
@@ -39,9 +40,10 @@ export default async function Post({ params }) {
     source: mdxSource + '\n\n# ' + month,
     cwd: path.join(process.cwd(), 'app', 'components'),
     mdxOptions: (options, frontmatter) => {
-      options.remarkPlugins = [...(options.remarkPlugins ?? []), ...[remarkGfm, remarkCodeTitles, [mdxMermaid,{'output': 'svg', theme: 'dark' }]]]
+      options.remarkPlugins = [...(options.remarkPlugins ?? []), ...[remarkGfm, remarkCodeTitles]]
       options.rehypePlugins = [...(options.rehypePlugins ?? []), ...[
         rehypeSlug,
+        rehypeMermaid,
         [rehypeAutolinkHeadings, { behavior: 'wrap' }],
         [rehypePrismPlus, { ignoreMissing: true, showLineNumbers: true }],
         rehypeCodeCopyButton,
@@ -95,6 +97,7 @@ export default async function Post({ params }) {
           AsciinemaPlayer,
           Slider,
           Reveal,
+          WrapperComponent
         }} />
       </main>
       <div className='container mx-auto max-w-[1200px] py-12 px-0'>

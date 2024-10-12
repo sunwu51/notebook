@@ -255,3 +255,6 @@ nav>ol.toc-level-1 {
     object-fit: contain;
     aspect-ratio: 16 / 9;
 }
+.remark-code-container>pre:has(svg){
+    border: solid 1px #000;
+}
