@@ -42,7 +42,8 @@
     "remark-gfm": "^4.0.0",
     "remark-reading-time": "^2.0.1",
     "reveal.js": "^5.0.5",
-    "tailwind-merge": "^2.3.0"
+    "tailwind-merge": "^2.3.0",
+    "unist-util-visit": "^5.0.0"
   },
   "devDependencies": {
     "eslint": "^8",
