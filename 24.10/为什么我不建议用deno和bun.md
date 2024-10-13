@@ -25,7 +25,7 @@ tags:
 
 `bun1.1.30`下载速度明显更快。
 
-<AsciinemaPlayer src="https://asciinema.org/a/BrseceESdFhP5ifubSRulhQYJ.cast" options = {{theme: 'tango',autoplay: true,}}/>
+<AsciinemaPlayer src="https://asciinema.org/a/mf51PUgAcHKFJJ0X3AcXm8wZJ.cast" options = {{theme: 'tango',autoplay: true,}}/>
 
 # std库的兼容
 写这样一段简单的js代码，用`bun` `deno`分别运行，会发现`deno`是不识别`require`的，导致无法正常运行，而`bun`本着尽量兼容`node`的思想，是能够正常运行的。
