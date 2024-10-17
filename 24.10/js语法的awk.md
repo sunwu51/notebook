@@ -59,7 +59,7 @@ $ cd flat
 $ cargo add clap
 ```
 
-```rs
+```rust
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use quick_js::{Context, JsValue};
@@ -143,7 +143,7 @@ $ cargo add quick-js
 添加js代码上下文`Context::new().unwrap()`，借助其`eval`方法即可运行js代码了，我们把当前行拼接字符串赋值给变量`l`，即可完成相应的功能了。
 
 为了方便使用我们还定义了空对象`ctx`，`n1 n2 n3`三个数字，空字符串`s`，空数组`arr`，这里没有像`awk`中那样用`print`函数才进行打印，而是`eval`返回的对象不是`null/undefined`时m默认打印出来，所以如果不想打印的话，代码块最后可以添加个`null`。
-```rs
+```rust
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use quick_js::{Context, JsValue};
@@ -248,7 +248,7 @@ $ awk 'BEGIN { sum = 0} {sum += length($0)} END {print sum}' test.txt
 
 在macM2上，`awk`只需要`2.58s`，而`flat`有`8.38s`满额了3倍以上，但是比想象中快一些，起码是同一个数量级的。
 
-而在linux上，还是这个文件`awk`只需要`<1s`，而`flat`是`9s`,这个就差了10倍了。
+而在linux上，还是这个文件`awk`只需要`<1s`，而`flat`是`9s`,这个就差了几十倍了。
 
 我们可以思考下为什么我们的代码比`awk`慢了2倍，当然首先会想到，因为我们用了`quick-js`这个js运行时，他需要解释`js`代码来执行，肯定是比较慢的。而且每一行都需要解释，这肯定比`awk`这种纯的`native`程序慢。我们把`eval`删掉，只读取这文件耗时不到1s，所以有7s的时间都是用在了`context.eval`上面。
 
@@ -372,7 +372,7 @@ fn main() {
 $ cargo add deno_core
 ```
 代码进行简单的替换：
-```rs
+```rust
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 use clap::{Arg, Command};
@@ -439,7 +439,7 @@ fn main() {
     }
 }
 ```
-此时的性能提高了2-3倍，计算1亿字符文件字符总数的测试中在gitpod的linux上耗时是`5s`，相比`awk`只有`0.5s`左右。差距在10倍左右。
+此时的性能提高了2-3倍，计算1亿字符文件字符总数的测试中在gitpod的linux上耗时是`5s`，但相比`awk`只有`0.5s`左右。差距在10倍左右。
 ```
 $ time awk '{s+=length($0)} END {print s}' ../test.txt 
 119204505
@@ -448,8 +448,8 @@ real    0m0.577s
 user    0m0.540s
 sys     0m0.036s
 ```
-继续按照行数进行批次处理，如下每100行作为一个批次处理：
-```rs
+继续按照行数进行批次处理，如下每200行作为一个批次处理：
+```rust
 mod test;
 use clap::{Arg, Command};
 use deno_core::JsRuntime;
@@ -560,7 +560,7 @@ real    0m2.114s
 user    0m2.117s
 sys     0m0.394s
 ```
-因为计数的任务比较简单，我们可以在测试一个负责场景，按照数字0将每一行进行拆分，然后把第0个元素取出，过滤出英文字母的个数，进行求和。
+因为计数的任务比较简单，我们可以在测试一个复杂场景，按照数字0将每一行进行拆分，然后把第0个元素取出，过滤出英文字母的个数，进行求和。
 
 ![compare](https://i.imgur.com/tn7sMYE.png)
 
