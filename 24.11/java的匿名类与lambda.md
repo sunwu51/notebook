@@ -253,7 +253,7 @@ public class test/LambdaTest {
 同样有点长，我们只关注部分重点
 - 1 同样有个内部类的声明`static INNERCLASS java/lang/invoke/MethodHandles$Lookup java/lang/invoke/MethodHandles Lookup`，但是类型是`MethodHandles$Lookup`
 - 2 `INVOKEDYNAMIC`这一部分，他有很多行，`run(I)Ljava/lang/Runnable;`指要实现的方法名是`run`，调用点的签名是入参`int`返回一个`Runnable`类型，这里简单理解调用点就是产生我们想要的`Runnable`匿名类的一个入口点。
-- 3 接下来`java/lang/invoke/LambdaMetafactory.metafactory(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;`这一段非常长，其实就是调用`LambdaMetafactory`类的`metafactory`方法，这个方法有6个入参`Lookup`当前调用上下文，由`jvm`自行填充；`String`是方法名，这里就是`run`；第一个`MethodType`是接入点的方法签名，即入参int返回Runnable；第二个`MethodType`是接口中方法签名，这里就是run的`()void`；`MethodHandle`则是真正承载接口实现的一个方法，这个函数是编译器合成的方法，这里是下面的`lambda$main$0`方法；第三个`MethodType`是要实现的方法的签名，这里与第二个`MethodType`一致都是`()void`。最后返回值是`CallSite`类型，一个调用的接入点，这个对象调用`getTarget().invoke(xx)`就可以返回一个目标类型，即`Runnable`。
+- 3 接下来`java/lang/invoke/LambdaMetafactory.metafactory...`这一段非常长，其实就是调用`LambdaMetafactory`类的`metafactory`方法，这个方法有6个入参`Lookup`当前调用上下文，由`jvm`自行填充；`String`是方法名，这里就是`run`；第一个`MethodType`是接入点的方法签名，即入参int返回Runnable；第二个`MethodType`是接口中方法签名，这里就是run的`()void`；`MethodHandle`则是真正承载接口实现的一个方法，这个函数是编译器合成的方法，这里是下面的`lambda$main$0`方法；第三个`MethodType`是要实现的方法的签名，这里与第二个`MethodType`一致都是`()void`。最后返回值是`CallSite`类型，一个调用的接入点，这个对象调用`getTarget().invoke(xx)`就可以返回一个目标类型，即`Runnable`。
 - 4 再往后`()V, test/LambdaTest.lambda$main$0(I)V, ()V`这三个对应的就是上面提到的方法入参，前面3个入参由jvm填充，这是对应后面3个入参。
 - 5 `lambda$main$0(I)V`，这个`private static`的合成方法就是真正实现接口的函数，注意这里有个`int`的入参，引入从上下文中捕捉了变量int。
 
