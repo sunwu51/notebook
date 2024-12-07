@@ -6,3 +6,6 @@
 /public/imgur/**
 **/*.class
 **/*.jar
+**/*.so
+**/*.dll
+**/*.exe
