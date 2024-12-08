@@ -217,7 +217,7 @@ if errB != nil {/*B读取失败*/}
 ```
 当然了，`golang`这种方式的问题也是因为区分的太细，每个`err`都要做判断，判断错误的代码穿插在正常的逻辑中间，没办法很好的分离关注点。
 
-## 2。4 Result/Either
+## 2.4 Result/Either
 
 还有一些语言采用`Result/Either`的方式，和`golang`的多返回值类似，只不过更适合单返回值的语言，例如`Rust`中`Result<T, E>`是一个枚举类型，他要么是`OK(T)`类型，里面会存放正常结果，要么是`Err(E)`类型，里面会存放错误信息。`Scala`的`Either[L, R]`也是类似的，要么是`L`要么是`R`。说到底都和`golang`的`content, err := xxx`是类似的效果。这里不再展开说了。
 
