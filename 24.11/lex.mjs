@@ -1,6 +1,6 @@
 export const ASSIGN = 'ASSIGN', LPAREN = 'LPAREN', RPAREN = 'RPAREN', LBRACE = 'LBRACE', RBRACE = 'RBRACE', LBRACKET = 'LBRACKET', RBRACKET = 'RBRACKET',
     SEMICOLON = 'SEMICOLON', COMMA = 'COMMA', PLUS = 'PLUS', MINUS = 'MINUS', MULTIPLY = 'MULTIPLY', DIVIDE = 'DIVIDE', MODULUS = 'MODULUS', 
-    POINT = 'POINT',
+    POINT = 'POINT', INCREMENT = 'INCREMENT', DECREMENT = 'DECREMENT',
     AND = 'AND', OR = 'OR', NOT = 'NOT', GT = 'GT', LT = 'LT', GTE = 'GTE', LTE = 'LTE', NEQ = 'NEQ',
     BAND = 'BAND', BOR = 'BOR', BXOR = 'BXOR', BNOT = 'BNOT', BSHL = 'BSHL', BSHR = 'BSHR';
 
@@ -49,8 +49,17 @@ export function lex(input) {
             case '}':
                 tokens.push(new Token(RBRACE, '}')); position++; break;
             case '+':
-                tokens.push(new Token(PLUS, '+')); position++; break;
+                if (input[position + 1] == '+') {
+                    tokens.push(new Token(INCREMENT, '++')); position += 2; break;
+                } else {
+                    tokens.push(new Token(PLUS, '+')); position ++; break;
+                }
             case '-':
+                if (input[position + 1] == '-') {
+                    tokens.push(new Token(DECREMENT, '--')); position += 2; break;
+                } else {
+                    tokens.push(new Token(MINUS, '-')); position ++; break;
+                }
                 tokens.push(new Token(MINUS, '-')); position++; break;
             case '*':
                 tokens.push(new Token(MULTIPLY, '*')); position++; break;
@@ -107,9 +116,9 @@ export function lex(input) {
             case '\t':
             case '\r':
                 position++; break;
-            // 回车这里解析一下，因为想要支持js的弱判断
+            // 回车忽略
             case '\n':
-                 tokens.push(new Token(NEW_LINE, '\n')); position++; break;
+                position++; break;
             case '\'':
                 var start = position;
                 while (true) {
