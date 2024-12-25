@@ -16,7 +16,7 @@ class VarSentence extends Sentence {
     }
 
     toString() {
-        return `var ${this.name} = ${this.value.toString()}`;
+        return `var ${this.name} = ${this.value.toString()};`;
     }
 }
 
@@ -26,7 +26,7 @@ class ReturnSentence extends Sentence {
         this.value = value; // 这里的value也是表达式
     }
     toString() {
-        return `return ${this.value.toString()}`;
+        return `return ${this.value.toString()};`;
     }
 }
 
@@ -49,7 +49,7 @@ class ExpressionStatement extends Sentence {
     }
 
     toString() {
-        return this.expression.toString();
+        return this.expression.toString() + ";";
     }
 }
 // 基础类型
@@ -139,40 +139,7 @@ class PostfixOperatorAstNode extends AstNode {
         return `(${this.left.toString()} ${this.op.value})`;
     }
 }
-// 函数声明
-class FunctionDeclarationAstNode extends AstNode {
-    constructor(nameToken, params, body) {
-        super();
-        this.name = name == null ? null :new IdentifierAstNode(nameToken);
-        this.params = params;
-        this.body = body;
-    }
-    toString() {
-        return `function${this.name ? ' ' + this.name.toString() : ''}(${this.params.join(',')})${this.body.map(it=>it.toString()).join('\n')}`;
-    }
-}
-// 函数调用
-class FunctionCallAstNode extends AstNode {
-    constructor(nameToken, args) {
-        super();
-        this.name = new IdentifierAstNode(nameToken);
-        this.args = args; // args是ast数组
-    }
-    toString() {
-        return `${this.name.toString()}(${this.args.map(it=>it.toString()).join(',')})`
-    }
-}
-// 分组节点
-class GroupAstNode extends AstNode {
-    constructor(exp) {
-        super();
-        this.exp = exp;
-    }
-    toString() {
-        // 因为小括号已经在运算符的toString中使用了，这里为了更好的凸显使用中文中括号
-        return `【${this.exp.toString()}】`
-    }
-}
+
 // 语法解析，把tokens转换为sentences
 function parse(tokens) {
     // 从i开始转换成var语句，校验是不是var xx = xxx;格式，然后需要解析表达式parseExpression函数。

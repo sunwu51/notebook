@@ -16,7 +16,7 @@ class VarSentence extends Sentence {
     }
 
     toString() {
-        return `var ${this.name} = ${this.value.toString()}`;
+        return `var ${this.name} = ${this.value.toString()};`;
     }
 }
 
@@ -26,7 +26,7 @@ class ReturnSentence extends Sentence {
         this.value = value; // 这里的value也是表达式
     }
     toString() {
-        return `return ${this.value.toString()}`;
+        return `return ${this.value.toString()};`;
     }
 }
 
@@ -49,7 +49,7 @@ class ExpressionStatement extends Sentence {
     }
 
     toString() {
-        return this.expression.toString();
+        return this.expression.toString() + ";";
     }
 }
 

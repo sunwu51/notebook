@@ -8,6 +8,14 @@ class Sentence {
         }
     }
 }
+class EmptySentence extends Sentence {
+    constructor() {
+        super("EMPTY");
+    }
+    toString() {
+        return "";
+    }
+}
 class VarSentence extends Sentence {
     constructor(name, value) {
         super("VAR");
@@ -41,6 +49,35 @@ class BlockSentence extends Sentence {
 }`
     }
 }
+
+class IfSentence extends Sentence {
+    constructor(condition, ifBody, elseBody) {
+        super("IF");
+        this.condition = condition;
+        this.ifBody = ifBody;
+        this.elseBody = elseBody;
+    }
+    toString() {
+        return `if ${this.condition.toString()} ${this.ifBody.toString()} else ${this.elseBody.toString()}
+`
+    }
+}
+
+class ForSentence extends Sentence {
+    constructor(init, condition, step, body) {
+        super("FOR");
+        this.init = init;
+        this.condition = condition;
+        this.step = step;
+        this.body = body;
+    }
+    toString() {
+        return `for(${this.init.toString()} ${this.condition.toString()} ${this.step.toString()})${this.body.toString()}`
+    }
+}
+class BreakSentence extends Sentence { constructor () { super("BREAK");}}
+class ContinueSentence extends Sentence { constructor () { super("CONTINUE");}}
+
 
 class ExpressionStatement extends Sentence {
     constructor(expression) {
@@ -186,10 +223,13 @@ class GroupAstNode extends AstNode {
 
 
 const precedenceMap = {
-    '+': 1,
-    '-': 1,
-    '*': 2,
-    '/': 2
+    '=': 10,
+    '||': 11, '&&': 12, '^': 13,
+    '==': 14, '!=': 14,
+    '<': 15, '<=': 15, '>': 15, '>=': 15,
+    '<<': 16, '>>': 16, '>>>': 16,
+    '+': 17, '-': 17,
+    '*': 18, '/': 18, '%': 18,
 }
 const prefixPrecedenceMap = {
     '-': 100,
@@ -211,30 +251,44 @@ class Parser {
     }
     // 语法解析，把tokens转换为sentences
     parse() {
-        var tokens = this.tokens;
         var sentences = [];
         for (;;) {
-            var token = tokens[this.cursor];
-            var sentence = null;
-            if (token.type === LEX.SEMICOLON) {
-                this.cursor++;
+            var item = this.parseSentence();
+            if (item == null) break;
+            if (item instanceof EmptySentence) {
                 continue;
-            } else if (token.type === LEX.EOF) {
-                break;
-            } if (token.type === LEX.VAR) {
-                sentence = this.parseVarSentence();
-            } else if (token.type === LEX.RETURN) {
-                sentence = this.parseReturnSentence();
-            } else if (token.type === LEX.LBRACE) {
-                sentence = this.parseBlockSentence();
-            } else {
-                sentence = this.parseExpressionStatement();
             }
-            sentences.push(sentence);
+            sentences.push(item);
         }
         return sentences;
     }
+    parseSentence() {
+        var token = tokens[this.cursor];
+        if (token.type === LEX.SEMICOLON) {
+            this.cursor++;
+            return new EmptySentence();
+        } else if (token.type === LEX.EOF || token.type === LEX.RBRACE || token.type === LEX.RPAREN) {
+            return null;
+        } if (token.type === LEX.VAR) {
+            return this.parseVarSentence();
+        } else if (token.type === LEX.RETURN) {
+            return  this.parseReturnSentence();
+        } else if (token.type === LEX.LBRACE) {
+            return this.parseBlockSentence();
+        } else if (token.type === LEX.IF) {
+            return this.parseIfSentence();
+        } else if (token.type === LEX.FOR) {
+            return this.parseForSentence();
+        } else if (token.type === LEX.BREAK) {
+            return new BreakSentence();
+        } else if (token.type === LEX.CONTINUE) {
+            return new ContinueSentence();
+        } else {
+            return this.parseExpressionStatement();
+        }
+    }
 
+    // 从i开始转换成var语句，校验是不是var xx = xxx;格式，然后需要解析表达式parseExpression函数。
     parseVarSentence() {
         var tokens = this.tokens;
         assert (tokens[this.cursor++].type === LEX.VAR);
@@ -269,13 +323,33 @@ class Parser {
         assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block sentence");
         return result
     }
-    // 转换为块语句，块语句中包含一个语句数组
-    parseBlockSentence() {
+
+    parseIfSentence() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type === LEX.LBRACE, "brace not open for block sentence")
-        var result = new BlockSentence(this.parse());
-        assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block sentence");
-        return result
+        assert(tokens[this.cursor++].type == LEX.IF, "if sentence need a if");                         // if
+        assert(tokens[this.cursor++].type == LEX.LPAREN, "if sentence need a LPAREN follow if");       // (
+        var condition = this.parseExpression();                                                        // condition
+        assert(tokens[this.cursor++].type == LEX.RPAREN, "if sentence need a RPAREN follow condition");// )
+        var ifBody = this.parseBlockSentence();                                                        // {xxx}
+        if (tokens[this.cursor].type == LEX.ELSE) {                                                    
+            this.cursor++;                                                                             // else
+            var elseBody = this.parseBlockSentence();                                                  // {yyy}
+        }
+        return new IfSentence(condition, ifBody, elseBody);
+    }
+
+    parseForSentence() {
+        var tokens = this.tokens;
+        assert(tokens[this.cursor++].type == LEX.FOR, "for sentence need a for");
+        assert(tokens[this.cursor++].type == LEX.LPAREN, "for sentence need a LPAREN follow for");
+        var init = this.parseSentence();
+        assert(tokens[this.cursor++].type == LEX.SEMICOLON, "for sentence error need a SEMICOLON after init");
+        var condition = this.parseSentence();
+        assert(tokens[this.cursor++].type == LEX.SEMICOLON, "for sentence error need a SEMICOLON after condition");
+        var step = this.parseExpression();
+        assert(tokens[this.cursor++].type == LEX.RPAREN, "for sentence need a RPAREN follow condition");
+        var body = this.parseBlockSentence();
+        return new ForSentence(init, condition, step, body);
     }
 
     // 然后修改parseExpression函数，使其接受一个参数，代表前置符号的优先级
@@ -291,7 +365,7 @@ class Parser {
             // 结束循环的条件改为，当前操作符优先级<=上下文优先级 并且 栈为空
             // 这样首先是能兼容为0的情况，其次前缀操作符优先级是比中缀高的，所以前缀操作符传进来的时候一定是遇到中缀就结束
             if (opNode.precedence <= precedence && stackTopPrecedence == precedence) return mid;
-            if (opNode.precedence <= stackTopPrecedence) {
+            if (opNode.op.value == '=' ? opNode.precedence < stackTopPrecedence : opNode.precedence <= stackTopPrecedence) {
                 var top = stack.pop();
                 top.right = mid;
                 mid = top;
@@ -304,6 +378,7 @@ class Parser {
             }
         }
     }
+
     nextUnaryNode() {
         var tokens = this.tokens;
         var node = null;
@@ -319,9 +394,6 @@ class Parser {
                 break;
             case LEX.NULL:
                 node = new NullAstNode(tokens[this.cursor++]);
-                break;
-            case LEX.IDENTIFIER:
-                node = new IdentifierAstNode(tokens[this.cursor++]);
                 break;
             // 遇到前缀运算符
             case LEX.PLUS:
@@ -341,10 +413,55 @@ class Parser {
                 node = new GroupAstNode(this.parseExpression());
                 assert(tokens[this.cursor++].type == LEX.RPAREN, "group not closed");
                 break;
+            case LEX.IDENTIFIER:
+                node = new IdentifierAstNode(tokens[this.cursor++]);
+                // 函数调用
+                while (tokens[this.cursor].type == LEX.LPAREN) {
+                    this.cursor++;
+                    var args = [];
+                    while (tokens[this.cursor].type != LEX.RPAREN) {
+                        args.push(this.parseExpression());
+                        if (tokens[this.cursor].type == LEX.COMMA) {
+                            this.cursor++;
+                        }
+                    }
+                    this.cursor++;
+                    node = new FunctionCallAstNode(node, args);
+                }
+                break;
+            case LEX.FUNCTION:
+                assert(tokens[++this.cursor].type == LEX.LPAREN, "function need a lparen");
+                this.cursor++;
+                var params = [];
+                while (tokens[this.cursor].type != LEX.RPAREN) {
+                    assert(tokens[this.cursor].type == LEX.IDENTIFIER);
+                    params.push(new IdentifierAstNode(tokens[this.cursor++]));
+                    if (tokens[this.cursor].type == LEX.COMMA) {
+                        this.cursor++;
+                    }
+                }
+                this.cursor++;
+                var body = this.parseBlockSentence();
+                node = new FunctionDeclarationAstNode(params, body)
+                // 函数声明直接调用，与变量的代码一模一样
+                while (tokens[this.cursor].type == LEX.LPAREN) {
+                    this.cursor++;
+                    var args = [];
+                    while (tokens[this.cursor].type != LEX.RPAREN) {
+                        args.push(this.parseExpression());
+                        if (tokens[this.cursor].type == LEX.COMMA) {
+                            this.cursor++;
+                        }
+                    }
+                    this.cursor++;
+                    node = new FunctionCallAstNode(node, args);
+                }
+                break;
             default:
                 throw new Error('unexpected token in nextUnary: ' + tokens[this.cursor].type);
         }
         while (tokens[this.cursor].type == LEX.INCREMENT || tokens[this.cursor].type == LEX.DECREMENT) {
+            assert(node instanceof IdentifierAstNode, "INCREMENT/DECREMENT can only be used with identifier");
             node = new PostfixOperatorAstNode(tokens[this.cursor++], node);
         }
         return node;
@@ -369,7 +486,12 @@ function assert(condition) {
 }
 
 
-var code = `var a = -1 * (-++ x ++ - 3) * 4;`;
+var code = `var add = function(a, b ) {return a+b;}(1 + a * 3,2)();`;
+var code = `var a = b = c = 1;`;
+var code = `if (10 > 1) {print("ten");} else {print("not ten");}`;
+var code = `for (var i = 0; i < 10; i++) { print(i); }`;
+
+
 
 var tokens = lex(code);
 var sentences = new Parser(tokens).parse()

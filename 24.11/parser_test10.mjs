@@ -139,6 +139,39 @@ class PostfixOperatorAstNode extends AstNode {
         return `(${this.left.toString()} ${this.op.value})`;
     }
 }
+// 函数声明
+class FunctionDeclarationAstNode extends AstNode {
+    constructor(params, body) {
+        super();
+        this.params = params;
+        this.body = body;
+    }
+    toString() {
+        return `function(${this.params.join(',')})${this.body.toString()}`;
+    }
+}
+// 函数调用
+class FunctionCallAstNode extends AstNode {
+    constructor(caller, args) {
+        super();
+        this.caller = caller;
+        this.args = args;
+    }
+    toString() {
+        return `${this.caller.toString()}(${this.args.map(it=>it.toString()).join(',')})`
+    }
+}
+// 分组节点
+class GroupAstNode extends AstNode {
+    constructor(exp) {
+        super();
+        this.exp = exp;
+    }
+    toString() {
+        // 因为小括号已经在运算符的toString中使用了，这里为了更好的凸显使用中文中括号
+        return `【${this.exp.toString()}】`
+    }
+}
 
 
 
@@ -153,10 +186,13 @@ class PostfixOperatorAstNode extends AstNode {
 
 
 const precedenceMap = {
-    '+': 1,
-    '-': 1,
-    '*': 2,
-    '/': 2
+    '=': 10,
+    '||': 11, '&&': 12, '^': 13,
+    '==': 14, '!=': 14,
+    '<': 15, '<=': 15, '>': 15, '>=': 15,
+    '<<': 16, '>>': 16, '>>>': 16,
+    '+': 17, '-': 17,
+    '*': 18, '/': 18, '%': 18,
 }
 const prefixPrecedenceMap = {
     '-': 100,
@@ -184,8 +220,9 @@ class Parser {
             var token = tokens[this.cursor];
             var sentence = null;
             if (token.type === LEX.SEMICOLON) {
+                this.cursor++;
                 continue;
-            } else if (token.type === LEX.EOF) {
+            } else if (token.type === LEX.EOF || token.type === LEX.RBRACE) {
                 break;
             } if (token.type === LEX.VAR) {
                 sentence = this.parseVarSentence();
@@ -201,50 +238,24 @@ class Parser {
         return sentences;
     }
 
-    // 从i开始转换成var语句，校验是不是var xx = xxx;格式，然后需要解析表达式parseExpression函数。
+
     parseVarSentence() {
         var tokens = this.tokens;
-        assert (tokens[this.cursor].type === LEX.VAR);
-        assert (tokens[this.cursor + 1].type === LEX.IDENTIFIER);
-        assert (tokens[this.cursor + 2].type === LEX.ASSIGN);
-        var name = new IdentifierAstNode(tokens[this.cursor + 1]);
-        for (var j = this.cursor + 3; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                var value = this.parseExpression(this.cursor = this.cursor + 3);
-                return new VarSentence(name, value);
-            }
-        }
+        assert (tokens[this.cursor++].type === LEX.VAR);
+        assert (tokens[this.cursor].type === LEX.IDENTIFIER);
+        var name = new IdentifierAstNode(tokens[this.cursor ++]);
+        assert (tokens[this.cursor++].type === LEX.ASSIGN);
+        var value = this.parseExpression();
+        return new VarSentence(name, value);
     }
-    // 从i开始转换成var语句，校验是不是var xx = xxx;格式，然后需要解析表达式parseExpression函数。
-   parseVarSentence() {
-        var tokens = this.tokens;
-        assert (tokens[this.cursor].type === LEX.VAR);
-        assert (tokens[this.cursor + 1].type === LEX.IDENTIFIER);
-        assert (tokens[this.cursor + 2].type === LEX.ASSIGN);
-        var name = new IdentifierAstNode(tokens[this.cursor + 1]);
-        for (var j = this.cursor + 3; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                this.cursor = this.cursor + 3
-                var value = this.parseExpression();
-                assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
-                this.cursor ++;
-                return new VarSentence(name, value);
-            }
-        }
-    }
+
     // 与var语句类似
     parseReturnSentence() {
         var tokens = this.tokens;
-        assert (tokens[this.cursor].type === LEX.RETURN);
-        for (var j = this.cursor + 1; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                this.cursor += 1;
-                var value = this.parseExpression();
-                assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
-                this.cursor ++;
-                return new ReturnSentence(value);
-            }
-        }
+        assert (tokens[this.cursor++].type === LEX.RETURN);
+        var value = this.parseExpression();
+        assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
+        return new ReturnSentence(value);
     }
     // 转换为表达式语句
     parseExpressionStatement() {
@@ -267,34 +278,33 @@ class Parser {
         return result
     }
 
-    // 表达式解析，解析下一个表达式，遇到无法识别的字符会结束
-    parseExpression() {
+    // 然后修改parseExpression函数，使其接受一个参数，代表前置符号的优先级
+    parseExpression(precedence = 0) {
         var tokens = this.tokens;
         var stack = [];
         var mid = null;
         while (true) {
-            // 每个循环，准备好栈顶优先级、中间元素、当前操作符
-            var stackTopPrecedence = stack.length == 0? 0: stack[stack.length - 1].precedence;
+            // 此时栈为空的时候默认看到的就是上下文传进来的优先级
+            var stackTopPrecedence = stack.length == 0 ? precedence: stack[stack.length - 1].precedence;
             mid = mid == null ? this.nextUnaryNode() : mid;
             var opNode = this.getEofOrInfixNode(tokens, this.cursor);
-            // 结束循环的条件
-            if (opNode.precedence == 0 && stackTopPrecedence == 0)return mid;
-            // 栈顶操作符赢得mid：弹出栈顶，填充right，并作为新的mid; NULL是EOF是最低优先级
-            if (opNode.precedence <= stackTopPrecedence) {
+            // 结束循环的条件改为，当前操作符优先级<=上下文优先级 并且 栈为空
+            // 这样首先是能兼容为0的情况，其次前缀操作符优先级是比中缀高的，所以前缀操作符传进来的时候一定是遇到中缀就结束
+            if (opNode.precedence <= precedence && stackTopPrecedence == precedence) return mid;
+            if (opNode.op.value == '=' ? opNode.precedence < stackTopPrecedence : opNode.precedence <= stackTopPrecedence) {
                 var top = stack.pop();
                 top.right = mid;
                 mid = top;
             }
-            // 当前操作符赢得mid：塞入栈中，继续向后走
             else {
                 opNode.left = mid;
                 stack.push(opNode);
                 this.cursor++;
-                mid = null; // 往后走取新的mid
+                mid = null;
             }
         }
-        
     }
+
     nextUnaryNode() {
         var tokens = this.tokens;
         var node = null;
@@ -311,9 +321,6 @@ class Parser {
             case LEX.NULL:
                 node = new NullAstNode(tokens[this.cursor++]);
                 break;
-            case LEX.IDENTIFIER:
-                node = new IdentifierAstNode(tokens[this.cursor++]);
-                break;
             // 遇到前缀运算符
             case LEX.PLUS:
             case LEX.MINUS:
@@ -321,9 +328,8 @@ class Parser {
             case LEX.DECREMENT:
             case LEX.NOT:
             case LEX.BIT_NOT:
-                // 前缀后面递归解析一元节点（前缀后面一定是个一元节点）
-                // 并且前缀操作符都是右结合的，所以可以直接递归。
-                node = new PrefixOperatorAstNode(tokens[this.cursor++], this.nextUnaryNode());
+                // 使用parseExpression函数递归，但是要传递当前符号的优先级
+                node = new PrefixOperatorAstNode(tokens[this.cursor], this.parseExpression(prefixPrecedenceMap[tokens[this.cursor++].value]));
                 break;
             // 分组
             case LEX.LPAREN:
@@ -333,11 +339,55 @@ class Parser {
                 node = new GroupAstNode(this.parseExpression());
                 assert(tokens[this.cursor++].type == LEX.RPAREN, "group not closed");
                 break;
+            case LEX.IDENTIFIER:
+                node = new IdentifierAstNode(tokens[this.cursor++]);
+                // 函数调用
+                while (tokens[this.cursor].type == LEX.LPAREN) {
+                    this.cursor++;
+                    var args = [];
+                    while (tokens[this.cursor].type != LEX.RPAREN) {
+                        args.push(this.parseExpression());
+                        if (tokens[this.cursor].type == LEX.COMMA) {
+                            this.cursor++;
+                        }
+                    }
+                    this.cursor++;
+                    node = new FunctionCallAstNode(node, args);
+                }
+                break;
+            case LEX.FUNCTION:
+                assert(tokens[++this.cursor].type == LEX.LPAREN, "function need a lparen");
+                this.cursor++;
+                var params = [];
+                while (tokens[this.cursor].type != LEX.RPAREN) {
+                    assert(tokens[this.cursor].type == LEX.IDENTIFIER);
+                    params.push(new IdentifierAstNode(tokens[this.cursor++]));
+                    if (tokens[this.cursor].type == LEX.COMMA) {
+                        this.cursor++;
+                    }
+                }
+                this.cursor++;
+                var body = this.parseBlockSentence();
+                node = new FunctionDeclarationAstNode(params, body)
+                // 函数声明直接调用，与变量的代码一模一样
+                while (tokens[this.cursor].type == LEX.LPAREN) {
+                    this.cursor++;
+                    var args = [];
+                    while (tokens[this.cursor].type != LEX.RPAREN) {
+                        args.push(this.parseExpression());
+                        if (tokens[this.cursor].type == LEX.COMMA) {
+                            this.cursor++;
+                        }
+                    }
+                    this.cursor++;
+                    node = new FunctionCallAstNode(node, args);
+                }
+                break;
             default:
                 throw new Error('unexpected token in nextUnary: ' + tokens[this.cursor].type);
         }
-        // 后缀操作符，后缀操作符都是左结合的，并且后缀操作符的优先级比前缀都要高
         while (tokens[this.cursor].type == LEX.INCREMENT || tokens[this.cursor].type == LEX.DECREMENT) {
+            assert(node instanceof IdentifierAstNode, "INCREMENT/DECREMENT can only be used with identifier");
             node = new PostfixOperatorAstNode(tokens[this.cursor++], node);
         }
         return node;
@@ -362,7 +412,8 @@ function assert(condition) {
 }
 
 
-var code = `var a = 1 * 2 - 3;`;
+var code = `var add = function(a, b ) {return a+b;}(1 + a * 3,2)();`;
+var code = `var a = b = c = 1`;
 
 var tokens = lex(code);
 var sentences = new Parser(tokens).parse()

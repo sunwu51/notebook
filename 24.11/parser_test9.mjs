@@ -16,7 +16,7 @@ class VarSentence extends Sentence {
     }
 
     toString() {
-        return `var ${this.name} = ${this.value.toString()}`;
+        return `var ${this.name} = ${this.value.toString()};`;
     }
 }
 
@@ -26,7 +26,7 @@ class ReturnSentence extends Sentence {
         this.value = value; // 这里的value也是表达式
     }
     toString() {
-        return `return ${this.value.toString()}`;
+        return `return ${this.value.toString()};`;
     }
 }
 
@@ -49,7 +49,7 @@ class ExpressionStatement extends Sentence {
     }
 
     toString() {
-        return this.expression.toString();
+        return this.expression.toString() + ";";
     }
 }
 // 基础类型
@@ -143,25 +143,24 @@ class PostfixOperatorAstNode extends AstNode {
 }
 // 函数声明
 class FunctionDeclarationAstNode extends AstNode {
-    constructor(nameToken, params, body) {
+    constructor(params, body) {
         super();
-        this.name = name == null ? null :new IdentifierAstNode(nameToken);
         this.params = params;
         this.body = body;
     }
     toString() {
-        return `function${this.name ? ' ' + this.name.toString() : ''}(${this.params.join(',')})${this.body.map(it=>it.toString()).join('\n')}`;
+        return `function(${this.params.join(',')})${this.body.toString()}`;
     }
 }
 // 函数调用
 class FunctionCallAstNode extends AstNode {
-    constructor(nameToken, args) {
+    constructor(caller, args) {
         super();
-        this.name = new IdentifierAstNode(nameToken);
-        this.args = args; // args是ast数组
+        this.caller = caller;
+        this.args = args;
     }
     toString() {
-        return `${this.name.toString()}(${this.args.map(it=>it.toString()).join(',')})`
+        return `${this.caller.toString()}(${this.args.map(it=>it.toString()).join(',')})`
     }
 }
 // 分组节点
@@ -175,9 +174,6 @@ class GroupAstNode extends AstNode {
         return `【${this.exp.toString()}】`
     }
 }
-
-
-
 
 
 
@@ -220,6 +216,7 @@ class Parser {
             var token = tokens[this.cursor];
             var sentence = null;
             if (token.type === LEX.SEMICOLON) {
+                this.cursor++;
                 continue;
             } else if (token.type === LEX.EOF) {
                 break;
@@ -236,76 +233,39 @@ class Parser {
         }
         return sentences;
     }
-
-    // 从i开始转换成var语句，校验是不是var xx = xxx;格式，然后需要解析表达式parseExpression函数。
     parseVarSentence() {
         var tokens = this.tokens;
-        assert (tokens[this.cursor].type === LEX.VAR);
-        assert (tokens[this.cursor + 1].type === LEX.IDENTIFIER);
-        assert (tokens[this.cursor + 2].type === LEX.ASSIGN);
-        var name = new IdentifierAstNode(tokens[this.cursor + 1]);
-        for (var j = this.cursor + 3; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                var value = this.parseExpression(this.cursor = this.cursor + 3);
-                return new VarSentence(name, value);
-            }
-        }
+        assert (tokens[this.cursor++].type === LEX.VAR);
+        assert (tokens[this.cursor].type === LEX.IDENTIFIER);
+        var name = new IdentifierAstNode(tokens[this.cursor++]);
+        assert (tokens[this.cursor++].type === LEX.ASSIGN);
+        var value = this.parseExpression();
+        return new VarSentence(name, value);
     }
-    // 从i开始转换成var语句，校验是不是var xx = xxx;格式，然后需要解析表达式parseExpression函数。
-   parseVarSentence() {
-        var tokens = this.tokens;
-        assert (tokens[this.cursor].type === LEX.VAR);
-        assert (tokens[this.cursor + 1].type === LEX.IDENTIFIER);
-        assert (tokens[this.cursor + 2].type === LEX.ASSIGN);
-        var name = new IdentifierAstNode(tokens[this.cursor + 1]);
-        for (var j = this.cursor + 3; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                this.cursor = this.cursor + 3
-                var value = this.parseExpression();
-                assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
-                this.cursor ++;
-                return new VarSentence(name, value);
-            }
-        }
-    }
+
     // 与var语句类似
     parseReturnSentence() {
         var tokens = this.tokens;
-        assert (tokens[this.cursor].type === LEX.RETURN);
-        for (var j = this.cursor + 1; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                this.cursor += 1;
-                var value = this.parseExpression();
-                assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
-                this.cursor ++;
-                return new ReturnSentence(value);
-            }
-        }
+        assert (tokens[this.cursor++].type === LEX.RETURN);
+        var value = this.parseExpression();
+        assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
+        return new ReturnSentence(value);
     }
+
     // 转换为表达式语句
     parseExpressionStatement() {
         var tokens = this.tokens;
-        for (var j = this.cursor; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                var expression = this.parseExpression();
-                assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX>EOF);
-                this.cursor ++;
-                return new ExpressionStatement(expression);
-            }
-        }
+        var value = this.parseExpression();
+        assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
+        return new ExpressionStatement(value);
     }
     // 转换为块语句，块语句中包含一个语句数组
     parseBlockSentence() {
         var tokens = this.tokens;
-        var braceCount = 0;
-        for (var j = this.cursor; j < tokens.length; j++) {
-            if (tokens[j].type == LEX.LBRACE) braceCount++;
-            if (tokens[j].type == LEX.RBRACE) braceCount--;
-            if (braceCount == 0) {
-                return new BlockSentence(parse(tokens.slice(this.cursor + 1, this.cursor = j)));
-            }
-        }
-        throw new Error("brace not close for block sentence")
+        assert(tokens[this.cursor++].type === LEX.LBRACE, "brace not open for block sentence")
+        var result = new BlockSentence(this.parse());
+        assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block sentence");
+        return result
     }
 
     parseExpression() {
