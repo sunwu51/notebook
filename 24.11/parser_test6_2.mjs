@@ -1,6 +1,6 @@
 import * as LEX  from "./lex.mjs";
-import {VarSentence, ReturnSentence, BlockSentence, ExpressionSentence, precedenceMap, IfSentence} from './parser_class_v3.mjs'
-import {AstNode, IdentifierAstNode, NumberAstNode, InfixOperatorAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, GroupAstNode, FunctionDeclarationAstNode, FunctionCallAstNode} from './parser_class_v3.mjs'
+import {VarSentence, ReturnSentence, BlockSentence, ExpressionSentence, precedenceMap, prefixPrecedenceMap, postfixPrecedenceMap} from './parser_class_v3.mjs'
+import {AstNode, IdentifierAstNode, NumberAstNode, InfixOperatorAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, GroupAstNode} from './parser_class_v3.mjs'
 
 class Parser {
     constructor(tokens) {
@@ -24,8 +24,6 @@ class Parser {
                 sentence = this.parseReturnSentence();
             } else if (token.type === LEX.LBRACE) {
                 sentence = this.parseBlockSentence();
-            } else if (token.type === LEX.IF) {
-                sentence = this.parseIfSentence();
             } else {
                 sentence = this.parseExpressionSentence();
             }
@@ -80,29 +78,20 @@ class Parser {
         assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block sentence");
         return result
     }
-    parseIfSentence() {
-        var tokens = this.tokens;
-        assert(tokens[this.cursor++].type == LEX.IF, "if sentence need a if");                         // if
-        assert(tokens[this.cursor++].type == LEX.LPAREN, "if sentence need a LPAREN follow if");       // (
-        var condition = this.parseExpression();                                                        // condition
-        assert(tokens[this.cursor++].type == LEX.RPAREN, "if sentence need a RPAREN follow condition");// )
-        var ifBody = this.parseBlockSentence();                                                        // {xxx}
-        if (tokens[this.cursor].type == LEX.ELSE) {                                                    
-            this.cursor++;                                                                              // else
-            var elseBody = this.parseBlockSentence();                                                   // {yyy}
-        }
-        return new IfSentence(condition, ifBody, elseBody);
-    }
-    parseExpression() {
+    // 然后修改parseExpression函数，使其接受一个参数，代表前置符号的优先级
+    parseExpression(precedence = 0) {
         var tokens = this.tokens;
         var stack = [];
         var mid = null;
         while (true) {
-            var stackTopPrecedence = stack.length == 0? 0: stack[stack.length - 1].precedence;
+            // 此时栈为空的时候默认看到的就是上下文传进来的优先级
+            var stackTopPrecedence = stack.length == 0 ? precedence: stack[stack.length - 1].precedence;
             mid = mid == null ? this.nextUnaryNode() : mid;
             var opNode = this.getEofOrInfixNode(tokens, this.cursor);
-            if (opNode.precedence == 0 && stackTopPrecedence == 0)return mid;
-            if (opNode.op.type === LEX.ASSIGN ? opNode.precedence < stackTopPrecedence : opNode.precedence <= stackTopPrecedence) {
+            // 结束循环的条件改为，当前操作符优先级<=上下文优先级 并且 栈为空
+            // 这样首先是能兼容为0的情况，其次前缀操作符优先级是比中缀高的，所以前缀操作符传进来的时候一定是遇到中缀就结束
+            if (opNode.precedence <= precedence && stackTopPrecedence == precedence) return mid;
+            if (opNode.precedence <= stackTopPrecedence) {
                 var top = stack.pop();
                 top.right = mid;
                 mid = top;
@@ -131,6 +120,9 @@ class Parser {
             case LEX.NULL:
                 node = new NullAstNode(tokens[this.cursor++]);
                 break;
+            case LEX.IDENTIFIER:
+                node = new IdentifierAstNode(tokens[this.cursor++]);
+                break;
             // 遇到前缀运算符
             case LEX.PLUS:
             case LEX.MINUS:
@@ -138,9 +130,8 @@ class Parser {
             case LEX.DECREMENT:
             case LEX.NOT:
             case LEX.BIT_NOT:
-                // 前缀后面递归解析一元节点（前缀后面一定是个一元节点）
-                // 并且前缀操作符都是右结合的，所以可以直接递归。
-                node = new PrefixOperatorAstNode(tokens[this.cursor++], this.nextUnaryNode());
+                // 使用parseExpression函数递归，但是要传递当前符号的优先级
+                node = new PrefixOperatorAstNode(tokens[this.cursor], this.parseExpression(prefixPrecedenceMap[tokens[this.cursor++].value]));
                 break;
             // 分组
             case LEX.LPAREN:
@@ -149,50 +140,6 @@ class Parser {
                 // GroupAstNode其实可有可无
                 node = new GroupAstNode(this.parseExpression());
                 assert(tokens[this.cursor++].type == LEX.RPAREN, "group not closed");
-                break;
-            case LEX.IDENTIFIER:
-                node = new IdentifierAstNode(tokens[this.cursor++]);
-                // 函数调用
-                while (tokens[this.cursor].type == LEX.LPAREN) {
-                    this.cursor++;
-                    var args = [];
-                    while (tokens[this.cursor].type != LEX.RPAREN) {
-                        args.push(this.parseExpression());
-                        if (tokens[this.cursor].type == LEX.COMMA) {
-                            this.cursor++;
-                        }
-                    }
-                    this.cursor++;
-                    node = new FunctionCallAstNode(node, args);
-                }
-                break;
-            case LEX.FUNCTION:
-                assert(tokens[++this.cursor].type == LEX.LPAREN, "function need a lparen");
-                this.cursor++;
-                var params = [];
-                while (tokens[this.cursor].type != LEX.RPAREN) {
-                    assert(tokens[this.cursor].type == LEX.IDENTIFIER);
-                    params.push(new IdentifierAstNode(tokens[this.cursor++]));
-                    if (tokens[this.cursor].type == LEX.COMMA) {
-                        this.cursor++;
-                    }
-                }
-                this.cursor++;
-                var body = this.parseBlockSentence();
-                node = new FunctionDeclarationAstNode(params, body)
-                // 函数声明直接调用，与变量的代码一模一样
-                while (tokens[this.cursor].type == LEX.LPAREN) {
-                    this.cursor++;
-                    var args = [];
-                    while (tokens[this.cursor].type != LEX.RPAREN) {
-                        args.push(this.parseExpression());
-                        if (tokens[this.cursor].type == LEX.COMMA) {
-                            this.cursor++;
-                        }
-                    }
-                    this.cursor++;
-                    node = new FunctionCallAstNode(node, args);
-                }
                 break;
             default:
                 throw new Error('unexpected token in nextUnary: ' + tokens[this.cursor].type);
@@ -205,6 +152,7 @@ class Parser {
     }
     getEofOrInfixNode(tokens, index) {
         var eof = new InfixOperatorAstNode(new LEX.Token(LEX.EOF, 'EOF'));
+        eof.precedence = 0;
         if (index >= tokens.length) return eof
         var token = tokens[index];
         if (precedenceMap[token.value] == null) {
@@ -221,24 +169,10 @@ function assert(condition, msg) {
     }
 }
 
-
 var code = `var a = 1 * (2 - 3);
     return 1 * 3 - b;
 {a * 3 - 1;}
 var b = -1 + !(var1 + var2++);
-var c = b = a = 1;
-var add = function(a,b) {return a +b;};
-var res = add(2,add(1, 13))(1)(333,b + a * 3);
-var res = function(a,b) {return a +b;}(1,2)(3);
-
-if (a > 1) {
-    var a = 1;
-}
-if (a > b) {
-    print(a);
-} else {
-    print(b);
-}
 `;
 
 var tokens = LEX.lex(code);

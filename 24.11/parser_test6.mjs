@@ -1,269 +1,123 @@
 import * as LEX  from "./lex.mjs";
-import  { lex } from './lex.mjs';
+import {VarSentence, ReturnSentence, BlockSentence, ExpressionSentence, precedenceMap} from './parser_class_v3.mjs'
+import {AstNode, IdentifierAstNode, NumberAstNode, InfixOperatorAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, GroupAstNode} from './parser_class_v3.mjs'
 
-class Sentence {
-    constructor(type) {
-        if (type) {
-            this.type = type.toUpperCase() + "_SENTENCE";
+class Parser {
+    constructor(tokens) {
+        this.tokens = tokens;
+        this.cursor = 0;
+    }
+    parse() {
+        var tokens = this.tokens;
+        var sentences = [];
+        for (;;) {
+            var token = tokens[this.cursor];
+            var sentence = null;
+            if (token.type === LEX.SEMICOLON) {
+                this.cursor++;
+                continue;
+            } else if (token.type === LEX.EOF || token.type === LEX.RBRACE) {
+                break;
+            } if (token.type === LEX.VAR) {
+                sentence = this.parseVarSentence();
+            } else if (token.type === LEX.RETURN) {
+                sentence = this.parseReturnSentence();
+            } else if (token.type === LEX.LBRACE) {
+                sentence = this.parseBlockSentence();
+            } else {
+                sentence = this.parseExpressionSentence();
+            }
+            sentences.push(sentence);
         }
+        return sentences;
     }
-}
-class VarSentence extends Sentence {
-    constructor(name, value) {
-        super("VAR");
-        this.name = name;   // name本身其实也是个表达式
-        this.value = value; // 这里的value是个表达式
-    }
-
-    toString() {
-        return `var ${this.name} = ${this.value.toString()};`;
-    }
-}
-
-class ReturnSentence extends Sentence {
-    constructor(value) {
-        super("RETURN");
-        this.value = value; // 这里的value也是表达式
-    }
-    toString() {
-        return `return ${this.value.toString()};`;
-    }
-}
-
-class BlockSentence extends Sentence {
-    constructor(sentences) {
-        super("BLOCK");
-        this.sentences = sentences;
-    }
-    toString() {
-        return `{
-    ${this.sentences.map(it=>it.toString()).join('\n')}
-}`
-    }
-}
-
-class ExpressionStatement extends Sentence {
-    constructor(expression) {
-        super("EXPRESSION");
-        this.expression = expression; // 这里的expression也是表达式
-    }
-
-    toString() {
-        return this.expression.toString() + ";";
-    }
-}
-// 基础类型
-class AstNode {
-}
-// 数字字面量
-class NumberAstNode extends AstNode {
-    constructor(token) {
-        super();
-        this.token = token;
-    }
-
-    toString() {
-        return this.token.value;
-    }
-}
-// 变量名/函数名字面量
-class IdentifierAstNode extends AstNode {
-    constructor(token) {
-        super();
-        this.token = token;
-    }
-
-    toString() {
-        return this.token.value;
-    }
-}
-// null字面量
-class NullAstNode extends AstNode {
-    toString() {
-        return "null";
-    }
-}
-
-// 字符串字面量
-class StringAstNode extends AstNode {
-    constructor(token) {
-        super();
-        this.token = token;
-    }
-    toString() {
-        return this.token.value;
-    }
-}
-// boolean字面量
-class BooleanAstNode extends AstNode {
-    constructor(token) {
-        super();
-        this.token = token;
-    }
-    toString() {
-        return this.token.value;
-    }
-}
-// 中缀操作符节点
-class InfixOperatorAstNode extends AstNode {
-    constructor(token) {
-        super();
-        this.op = token;
-        this.left = null;
-        this.right = null;
-        this.precedence = precedenceMap[token.value];
-    }
-    toString() {
-        return `(${this.left.toString()} ${this.op.value} ${this.right.toString()})`;
-    }
-}
-// 前缀操作符
-class PrefixOperatorAstNode extends AstNode {
-    constructor(token, right) {
-        super(false);
-        this.op = token;
-        this.right = right;
-    }
-    toString() {
-        return `(${this.op.value} ${this.right.toString()})`;
-    }
-}
-// 后缀操作符
-class PostfixOperatorAstNode extends AstNode {
-    constructor(token, left) {
-        super(false);
-        this.op = token;
-        this.left = left;
-    }
-    toString() {
-        return `(${this.left.toString()} ${this.op.value})`;
-    }
-}
-
-// 语法解析，把tokens转换为sentences
-function parse(tokens) {
-    // 从i开始转换成var语句，校验是不是var xx = xxx;格式，然后需要解析表达式parseExpression函数。
-    function parseVarSentence() {
-        assert (tokens[i].type === LEX.VAR);
-        assert (tokens[i + 1].type === LEX.IDENTIFIER);
-        assert (tokens[i + 2].type === LEX.ASSIGN);
-        var name = new IdentifierAstNode(tokens[i + 1]);
-        for (var j = i + 3; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                var value = parseExpression(tokens, i + 3);
-                i = j;
+    parseVarSentence() {
+        var tokens = this.tokens;
+        assert(tokens[this.cursor++].type === LEX.VAR, "VarSentence should start with var");
+        assert(tokens[this.cursor].type === LEX.IDENTIFIER, "IDENTIFIER should follow var");
+        var name = new IdentifierAstNode(tokens[this.cursor++]);
+        assert(tokens[this.cursor++].type === LEX.ASSIGN, "ASSIGN should follow IDENT");
+        for (var x = this.cursor; this.cursor < tokens.length; this.cursor++) {
+            if (tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type === LEX.EOF) {
+                var value = this.parseExpression(tokens, x);
                 return new VarSentence(name, value);
             }
         }
     }
-    // 与var语句类似
-    function parseReturnSentence() {
-        assert (tokens[i].type === LEX.RETURN);
-        for (var j = i + 1; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                var value = parseExpression(tokens, i + 1);
-                i = j;
-                return new ReturnSentence(value);
+   parseVarSentence() {
+        var tokens = this.tokens;
+        assert (tokens[this.cursor].type === LEX.VAR);
+        assert (tokens[this.cursor + 1].type === LEX.IDENTIFIER);
+        assert (tokens[this.cursor + 2].type === LEX.ASSIGN);
+        var name = new IdentifierAstNode(tokens[this.cursor + 1]);
+        this.cursor = this.cursor + 3
+        var value = this.parseExpression();
+        assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
+        this.cursor ++;
+        return new VarSentence(name, value);
+    }
+    parseReturnSentence() {
+        var tokens = this.tokens;
+        assert(tokens[this.cursor++].type === LEX.RETURN, "ReturnSentence should start with return");
+        var value = this.parseExpression();
+        assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
+        this.cursor ++;
+        return new ReturnSentence(value);
+    }
+    parseExpressionSentence() {
+        var tokens = this.tokens;
+        var expression = this.parseExpression();
+        assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
+        this.cursor ++;
+        return new ExpressionSentence(expression);
+    }
+    parseBlockSentence() {
+        var tokens = this.tokens;
+        assert(tokens[this.cursor++].type === LEX.LBRACE, "brace not open for block sentence")
+        var result = new BlockSentence(this.parse());
+        assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block sentence");
+        return result
+    }
+    parseExpression() {
+        var tokens = this.tokens;
+        var stack = [];
+        var mid = null;
+        while (true) {
+            var stackTopPrecedence = stack.length == 0? 0: stack[stack.length - 1].precedence;
+            mid = mid == null ? this.nextUnaryNode() : mid;
+            var opNode = this.getEofOrInfixNode(tokens, this.cursor);
+            if (opNode.precedence == 0 && stackTopPrecedence == 0)return mid;
+            if (opNode.precedence <= stackTopPrecedence) {
+                var top = stack.pop();
+                top.right = mid;
+                mid = top;
+            }
+            else {
+                opNode.left = mid;
+                stack.push(opNode);
+                this.cursor++;
+                mid = null;
             }
         }
     }
-    // 转换为表达式语句
-    function parseExpressionStatement() {
-        for (var j = i; j < tokens.length; j++) {
-            if (tokens[j].type === LEX.SEMICOLON || tokens[j].type === LEX.EOF) {
-                var expression = parseExpression(tokens, i);
-                i = j;
-                return new ExpressionStatement(expression);
-            }
-        }
-    }
-    // 转换为块语句，块语句中包含一个语句数组
-    function parseBlockSentence() {
-        var braceCount = 0;
-        for (var j = i; j < tokens.length; j++) {
-            if (tokens[j].type == LEX.LBRACE) braceCount++;
-            if (tokens[j].type == LEX.RBRACE) braceCount--;
-            if (braceCount == 0) {
-                return new BlockSentence(parse(tokens.slice(i + 1, i = j)));
-            }
-        }
-        throw new Error("brace not close for block sentence")
-    }
-    var sentences = [];
-    for (var i = 0; i < tokens.length; i++) {
-        var token = tokens[i];
-        var sentence = null;
-        if (token.type === LEX.SEMICOLON) {
-            continue;
-        } else if (token.type === LEX.EOF) {
-            break;
-        } if (token.type === LEX.VAR) {
-            sentence = parseVarSentence();
-        } else if (token.type === LEX.RETURN) {
-            sentence = parseReturnSentence();
-        } else if (token.type === LEX.LBRACE) {
-            sentence = parseBlockSentence();
-        } else {
-            sentence = parseExpressionStatement();
-        }
-        sentences.push(sentence);
-    }
-    return sentences;
-}
-function assert(condition) {
-    if (!condition) {
-        throw new Error("assert failed");
-    }
-}
-const precedenceMap = {
-    '+': 1,
-    '-': 1,
-    '*': 2,
-    '/': 2
-}
-
-function parseExpression(tokens, start) {
-    var stack = [];
-    var i = start, mid = null;
-    while (true) {
-        // 每个循环，准备好栈顶优先级、中间元素、当前操作符
-        var stackTopPrecedence = stack.length == 0? 0: stack[stack.length - 1].precedence;
-        mid = mid == null ? nextUnaryNode() : mid;
-        var opNode = getEofOrInfixNode(tokens, i);
-        // 结束循环的条件
-        if (opNode.precedence == 0 && stackTopPrecedence == 0)return mid;
-        // 栈顶操作符赢得mid：弹出栈顶，填充right，并作为新的mid; NULL是EOF是最低优先级
-        if (opNode.precedence <= stackTopPrecedence) {
-            var top = stack.pop();
-            top.right = mid;
-            mid = top;
-        }
-        // 当前操作符赢得mid：塞入栈中，继续向后走
-        else {
-            opNode.left = mid;
-            stack.push(opNode);
-            i++;
-            mid = null; // 往后走取新的mid
-        }
-    }
-    // 这个函数的定义放到parseExpression函数里面
-    function nextUnaryNode() {
+    nextUnaryNode() {
+        var tokens = this.tokens;
         var node = null;
-        switch (tokens[i].type) {
+        switch (tokens[this.cursor].type) {
             case LEX.NUMBER:
-                node = new NumberAstNode(tokens[i++]);
+                node = new NumberAstNode(tokens[this.cursor++]);
                 break;
             case LEX.STRING:
-                node = new StringAstNode(tokens[i++]);
+                node = new StringAstNode(tokens[this.cursor++]);
                 break;
             case LEX.BOOLEAN:
-                node = new BooleanAstNode(tokens[i++]);
+                node = new BooleanAstNode(tokens[this.cursor++]);
                 break;
             case LEX.NULL:
-                node = new NullAstNode(tokens[i++]);
+                node = new NullAstNode(tokens[this.cursor++]);
                 break;
             case LEX.IDENTIFIER:
-                node = new IdentifierAstNode(tokens[i++]);
+                node = new IdentifierAstNode(tokens[this.cursor++]);
                 break;
             // 遇到前缀运算符
             case LEX.PLUS:
@@ -274,32 +128,52 @@ function parseExpression(tokens, start) {
             case LEX.BIT_NOT:
                 // 前缀后面递归解析一元节点（前缀后面一定是个一元节点）
                 // 并且前缀操作符都是右结合的，所以可以直接递归。
-                node = new PrefixOperatorAstNode(tokens[i++], nextUnaryNode());
+                node = new PrefixOperatorAstNode(tokens[this.cursor++], this.nextUnaryNode());
+                break;
+            // 分组
+            case LEX.LPAREN:
+                // 递归解析(后面的即可，因为遇到)的时候，parseExpression无法识别，就会结束解析
+                this.cursor++;
+                // GroupAstNode其实可有可无
+                node = new GroupAstNode(this.parseExpression());
+                assert(tokens[this.cursor++].type == LEX.RPAREN, "group not closed");
                 break;
             default:
-                throw new Error('unexpected token in getNode: ' + tokens[i].type);
+                throw new Error('unexpected token in nextUnary: ' + tokens[this.cursor].type);
         }
         // 后缀操作符，后缀操作符都是左结合的，并且后缀操作符的优先级比前缀都要高
-        while (tokens[i].type == LEX.INCREMENT || tokens[i].type == LEX.DECREMENT) {
-            node = new PostfixOperatorAstNode(tokens[i++], node);
+        while (tokens[this.cursor].type == LEX.INCREMENT || tokens[this.cursor].type == LEX.DECREMENT) {
+            node = new PostfixOperatorAstNode(tokens[this.cursor++], node);
         }
         return node;
     }
-}
-function getEofOrInfixNode(tokens, index) {
-    var eof = new InfixOperatorAstNode('EOF');
-    eof.precedence = 0;
-    if (index >= tokens.length) return eof
-    var token = tokens[index];
-    if (precedenceMap[token.value] == null) {
-        return eof;
+    getEofOrInfixNode(tokens, index) {
+        var eof = new InfixOperatorAstNode(new LEX.Token(LEX.EOF, 'EOF'));
+        if (index >= tokens.length) return eof
+        var token = tokens[index];
+        if (precedenceMap[token.value] == null) {
+            return eof;
+        }
+        return new InfixOperatorAstNode(tokens[index]);
     }
-    return new InfixOperatorAstNode(tokens[index]);
 }
-var code = `var a = var1 + 2 * 3 / 4 - 5;`;
 
-var tokens = lex(code);
-var sentences = parse(tokens)
+function assert(condition, msg) {
+    if (!condition) {
+        if (msg) throw new Error(msg);
+        throw new Error("assert failed");
+    }
+}
+
+
+var code = `var a = 1 * (2 - 3);
+    return 1 * 3 - b;
+{a * 3 - 1;}
+var b = -1 + !(var1 + var2++);
+`;
+
+var tokens = LEX.lex(code);
+var sentences = new Parser(tokens).parse()
 
 for (var i = 0; i < sentences.length; i++) {
     console.log(sentences[i].toString());
