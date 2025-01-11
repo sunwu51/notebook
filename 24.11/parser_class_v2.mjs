@@ -1,7 +1,7 @@
-export class Sentence {
+export class Statement {
 }
 
-export class VarSentence extends Sentence {
+export class VarStatement extends Statement {
     constructor(name, value) {
         super();
         this.name = name;   // name本身其实也是个表达式
@@ -12,7 +12,7 @@ export class VarSentence extends Sentence {
     }
 }
 
-export class ReturnSentence extends Sentence {
+export class ReturnStatement extends Statement {
     constructor(value) {
         super();
         this.value = value; // 这里的value也是表达式
@@ -22,19 +22,19 @@ export class ReturnSentence extends Sentence {
     }
 }
 
-export class BlockSentence extends Sentence {
-    constructor(sentences) {
+export class BlockStatement extends Statement {
+    constructor(statements) {
         super();
-        this.sentences = sentences;
+        this.statements = statements;
     }
     toString() {
         return `{
-    ${this.sentences.map(it=>it.toString()).join('\n')}
+    ${this.statements.map(it=>it.toString()).join('\n')}
 }`
     }
 }
 
-export class ExpressionSentence extends Sentence {
+export class ExpressionStatement extends Statement {
     constructor(expression) {
         super();
         this.expression = expression; // 这里的expression也是表达式

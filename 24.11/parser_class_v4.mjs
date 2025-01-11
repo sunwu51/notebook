@@ -62,7 +62,7 @@ export class ClassStatement extends Statement {
     }
 }
 
-export const precedenceMap = {
+export const precedenceMap = new Map(Object.entries({
     'EOF': 0,
     '=': 10,
     '||': 11, '&&': 12,
@@ -74,19 +74,19 @@ export const precedenceMap = {
     '(': 19, // 函数调用
     '[': 300, // 数组索引
     '.': 300,
-}
-export const prefixPrecedenceMap = {
+}))
+export const prefixPrecedenceMap = new Map(Object.entries({
     '-': 100,
     '!': 100,
     '~': 100,
     '+': 100,
     '++': 100,
     '--': 100
-}
-export const postfixPrecedenceMap = {
+}))
+export const postfixPrecedenceMap = new Map(Object.entries({
     '++': 200,
     '--': 200
-}
+}))
 export class AstNode {
     toString() {
         return `EmptyASTNode`;
@@ -158,7 +158,7 @@ export class InfixOperatorAstNode extends AstNode {
         this.op = token;
         this.left = null;
         this.right = null;
-        this.precedence = precedenceMap[token.value];
+        this.precedence = precedenceMap.get(token.value);
         if (this.precedence === undefined) {
             throw new Error(`Invalid infix operator: ${token.value}`);
         }
@@ -173,7 +173,7 @@ export class PrefixOperatorAstNode extends AstNode {
         super(false);
         this.op = token;
         this.right = right;
-        this.precedence = prefixPrecedenceMap[token.value];
+        this.precedence = prefixPrecedenceMap.get(token.value);
         if (this.precedence === undefined) {
             throw new Error(`Invalid prefix operator: ${token.value}`);
         }
@@ -188,7 +188,7 @@ export class PostfixOperatorAstNode extends AstNode {
         super(false);
         this.op = token;
         this.left = left;
-        this.precedence = postfixPrecedenceMap[token.value];
+        this.precedence = postfixPrecedenceMap.get(token.value);
         if (this.precedence === undefined) {
             throw new Error(`Invalid postfix operator: ${token.value}`);
         }
@@ -260,6 +260,7 @@ export class ArrayIndexAstNode extends AstNode {
         return `${this.array}[${this.index.toString()}]`
     }
 }
+
 
 
 // 分组节点

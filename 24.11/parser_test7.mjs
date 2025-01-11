@@ -1,5 +1,5 @@
 import * as LEX  from "./lex.mjs";
-import {VarSentence, ReturnSentence, BlockSentence, ExpressionSentence, precedenceMap} from './parser_class_v3.mjs'
+import {VarStatement, ReturnStatement, BlockStatement, ExpressionStatement, precedenceMap} from './parser_class_v3.mjs'
 import {AstNode, IdentifierAstNode, NumberAstNode, InfixOperatorAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, GroupAstNode, FunctionDeclarationAstNode} from './parser_class_v3.mjs'
 
 class Parser {
@@ -9,42 +9,42 @@ class Parser {
     }
     parse() {
         var tokens = this.tokens;
-        var sentences = [];
+        var statements = [];
         for (;;) {
             var token = tokens[this.cursor];
-            var sentence = null;
+            var statement = null;
             if (token.type === LEX.SEMICOLON) {
                 this.cursor++;
                 continue;
             } else if (token.type === LEX.EOF || token.type === LEX.RBRACE) {
                 break;
             } if (token.type === LEX.VAR) {
-                sentence = this.parseVarSentence();
+                statement = this.parseVarStatement();
             } else if (token.type === LEX.RETURN) {
-                sentence = this.parseReturnSentence();
+                statement = this.parseReturnStatement();
             } else if (token.type === LEX.LBRACE) {
-                sentence = this.parseBlockSentence();
+                statement = this.parseBlockStatement();
             } else {
-                sentence = this.parseExpressionSentence();
+                statement = this.parseExpressionStatement();
             }
-            sentences.push(sentence);
+            statements.push(statement);
         }
-        return sentences;
+        return statements;
     }
-    parseVarSentence() {
+    parseVarStatement() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type === LEX.VAR, "VarSentence should start with var");
+        assert(tokens[this.cursor++].type === LEX.VAR, "VarStatement should start with var");
         assert(tokens[this.cursor].type === LEX.IDENTIFIER, "IDENTIFIER should follow var");
         var name = new IdentifierAstNode(tokens[this.cursor++]);
         assert(tokens[this.cursor++].type === LEX.ASSIGN, "ASSIGN should follow IDENT");
         for (var x = this.cursor; this.cursor < tokens.length; this.cursor++) {
             if (tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type === LEX.EOF) {
                 var value = this.parseExpression(tokens, x);
-                return new VarSentence(name, value);
+                return new VarStatement(name, value);
             }
         }
     }
-   parseVarSentence() {
+   parseVarStatement() {
         var tokens = this.tokens;
         assert (tokens[this.cursor].type === LEX.VAR);
         assert (tokens[this.cursor + 1].type === LEX.IDENTIFIER);
@@ -54,28 +54,28 @@ class Parser {
         var value = this.parseExpression();
         assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
         this.cursor ++;
-        return new VarSentence(name, value);
+        return new VarStatement(name, value);
     }
-    parseReturnSentence() {
+    parseReturnStatement() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type === LEX.RETURN, "ReturnSentence should start with return");
+        assert(tokens[this.cursor++].type === LEX.RETURN, "ReturnStatement should start with return");
         var value = this.parseExpression();
         assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
         this.cursor ++;
-        return new ReturnSentence(value);
+        return new ReturnStatement(value);
     }
-    parseExpressionSentence() {
+    parseExpressionStatement() {
         var tokens = this.tokens;
         var expression = this.parseExpression();
         assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
         this.cursor ++;
-        return new ExpressionSentence(expression);
+        return new ExpressionStatement(expression);
     }
-    parseBlockSentence() {
+    parseBlockStatement() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type === LEX.LBRACE, "brace not open for block sentence")
-        var result = new BlockSentence(this.parse());
-        assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block sentence");
+        assert(tokens[this.cursor++].type === LEX.LBRACE, "brace not open for block statement")
+        var result = new BlockStatement(this.parse());
+        assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block statement");
         return result
     }
     parseExpression() {
@@ -156,7 +156,7 @@ class Parser {
                     }
                 }
                 // 接下来是个块语句 {xxx}
-                var body = this.parseBlockSentence();
+                var body = this.parseBlockStatement();
                 node = new FunctionDeclarationAstNode(params, body)
                 break;
             case LEX.FUNCTION:
@@ -177,7 +177,7 @@ class Parser {
                     }
                 }
                 // 接下来是个块语句 {xxx}
-                var body = this.parseBlockSentence();
+                var body = this.parseBlockStatement();
                 node = new FunctionDeclarationAstNode(params, body)
                 break;
             default:
@@ -216,8 +216,8 @@ var add = function(a,b) {return a +b;};
 `;
 
 var tokens = LEX.lex(code);
-var sentences = new Parser(tokens).parse()
+var statements = new Parser(tokens).parse()
 
-for (var i = 0; i < sentences.length; i++) {
-    console.log(sentences[i].toString());
+for (var i = 0; i < statements.length; i++) {
+    console.log(statements[i].toString());
 }

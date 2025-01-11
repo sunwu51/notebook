@@ -1,10 +1,10 @@
-export class Sentence {
+export class Statement {
     constructor() {
         this.endPos = -1;
     }
 }
 
-export class VarSentence extends Sentence {
+export class VarStatement extends Statement {
     constructor(name, value, endPos) {
         super();
         this.name = name;   // name本身其实也是个表达式
@@ -13,7 +13,7 @@ export class VarSentence extends Sentence {
     }
 }
 
-export class ReturnSentence extends Sentence {
+export class ReturnStatement extends Statement {
     constructor(value, endPos) {
         super();
         this.value = value; // 这里的value也是表达式
@@ -21,15 +21,15 @@ export class ReturnSentence extends Sentence {
     }
 }
 
-export class BlockSentence extends Sentence {
-    constructor(sentences, endPos) {
+export class BlockStatement extends Statement {
+    constructor(statements, endPos) {
         super();
-        this.sentences = sentences;
+        this.statements = statements;
         this.endPos = endPos;
     }
 }
 
-export class ExpressionSentence extends Sentence {
+export class ExpressionStatement extends Statement {
     constructor(expression, endPos) {
         super();
         this.expression = expression; // 这里的expression也是表达式

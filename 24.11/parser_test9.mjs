@@ -1,63 +1,63 @@
 import * as LEX  from "./lex.mjs";
-import {VarSentence, ReturnSentence, BlockSentence, ExpressionSentence, precedenceMap, IfSentence, ForSentence, BreakSentence, ContinueSentence, EmptySentence} from './parser_class_v3.mjs'
+import {VarStatement, ReturnStatement, BlockStatement, ExpressionStatement, precedenceMap, IfStatement, ForStatement, BreakStatement, ContinueStatement, EmptyStatement} from './parser_class_v3.mjs'
 import {AstNode, IdentifierAstNode, NumberAstNode, InfixOperatorAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, GroupAstNode, FunctionDeclarationAstNode, FunctionCallAstNode} from './parser_class_v3.mjs'
 
-class Parser {
+export class Parser {
     constructor(tokens) {
         this.tokens = tokens;
         this.cursor = 0;
     }
     parse() {
-        var sentences = [];
+        var statements = [];
         for (;;) {
-            var item = this.parseSentence();
+            var item = this.parseStatement();
             if (item == null) break;
-            if (item instanceof EmptySentence) {
+            if (item instanceof EmptyStatement) {
                 continue;
             }
-            sentences.push(item);
+            statements.push(item);
         }
-        return sentences;
+        return statements;
     }
-    parseSentence() {
+    parseStatement() {
         var token = tokens[this.cursor];
         if (token.type === LEX.SEMICOLON) {
             this.cursor++;
-            return new EmptySentence();
+            return new EmptyStatement();
         } else if (token.type === LEX.EOF || token.type === LEX.RBRACE || token.type === LEX.RPAREN) {
             return null;
         } if (token.type === LEX.VAR) {
-            return this.parseVarSentence();
+            return this.parseVarStatement();
         } else if (token.type === LEX.RETURN) {
-            return  this.parseReturnSentence();
+            return  this.parseReturnStatement();
         } else if (token.type === LEX.LBRACE) {
-            return this.parseBlockSentence();
+            return this.parseBlockStatement();
         } else if (token.type === LEX.IF) {
-            return this.parseIfSentence();
+            return this.parseIfStatement();
         } else if (token.type === LEX.FOR) {
-            return this.parseForSentence();
+            return this.parseForStatement();
         } else if (token.type === LEX.BREAK) {
-            return new BreakSentence(tokens[this.cursor++]);
+            return new BreakStatement(tokens[this.cursor++]);
         } else if (token.type === LEX.CONTINUE) {
-            return new ContinueSentence(tokens[this.cursor++]);
+            return new ContinueStatement(tokens[this.cursor++]);
         } else {
-            return this.parseExpressionSentence();
+            return this.parseExpressionStatement();
         }
     }
-    parseVarSentence() {
+    parseVarStatement() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type === LEX.VAR, "VarSentence should start with var");
+        assert(tokens[this.cursor++].type === LEX.VAR, "VarStatement should start with var");
         assert(tokens[this.cursor].type === LEX.IDENTIFIER, "IDENTIFIER should follow var");
         var name = new IdentifierAstNode(tokens[this.cursor++]);
         assert(tokens[this.cursor++].type === LEX.ASSIGN, "ASSIGN should follow IDENT");
         for (var x = this.cursor; this.cursor < tokens.length; this.cursor++) {
             if (tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type === LEX.EOF) {
                 var value = this.parseExpression(tokens, x);
-                return new VarSentence(name, value);
+                return new VarStatement(name, value);
             }
         }
     }
-   parseVarSentence() {
+   parseVarStatement() {
         var tokens = this.tokens;
         assert (tokens[this.cursor].type === LEX.VAR);
         assert (tokens[this.cursor + 1].type === LEX.IDENTIFIER);
@@ -67,55 +67,55 @@ class Parser {
         var value = this.parseExpression();
         assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
         this.cursor ++;
-        return new VarSentence(name, value);
+        return new VarStatement(name, value);
     }
-    parseReturnSentence() {
+    parseReturnStatement() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type === LEX.RETURN, "ReturnSentence should start with return");
+        assert(tokens[this.cursor++].type === LEX.RETURN, "ReturnStatement should start with return");
         var value = this.parseExpression();
         assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
         this.cursor ++;
-        return new ReturnSentence(value);
+        return new ReturnStatement(value);
     }
-    parseExpressionSentence() {
+    parseExpressionStatement() {
         var tokens = this.tokens;
         var expression = this.parseExpression();
         assert(tokens[this.cursor].type === LEX.SEMICOLON || tokens[this.cursor].type == LEX.EOF);
         this.cursor ++;
-        return new ExpressionSentence(expression);
+        return new ExpressionStatement(expression);
     }
-    parseBlockSentence() {
+    parseBlockStatement() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type === LEX.LBRACE, "brace not open for block sentence")
-        var result = new BlockSentence(this.parse());
-        assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block sentence");
+        assert(tokens[this.cursor++].type === LEX.LBRACE, "brace not open for block statement")
+        var result = new BlockStatement(this.parse());
+        assert(tokens[this.cursor++].type === LEX.RBRACE, "brace not close for block statement");
         return result
     }
-    parseIfSentence() {
+    parseIfStatement() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type == LEX.IF, "if sentence need a if");                         // if
-        assert(tokens[this.cursor++].type == LEX.LPAREN, "if sentence need a LPAREN follow if");       // (
+        assert(tokens[this.cursor++].type == LEX.IF, "if statement need a if");                         // if
+        assert(tokens[this.cursor++].type == LEX.LPAREN, "if statement need a LPAREN follow if");       // (
         var condition = this.parseExpression();                                                        // condition
-        assert(tokens[this.cursor++].type == LEX.RPAREN, "if sentence need a RPAREN follow condition");// )
-        var ifBody = this.parseBlockSentence();                                                        // {xxx}
+        assert(tokens[this.cursor++].type == LEX.RPAREN, "if statement need a RPAREN follow condition");// )
+        var ifBody = this.parseBlockStatement();                                                        // {xxx}
         if (tokens[this.cursor].type == LEX.ELSE) {                                                    
             this.cursor++;                                                                              // else
-            var elseBody = this.parseBlockSentence();                                                   // {yyy}
+            var elseBody = this.parseBlockStatement();                                                   // {yyy}
         }
-        return new IfSentence(condition, ifBody, elseBody);
+        return new IfStatement(condition, ifBody, elseBody);
     }
-    parseForSentence() {
+    parseForStatement() {
         var tokens = this.tokens;
-        assert(tokens[this.cursor++].type == LEX.FOR, "for sentence need a for");
-        assert(tokens[this.cursor++].type == LEX.LPAREN, "for sentence need a LPAREN follow for");
-        var init = this.parseSentence();
-        assert(tokens[this.cursor-1].type == LEX.SEMICOLON, "for sentence error need a SEMICOLON after init");
-        var condition = this.parseSentence();
-        assert(tokens[this.cursor-1].type == LEX.SEMICOLON, "for sentence error need a SEMICOLON after condition");
+        assert(tokens[this.cursor++].type == LEX.FOR, "for statement need a for");
+        assert(tokens[this.cursor++].type == LEX.LPAREN, "for statement need a LPAREN follow for");
+        var init = this.parseStatement();
+        assert(tokens[this.cursor-1].type == LEX.SEMICOLON, "for statement error need a SEMICOLON after init");
+        var condition = this.parseStatement();
+        assert(tokens[this.cursor-1].type == LEX.SEMICOLON, "for statement error need a SEMICOLON after condition");
         var step = this.parseExpression();
-        assert(tokens[this.cursor++].type == LEX.RPAREN, "for sentence need a RPAREN follow condition");
-        var body = this.parseBlockSentence();
-        return new ForSentence(init, condition, step, body);
+        assert(tokens[this.cursor++].type == LEX.RPAREN, "for statement need a RPAREN follow condition");
+        var body = this.parseBlockStatement();
+        return new ForStatement(init, condition, step, body);
     }
     parseExpression() {
         var tokens = this.tokens;
@@ -202,7 +202,7 @@ class Parser {
                     }
                 }
                 this.cursor++;
-                var body = this.parseBlockSentence();
+                var body = this.parseBlockStatement();
                 node = new FunctionDeclarationAstNode(params, body)
                 // 函数声明直接调用，与变量的代码一模一样
                 while (tokens[this.cursor].type == LEX.LPAREN) {
@@ -275,8 +275,8 @@ for (var i = 0; i < 10; i++) {
 `;
 
 var tokens = LEX.lex(code);
-var sentences = new Parser(tokens).parse()
+var statements = new Parser(tokens).parse()
 
-for (var i = 0; i < sentences.length; i++) {
-    console.log(sentences[i].toString());
+for (var i = 0; i < statements.length; i++) {
+    console.log(statements[i].toString());
 }

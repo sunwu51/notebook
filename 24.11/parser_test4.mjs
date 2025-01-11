@@ -1,5 +1,5 @@
 import * as LEX  from "./lex.mjs";
-import {VarSentence, ReturnSentence, BlockSentence, ExpressionSentence} from './parser_class_v2.mjs'
+import {VarStatement, ReturnStatement, BlockStatement, ExpressionStatement} from './parser_class_v2.mjs'
 import {AstNode, IdentifierAstNode, NumberAstNode, InfixOperatorAstNode} from './parser_class_v2.mjs'
 
 // 下面三个文件切换三种实现
@@ -8,41 +8,41 @@ import {parseExpression} from './parser_parse_exp_v4.mjs'
 // import {parseExpression} from './parser_parse_exp_v6.mjs'
 
 function parse(tokens) {
-    function parseVarSentence() {
-        assert(tokens[i++].type === LEX.VAR, "VarSentence should start with var");
+    function parseVarStatement() {
+        assert(tokens[i++].type === LEX.VAR, "VarStatement should start with var");
         assert(tokens[i].type === LEX.IDENTIFIER, "IDENTIFIER should follow var");
         var name = new IdentifierAstNode(tokens[i++]);
         assert(tokens[i++].type === LEX.ASSIGN, "ASSIGN should follow IDENT");
         for (var x = i; i < tokens.length; i++) {
             if (tokens[i].type === LEX.SEMICOLON || tokens[i].type === LEX.EOF) {
                 var value = parseExpression(tokens, x);
-                return new VarSentence(name, value);
+                return new VarStatement(name, value);
             }
         }
     }
     
-    function parseReturnSentence() {
-        assert(tokens[i].type === LEX.RETURN, "ReturnSentence should start with return");
+    function parseReturnStatement() {
+        assert(tokens[i].type === LEX.RETURN, "ReturnStatement should start with return");
         for (var x = i + 1; i < tokens.length; i++) {
             if (tokens[i].type === LEX.SEMICOLON || tokens[i].type === LEX.EOF) {
                 var value = parseExpression(tokens, x);
-                return new ReturnSentence(value);
+                return new ReturnStatement(value);
             }
         }
     }
     
-    function parseExpressionSentence() {
+    function parseExpressionStatement() {
         for (var x = i; i < tokens.length; i++) {
             if (tokens[i].type === LEX.SEMICOLON || tokens[i].type === LEX.EOF) {
                 var expression = parseExpression(tokens, x);
-                return new ExpressionSentence(expression);
+                return new ExpressionStatement(expression);
             }
         }
     }
     
-    function parseBlockSentence() {
-        assert(tokens[i].type === LEX.LBRACE, "ReturnSentence should start with LBRACE");
-        var sentences = parse(tokens.slice(i + 1));
+    function parseBlockStatement() {
+        assert(tokens[i].type === LEX.LBRACE, "ReturnStatement should start with LBRACE");
+        var statements = parse(tokens.slice(i + 1));
         // !! 需要自己给i赋值新的结束位置，因为递归是值传递i的值        
         var count = 1;
         for (i = i + 1; i < tokens.length; i++) {
@@ -53,30 +53,30 @@ function parse(tokens) {
             }
         }
 
-        return new BlockSentence(sentences);
+        return new BlockStatement(statements);
     }
     
 
-    var sentences = [];
+    var statements = [];
     for (var i = 0; i < tokens.length; i++) {
         var token = tokens[i];
-        var sentence = null;
+        var statement = null;
         if (token.type === LEX.SEMICOLON) {
             continue;
         } else if (token.type === LEX.EOF || token.type === LEX.RBRACE) {
             break;
         } else if (token.type === LEX.VAR) {
-            sentence = parseVarSentence(tokens, i);
+            statement = parseVarStatement(tokens, i);
         } else if (token.type === LEX.RETURN) {
-            sentence = parseReturnSentence(tokens, i);
+            statement = parseReturnStatement(tokens, i);
         } else if (token.type === LEX.LBRACE){
-            sentence = parseBlockSentence(tokens, i);
+            statement = parseBlockStatement(tokens, i);
         } else {
-            sentence = parseExpressionSentence(tokens, i);
+            statement = parseExpressionStatement(tokens, i);
         }
-        sentences.push(sentence);
+        statements.push(statement);
     }
-    return sentences;
+    return statements;
 }
 function assert(condition, msg) {
     if (!condition) {
@@ -87,7 +87,7 @@ function assert(condition, msg) {
 var code = `var a = 1 + 2 * 3 / 4 - 5;`;
 
 var tokens = LEX.lex(code);
-var sentences = parse(tokens)
-for (var i = 0; i < sentences.length; i++) {
-    console.log(sentences[i].toString());
+var statements = parse(tokens)
+for (var i = 0; i < statements.length; i++) {
+    console.log(statements[i].toString());
 }
