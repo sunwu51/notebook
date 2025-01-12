@@ -1,8 +1,14 @@
 import * as LEX  from "../24.11/lex.mjs";
-import { ParseError } from "../common/error.js";
-import {VarStatement, ReturnStatement, ThrowStatement, BlockStatement, ExpressionStatement, TryCatchStatement, precedenceMap, IfStatement, ForStatement, BreakStatement, ContinueStatement, EmptyStatement, ClassStatement, prefixPrecedenceMap, postfixPrecedenceMap, MapObjectDeclarationAstNode, BooleanAstNode} from './parse-model.js'
-import {AstNode, NullAstNode, IndexAstNode, ArrayDeclarationAstNode, FunctionArgsAstNode, IdentifierAstNode, StringAstNode, NumberAstNode, InfixOperatorAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, GroupAstNode, FunctionDeclarationAstNode, FunctionCallAstNode, NewAstNode} from './parse-model.js'
+import {VarStatement, ReturnStatement, ThrowStatement, BlockStatement, ExpressionStatement, TryCatchStatement, precedenceMap, IfStatement, ForStatement, BreakStatement, ContinueStatement, EmptyStatement, ClassStatement, prefixPrecedenceMap, postfixPrecedenceMap, MapObjectDeclarationAstNode, BooleanAstNode} from './parse-model.mjs'
+import {AstNode, NullAstNode, IndexAstNode, ArrayDeclarationAstNode, FunctionArgsAstNode, IdentifierAstNode, StringAstNode, NumberAstNode, InfixOperatorAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, GroupAstNode, FunctionDeclarationAstNode, FunctionCallAstNode, NewAstNode} from './parse-model.mjs'
 
+class ParseError extends Error {
+    constructor(message, tokens, index) {
+        super(message);
+        this.tokens = tokens;
+        this.index = index;
+    }
+}
 export class Parser {
     constructor(tokens) {
         this.tokens = tokens;
