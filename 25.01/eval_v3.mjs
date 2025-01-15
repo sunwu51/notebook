@@ -1,7 +1,7 @@
 import { Parser } from '../24.12/parser.mjs';
 import * as LEX from '../24.11/lex.mjs';
 import { lex } from '../24.11/lex.mjs';
-import { BlockStatement, ExpressionStatement, VarStatement, ReturnStatement } from '../24.12/parse-model.mjs'
+import { BlockStatement, ExpressionStatement, VarStatement, ReturnStatement, IfStatement, ForStatement, BreakStatement, ContinueStatement } from '../24.12/parse-model.mjs'
 import { NumberAstNode, StringAstNode, NullAstNode, IdentifierAstNode, BooleanAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, InfixOperatorAstNode, FunctionCallAstNode, ArrayDeclarationAstNode, GroupAstNode, FunctionDeclarationAstNode, MapObjectDeclarationAstNode, IndexAstNode } from '../24.12/parse-model.mjs'
 
 
@@ -169,9 +169,11 @@ export class RuntimeError extends Error {
 
 class Context {
     constructor(parent) {
-        this.parent = parent;
         this.variables = new Map();
-        this.funCtx = {name: undefined, returnElement: undefined};
+        this.funCtx = {name : undefined, returnElement: undefined};
+        // inFor主要是判断是否在for循环中，当出现break或continue的时候，设置对应的字段，并且从自己开始不断向上找到inFor=true，并将遍历路径上的上下文的对应字段都进行设置。
+        this.forCtx = {inFor: false, break: false, continue: false};
+        this.parent = parent;
     }
     get(name) {
         // 自己有这个变量，就返回这个变量的值
@@ -215,13 +217,36 @@ class Context {
         // 没有声明就更新，直接报错
         throw new RuntimeError(`Identifier ${name} is not defined`);
     }
+    setBreak() {
+        this.forCtx.break = true;
+        if (this.forCtx.inFor) {
+            return; //找到最近的for就结束
+        } else if (this.parent) {
+            // 不能跨函数
+            if (this.funCtx.name) throw new RuntimeError(`break not in for`);
+            this.parent.setBreak();
+        } else {
+            throw new RuntimeError('break not in for');
+        }
+    }
+    setContinue() {
+        this.forCtx.continue = true;
+        if (this.forCtx.inFor) {
+            return; //找到最近的for就结束
+        } else if (this.parent) {
+            if (this.funCtx.name) throw new RuntimeError(`continue not in for`);
+            this.parent.setContinue();
+        } else {
+            throw new RuntimeError('continue not in for');
+        }
+    }
 }
 
 // 对statement[]求值，最终返回最后一个语句的求值结果
 function evalStatements(statements, ctx) {
     var res = nil;
     for (let statement of statements) {
-        if (ctx.funCtx.returnElement) break;
+        if (ctx.funCtx.returnElement || ctx.forCtx.break || ctx.forCtx.continue) break;
         res = evalStatement(statement, ctx);
     }
     return res;
@@ -237,6 +262,46 @@ function evalStatement(statement, ctx) {
         return evalBlockStatement(statement, new Context(ctx));
     } else if (statement instanceof ReturnStatement) {
         ctx.setReturnElement(evalExpression(statement.valueAstNode, ctx));
+    } else if (statement instanceof IfStatement) {
+        var condRes = evalExpression(statement.conditionAstNode, ctx);
+        if ((condRes instanceof NumberElement) && condRes.value == 0 && statement.elseBlockStatement) {
+            evalBlockStatement(statement.elseBlockStatement, new Context(ctx));
+        } else if (condRes == nil || condRes == falseElement) {
+            if (statement.elseBlockStatement) {
+                evalBlockStatement(statement.elseBlockStatement, new Context(ctx));
+            }
+        } else {
+            evalBlockStatement(statement.ifBlockStatement, new Context(ctx));
+        }
+    } else if (statement instanceof ForStatement) {
+        if (statement.initStatement) {
+            evalStatement(statement.initStatement, ctx);
+        }
+        while (true) {
+            if (statement.conditionStatement) {
+                if (!(statement.conditionStatement instanceof ExpressionStatement)) {
+                    throw new RuntimeError("Condition should be an ExpressionStatement", `${statement.token.line}:${statement.token.pos}`);
+                }
+                var condRes = evalExpression(statement.conditionStatement.expression, ctx);
+                if (condRes instanceof NumberElement && condRes.value === 0) {
+                    return nil;
+                }
+                if (condRes == nil || condRes == falseElement) {
+                    return nil;
+                }
+            }
+            var newCtx = new Context(ctx);
+            newCtx.forCtx.inFor = true;
+            evalBlockStatement(statement.bodyBlockStatement, newCtx);
+            if (newCtx.forCtx.break || newCtx.funCtx.returnElement) break;
+            if (statement.stepAstNode) {
+                evalExpression(statement.stepAstNode, ctx);
+            }
+        }
+    } else if (statement instanceof BreakStatement) {
+        ctx.setBreak();
+    } else if (statement instanceof ContinueStatement) {
+        ctx.setContinue();
     }
     // 其他语句暂时不处理返回个nil
     return nil;
@@ -639,59 +704,59 @@ function assert(condition, msg, token) {
     }
 }
 
-// var ctx = new Context();
-// var tokens = lex(`var a = 1; var b = a; b++;`);
-// var statements = new Parser(tokens).parse();
-// var res = evalStatements(statements, ctx);
-// console.log(ctx);
-
-// var ctx = new Context();
-// var tokens = lex(`var a = 1; { var a = 2; var b = 3;}`);
-// var statements = new Parser(tokens).parse();
-// var res = evalStatements(statements, ctx);
-// console.log(ctx);
 
 // var ctx = new Context();
 // var tokens = lex(`
-//     var a = 1; var b = 2; var c = 3;
-//     print("a=" + a + ", b=" + b + ", c=" + c);
-//     {
-//         var a = 111; var b = 222;
-//         print("a=" + a + ", b=" + b + ", c=" + c);
-//         a = 999; b = 999; c = 999;
-//         print("a=" + a + ", b=" + b + ", c=" + c);
+//     for (var i=0; i<10; i++) {
+//         // 偶数跳过
+//         if (i % 2 == 0) {
+//             continue;
+//         }
+//         // 5就退出循环
+//         if (i == 5) {
+//             {{{{break;}}}} //嵌套也可以break
+//         }
+//         // 只有1和3 走到这里，进入子循环
+//         for(var j = i; j<10; j++) {
+//             if (j % 2 == 0) {
+//                 continue;
+//             }
+//             if (j == 7) {
+//                 break;
+//             }
+//             // i=1满足条件的j有135
+//             // i=3满足条件的j有35
+//             print(i, j);
+//         }
 //     }
-//     print("a=" + a + ", b=" + b + ", c=" + c);
+//     `);
+// var statements = new Parser(tokens).parse();
+// evalStatements(statements, ctx);
+
+// var ctx = new Context();
+// var tokens = lex(`
+//     var loop = function(n) {
+//         for (var i=0; i<n; i++) {
+//             print(i);
+//             if (i == 3) {
+//                 return 3;
+//             }
+//             print(i);
+//         }
+//         print(100);
+//         return 100;
+//     };
+//     print("loop(5)=", loop(5));
+//     print("loop(2)=", loop(2));
 //     `);
 // var statements = new Parser(tokens).parse();
 // evalStatements(statements, ctx);
 
 var ctx = new Context();
 var tokens = lex(`
-    var add = function(a, b) {
-        return a + b;
-        print("执行不到");
-        return -123; // 这里已经执行不到了，第一个return之后的语句都跳过执行
-    };
-    print(add(add(1, 2), add(3, 4)));
-
-    // 闭包从上下文中捕捉变量
-    // add是一个返回函数的函数，而返回的函数，从内部上下文捕捉变量offset=100;
-    var offset = 0;
-    var add = function() {
-        var offset = 100;
-        var add = function(a, b) {
-            return offset + a + b;
-        };
-        return add;
-    };
-    print(add()(1, 2));
-
-    function(a){print(a);}("函数字面量直接调用");
-
-    var obj = {a: 1, b: 2, c: {d: 3, e: "eee"}};
-    var arr = [1, 2, 3, 4, 5];
-    print(obj.a, obj.b, obj.c.d, obj.c.e, arr[0], arr[1]);
+    for(var i=0; i<10; i++) {
+        function() {break;}();
+    }
     `);
 var statements = new Parser(tokens).parse();
 evalStatements(statements, ctx);

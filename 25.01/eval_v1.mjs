@@ -126,13 +126,8 @@ falseElement = new BooleanElement(false);
 
 // 声明运行时的报错
 export class RuntimeError extends Error {
-    constructor(msg, token) {
-        super(msg)
-        this.token = token
-    }
-    toString() {
-        var token = this.token;
-        return `${this.message}${this.token ? ` at line ${token.line}:${token.pos}, error near '${this.token.value}'`: ""}`
+    constructor(msg, position="") {
+        super(msg);
     }
 }
 
@@ -209,14 +204,14 @@ function evalPrefixOperator(prefixOperatorAstNode) {
             if (right instanceof NumberElement) {
                 return right;
             } else {
-                throw new RuntimeError("+ should only used with numbers", prefixOperatorAstNode.op);
+                throw new RuntimeError("+ should only used with numbers", `${prefixOperatorAstNode.op.line}:${prefixOperatorAstNode.op.pos}`);
             }
         case LEX.MINUS:
             if (right instanceof NumberElement) {
                 right.value = -right.value;
                 return right;
             } else {
-                throw new RuntimeError("- should only used with numbers", prefixOperatorAstNode.op);
+                throw new RuntimeError("- should only used with numbers", `${prefixOperatorAstNode.op.line}:${prefixOperatorAstNode.op.pos}`);
             }
         case LEX.NOT:
             if (right instanceof BooleanElement) {
@@ -232,7 +227,7 @@ function evalPrefixOperator(prefixOperatorAstNode) {
                 right.value = ~right.value;
                 return right;
             } else {
-                throw new RuntimeError("~ should only used with numbers", prefixOperatorAstNode.op);
+                throw new RuntimeError("~ should only used with numbers", `${prefixOperatorAstNode.op.line}:${prefixOperatorAstNode.op.pos}`);
             }
         case LEX.INCREMENT:
             if (checkSelfOps(prefixOperatorAstNode.right)) {
@@ -242,7 +237,7 @@ function evalPrefixOperator(prefixOperatorAstNode) {
                     return item;
                 }
             }
-            throw new RuntimeError("++ should only used with number varible", prefixOperatorAstNode.op);
+            throw new RuntimeError("++ should only used with number variable", `${prefixOperatorAstNode.op.line}:${prefixOperatorAstNode.op.pos}`);
         case LEX.DECREMENT:
             if (checkSelfOps(prefixOperatorAstNode.right)) {
                 var item = evalExpression(prefixOperatorAstNode.right);
@@ -251,9 +246,9 @@ function evalPrefixOperator(prefixOperatorAstNode) {
                     return item;
                 }
             }
-            throw new RuntimeError("-- should only used with number varible", prefixOperatorAstNode.op);
+            throw new RuntimeError("-- should only used with number variable", `${prefixOperatorAstNode.op.line}:${prefixOperatorAstNode.op.pos}`);
         default:
-            throw new RuntimeError(`Unsupported prefix operator: ${prefixOperatorAstNode.op.type}`, prefixOperatorAstNode.op);
+            throw new RuntimeError(`Unsupported prefix operator: ${prefixOperatorAstNode.op.type}`, `${prefixOperatorAstNode.op.line}:${prefixOperatorAstNode.op.pos}`);
     }
 }
 
@@ -269,10 +264,10 @@ function evalPostfixOperator(postfixOperatorAstNode) {
                 case LEX.DECREMENT:
                     return new NumberElement(left.value--);
                 default:
-                    throw new RuntimeError("unknown postfix operator " + postfixOperatorAstNode.op.type, postfixOperatorAstNode.op);
+                    throw new RuntimeError("unknown postfix operator " + postfixOperatorAstNode.op.type, `${prefixOperatorAstNode.op.line}:${prefixOperatorAstNode.op.pos}`);
             }
         }
-        throw new RuntimeError("++/-- should only used with number varible", postfixOperatorAstNode.op);
+        throw new RuntimeError("++/-- should only used with number variable", `${prefixOperatorAstNode.op.line}:${prefixOperatorAstNode.op.pos}`);
     }
 }
 // ++ --等操作符的使用场景判断：只能用在 a++  p.a++ (p.a)++ 这些场景下
@@ -297,77 +292,77 @@ function evalInfixOperator(infixOperatorAstNode) {
             if ((l instanceof StringElement || r instanceof StringElement)) {
                 return new StringElement(l.toString() + r.toString());
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.MINUS:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return new NumberElement(l.value - r.value);
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.MULTIPLY:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return new NumberElement(l.value * r.value);
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.DIVIDE:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return new NumberElement(l.value / r.value);
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.MODULUS:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return new NumberElement(l.value % r.value);
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.BSHR:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return new NumberElement(l.value >> r.value);
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.BSHL:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return new NumberElement(l.value << r.value);
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.LT:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return l.value < r.value ? trueElement : falseElement;
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.GT:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return l.value > r.value ? trueElement : falseElement;
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.LTE:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return l.value <= r.value ? trueElement : falseElement;
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.GTE:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
             if (l instanceof NumberElement && r instanceof NumberElement) {
                 return l.value >= r.value ? trueElement : falseElement;
             }
-            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Invalid infix operator ${infixOperatorAstNode.op.type} for ${l.type} and ${r.type}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.EQ:
             var l = evalExpression(infixOperatorAstNode.left);
             var r = evalExpression(infixOperatorAstNode.right);
@@ -429,7 +424,7 @@ function evalInfixOperator(infixOperatorAstNode) {
                     return l.get(infixOperatorAstNode.right.toString());
                 }
             }
-            throw new RuntimeError(". should be after an Element", infixOperatorAstNode.op);
+            throw new RuntimeError(". should be after an Element", `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         case LEX.LPAREN: // 小括号运算符特指函数执行
             var functionCall = new FunctionCallAstNode(infixOperatorAstNode.token, infixOperatorAstNode.left, infixOperatorAstNode.right.args);
             return evalExpression(functionCall);
@@ -451,9 +446,9 @@ function evalInfixOperator(infixOperatorAstNode) {
             if (target instanceof Element) {
                 return target.get(index.value);
             }
-            throw new RuntimeError("Invalid infix operator usage for []", infixOperatorAstNode.op);
+            throw new RuntimeError("Invalid infix operator usage for []", `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
         default:
-            throw new RuntimeError(`Unknown operator ${infixOperatorAstNode.toString()}`, infixOperatorAstNode.op);
+            throw new RuntimeError(`Unknown operator ${infixOperatorAstNode.toString()}`, `${infixOperatorAstNode.op.line}:${infixOperatorAstNode.op.pos}`);
     }
 }
 

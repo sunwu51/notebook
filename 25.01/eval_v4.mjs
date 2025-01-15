@@ -1,7 +1,7 @@
 import { Parser } from '../24.12/parser.mjs';
 import * as LEX from '../24.11/lex.mjs';
 import { lex } from '../24.11/lex.mjs';
-import { BlockStatement, ExpressionStatement, VarStatement, ReturnStatement } from '../24.12/parse-model.mjs'
+import { BlockStatement, ExpressionStatement, VarStatement, ReturnStatement, IfStatement, ForStatement, BreakStatement, ContinueStatement, ThrowStatement } from '../24.12/parse-model.mjs'
 import { NumberAstNode, StringAstNode, NullAstNode, IdentifierAstNode, BooleanAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, InfixOperatorAstNode, FunctionCallAstNode, ArrayDeclarationAstNode, GroupAstNode, FunctionDeclarationAstNode, MapObjectDeclarationAstNode, IndexAstNode } from '../24.12/parse-model.mjs'
 
 
@@ -150,7 +150,16 @@ export class FunctionElement extends Element {
         this.params.forEach((param, index) => {
             newCtx.set(param, args[index] ? args[index] : nil);
         });
-        evalBlockStatement(this.body, newCtx);
+        try {
+            evalBlockStatement(this.body, newCtx);
+        } catch (e) {
+            if (e instanceof RuntimeError) {
+                var stack = e.stack;
+                stack[stack.length-1].functionName = name;
+                stack.push({functionName: "<anonymous>", position: `${exp.token.line}:${exp.token.pos}`});
+            }
+            throw e;
+        }
         return newCtx.funCtx.returnElement =  newCtx.funCtx.returnElement ?  newCtx.funCtx.returnElement : nil;
     }
 }
@@ -164,14 +173,17 @@ falseElement = new BooleanElement(false);
 export class RuntimeError extends Error {
     constructor(msg, position="") {
         super(msg);
+        this.stack = [{functionName: "<anonymous>", position}];
     }
 }
 
 class Context {
     constructor(parent) {
-        this.parent = parent;
         this.variables = new Map();
-        this.funCtx = {name: undefined, returnElement: undefined};
+        this.funCtx = {name : undefined, returnElement: undefined};
+        // inFor主要是判断是否在for循环中，当出现break或continue的时候，设置对应的字段，并且从自己开始不断向上找到inFor=true，并将遍历路径上的上下文的对应字段都进行设置。
+        this.forCtx = {inFor: false, break: false, continue: false};
+        this.parent = parent;
     }
     get(name) {
         // 自己有这个变量，就返回这个变量的值
@@ -215,14 +227,54 @@ class Context {
         // 没有声明就更新，直接报错
         throw new RuntimeError(`Identifier ${name} is not defined`);
     }
+    setBreak() {
+        this.forCtx.break = true;
+        if (this.forCtx.inFor) {
+            return; //找到最近的for就结束
+        } else if (this.parent) {
+            // 不能跨函数
+            if (this.funCtx.name) throw new RuntimeError(`break not in for`);
+            this.parent.setBreak();
+        } else {
+            throw new RuntimeError('break not in for');
+        }
+    }
+    setContinue() {
+        this.forCtx.continue = true;
+        if (this.forCtx.inFor) {
+            return; //找到最近的for就结束
+        } else if (this.parent) {
+            if (this.funCtx.name) throw new RuntimeError(`continue not in for`);
+            this.parent.setContinue();
+        } else {
+            throw new RuntimeError('continue not in for');
+        }
+    }
 }
 
 // 对statement[]求值，最终返回最后一个语句的求值结果
 function evalStatements(statements, ctx) {
     var res = nil;
     for (let statement of statements) {
-        if (ctx.funCtx.returnElement) break;
-        res = evalStatement(statement, ctx);
+        if (ctx.funCtx.returnElement || ctx.forCtx.break || ctx.forCtx.continue) break;
+        try {
+            res = evalStatement(statement, ctx);
+        } catch(e) {
+            if (e instanceof RuntimeError) {
+                if (e.stack[e.stack.length-1].position == "") {
+                    e.stack[e.stack.length-1].position = `${statement.token.line}:${statement.token.pos}`;
+                }
+                if (!ctx.parent) { // 根上下文了，则直接结束进程，打印异常堆栈
+                    console.error("Uncaught Error: " + e.message);
+                    e.stack.forEach(item=> {
+                        console.error(` at ${item.functionName}  ${item.position}`);
+                    });
+                    // 打印堆栈后，退出运行
+                    process.exit(1);
+                }
+            }
+            throw e;
+        }
     }
     return res;
 }
@@ -237,6 +289,49 @@ function evalStatement(statement, ctx) {
         return evalBlockStatement(statement, new Context(ctx));
     } else if (statement instanceof ReturnStatement) {
         ctx.setReturnElement(evalExpression(statement.valueAstNode, ctx));
+    } else if (statement instanceof IfStatement) {
+        var condRes = evalExpression(statement.conditionAstNode, ctx);
+        if ((condRes instanceof NumberElement) && condRes.value == 0 && statement.elseBlockStatement) {
+            evalBlockStatement(statement.elseBlockStatement, new Context(ctx));
+        } else if (condRes == nil || condRes == falseElement) {
+            if (statement.elseBlockStatement) {
+                evalBlockStatement(statement.elseBlockStatement, new Context(ctx));
+            }
+        } else {
+            evalBlockStatement(statement.ifBlockStatement, new Context(ctx));
+        }
+    } else if (statement instanceof ForStatement) {
+        if (statement.initStatement) {
+            evalStatement(statement.initStatement, ctx);
+        }
+        while (true) {
+            if (statement.conditionStatement) {
+                if (!(statement.conditionStatement instanceof ExpressionStatement)) {
+                    throw new RuntimeError("Condition should be an ExpressionStatement", `${statement.token.line}:${statement.token.pos}`);
+                }
+                var condRes = evalExpression(statement.conditionStatement.expression, ctx);
+                if (condRes instanceof NumberElement && condRes.value === 0) {
+                    return nil;
+                }
+                if (condRes == nil || condRes == falseElement) {
+                    return nil;
+                }
+            }
+            var newCtx = new Context(ctx);
+            newCtx.forCtx.inFor = true;
+            evalBlockStatement(statement.bodyBlockStatement, newCtx);
+            if (newCtx.forCtx.break || newCtx.funCtx.returnElement) break;
+            if (statement.stepAstNode) {
+                evalExpression(statement.stepAstNode, ctx);
+            }
+        }
+    } else if (statement instanceof BreakStatement) {
+        ctx.setBreak();
+    } else if (statement instanceof ContinueStatement) {
+        ctx.setContinue();
+    } else if (statement instanceof ThrowStatement) { 
+        var err = evalExpression(statement.valueAstNode, ctx);
+        throw new RuntimeError(err.get("msg").toNative(), `${statement.token.line}:${statement.token.pos}`);
     }
     // 其他语句暂时不处理返回个nil
     return nil;
@@ -639,59 +734,67 @@ function assert(condition, msg, token) {
     }
 }
 
-// var ctx = new Context();
-// var tokens = lex(`var a = 1; var b = a; b++;`);
-// var statements = new Parser(tokens).parse();
-// var res = evalStatements(statements, ctx);
-// console.log(ctx);
-
-// var ctx = new Context();
-// var tokens = lex(`var a = 1; { var a = 2; var b = 3;}`);
-// var statements = new Parser(tokens).parse();
-// var res = evalStatements(statements, ctx);
-// console.log(ctx);
 
 // var ctx = new Context();
 // var tokens = lex(`
-//     var a = 1; var b = 2; var c = 3;
-//     print("a=" + a + ", b=" + b + ", c=" + c);
-//     {
-//         var a = 111; var b = 222;
-//         print("a=" + a + ", b=" + b + ", c=" + c);
-//         a = 999; b = 999; c = 999;
-//         print("a=" + a + ", b=" + b + ", c=" + c);
-//     }
-//     print("a=" + a + ", b=" + b + ", c=" + c);
+//     var add = function(a, b) {
+//         if (a < 0 || b < 0) {
+//             throw {msg: "Invalid number"};
+//         }
+//         return a + b;
+//     };
+//     var add2 = function(a, b) {
+//         return add(a, b);
+//     };
+//     var add3 = function(a, b) {
+//         return add2(a, b);
+//     };
+//     print(add3(1,2));
+//     print(add3(-1,2));
+//     print(add3(1,2));
+//     `);
+// var statements = new Parser(tokens).parse();
+// evalStatements(statements, ctx);
+
+
+// var ctx = new Context();
+// var tokens = lex(`
+//     var add = function(a, b) {
+//         if (a.type == "number" && b.type == "number") {
+//             return a + b;
+//         } else {
+//             throw {msg: "a or b is not a number"};
+//         }
+//     };
+//     function() {
+//         try {
+//             print("1+1=", add(1, 1));
+//             print("1+a=", add(1, "a"));
+//             print("2+2=", add(2, 2));
+//         } catch(e) {
+//             print("error:", e);
+//             throw e;
+//         }
+//     }();
+//     `);
+// var statements = new Parser(tokens).parse();
+// evalStatements(statements, ctx);
+
+// var ctx = new Context();
+// var tokens = lex(`
+//     var add = function(a, b) {
+//         throw {msg: "Invalid number"};
+//     };
+//     print(add(1, 2));
 //     `);
 // var statements = new Parser(tokens).parse();
 // evalStatements(statements, ctx);
 
 var ctx = new Context();
 var tokens = lex(`
-    var add = function(a, b) {
-        return a + b;
-        print("执行不到");
-        return -123; // 这里已经执行不到了，第一个return之后的语句都跳过执行
-    };
-    print(add(add(1, 2), add(3, 4)));
-
-    // 闭包从上下文中捕捉变量
-    // add是一个返回函数的函数，而返回的函数，从内部上下文捕捉变量offset=100;
-    var offset = 0;
-    var add = function() {
-        var offset = 100;
-        var add = function(a, b) {
-            return offset + a + b;
-        };
-        return add;
-    };
-    print(add()(1, 2));
-
-    function(a){print(a);}("函数字面量直接调用");
-
-    var obj = {a: 1, b: 2, c: {d: 3, e: "eee"}};
-    var arr = [1, 2, 3, 4, 5];
-    print(obj.a, obj.b, obj.c.d, obj.c.e, arr[0], arr[1]);
+    for(var i=0; i<10; i++) {
+        function() {break;}();
+    }
     `);
 var statements = new Parser(tokens).parse();
 evalStatements(statements, ctx);
