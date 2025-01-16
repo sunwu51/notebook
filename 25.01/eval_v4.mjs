@@ -1,7 +1,7 @@
 import { Parser } from '../24.12/parser.mjs';
 import * as LEX from '../24.11/lex.mjs';
 import { lex } from '../24.11/lex.mjs';
-import { BlockStatement, ExpressionStatement, VarStatement, ReturnStatement, IfStatement, ForStatement, BreakStatement, ContinueStatement, ThrowStatement } from '../24.12/parse-model.mjs'
+import { BlockStatement, ExpressionStatement, VarStatement, ReturnStatement, IfStatement, ForStatement, BreakStatement, ContinueStatement, ThrowStatement, TryCatchStatement } from '../24.12/parse-model.mjs'
 import { NumberAstNode, StringAstNode, NullAstNode, IdentifierAstNode, BooleanAstNode, PrefixOperatorAstNode, PostfixOperatorAstNode, InfixOperatorAstNode, FunctionCallAstNode, ArrayDeclarationAstNode, GroupAstNode, FunctionDeclarationAstNode, MapObjectDeclarationAstNode, IndexAstNode } from '../24.12/parse-model.mjs'
 
 
@@ -154,14 +154,59 @@ export class FunctionElement extends Element {
             evalBlockStatement(this.body, newCtx);
         } catch (e) {
             if (e instanceof RuntimeError) {
-                var stack = e.stack;
-                stack[stack.length-1].functionName = name;
-                stack.push({functionName: "<anonymous>", position: `${exp.token.line}:${exp.token.pos}`});
+                if (e.element instanceof ErrorElement) {
+                    e.element.updateFunctionName(name);
+                    e.element.pushStack({position: `${exp.token.line}:${exp.token.pos}`})
+                }
             }
             throw e;
         }
         return newCtx.funCtx.returnElement =  newCtx.funCtx.returnElement ?  newCtx.funCtx.returnElement : nil;
     }
+}
+export class ErrorElement extends Element {
+    constructor(msg, stack = []) {
+        super('error');
+        this.set("msg", jsObjectToElement(msg));
+        this.set("stack", jsObjectToElement(stack));
+    }
+    pushStack(info) {
+        this.get("stack").array.push(jsObjectToElement(info));
+    }
+    updateFunctionName(name) {
+        var last = this.get("stack").array[this.get("stack").array.length - 1];
+        if (last && last.get("functionName") == nil) {
+            last.set("functionName", new StringElement(name));
+        }
+    }
+    toNative() {
+        return {
+            msg: this.get("msg") ? this.get("msg").toNative() : null,
+            stack: this.get("stack") ? this.get("stack").toNative() : null
+        }
+    }
+}
+
+function jsObjectToElement(obj) {
+    if (typeof obj === 'number') {
+        return new NumberElement(obj);
+    } else if (typeof obj === 'string') {
+        return new StringElement(obj);
+    } else if (typeof obj === 'boolean') {
+        return obj ? trueElement: falseElement;
+    } else if (obj === null) {
+        return nil;
+    } else if (Array.isArray(obj)) {
+        return new ArrayElement(obj.map(e => jsObjectToElement(e)));
+    } else if (obj === null || obj === undefined) {
+        return nil;
+    }
+    // obj类型
+    const keys = Object.keys(obj);
+    const res = new Element("nomalMap")
+    res.map = new Map();
+    keys.forEach(key => res.map.set(key, jsObjectToElement(obj[key])));
+    return res;
 }
 
 // null / true / false 只有一种，所以采用单例
@@ -171,9 +216,9 @@ falseElement = new BooleanElement(false);
 
 // 声明运行时的报错
 export class RuntimeError extends Error {
-    constructor(msg, position="") {
+    constructor(msg, position, element) {
         super(msg);
-        this.stack = [{functionName: "<anonymous>", position}];
+        this.element = element ? element: new ErrorElement(msg, [{position}]);
     }
 }
 
@@ -266,8 +311,8 @@ function evalStatements(statements, ctx) {
                 }
                 if (!ctx.parent) { // 根上下文了，则直接结束进程，打印异常堆栈
                     console.error("Uncaught Error: " + e.message);
-                    e.stack.forEach(item=> {
-                        console.error(` at ${item.functionName}  ${item.position}`);
+                    e.element.toNative().stack.forEach(item=> {
+                        console.error(` at ${item.functionName ? item.functionName : "__root__"}  ${item.position}`);
                     });
                     // 打印堆栈后，退出运行
                     process.exit(1);
@@ -331,7 +376,24 @@ function evalStatement(statement, ctx) {
         ctx.setContinue();
     } else if (statement instanceof ThrowStatement) { 
         var err = evalExpression(statement.valueAstNode, ctx);
-        throw new RuntimeError(err.get("msg").toNative(), `${statement.token.line}:${statement.token.pos}`);
+        err.pushStack({functionName : ctx.getFunctionName(), position: `${statement.token.line}:${statement.token.pos}`});
+        var jsErr = new RuntimeError(err.get("msg").toNative(), null, err);
+        throw jsErr
+    } else if (statement instanceof TryCatchStatement) {
+        try {
+            return evalBlockStatement(statement.tryBlockStatement, new Context(ctx));
+        } catch(e) {
+            if (e instanceof RuntimeError) {
+                var catchCtx = new Context(ctx);
+                // try-catch的没机会上翻到函数定义的ctx了，所以主动设置
+                e.element.updateFunctionName(ctx.getFunctionName());
+                catchCtx.set(statement.catchParamIdentifierAstNode.toString(), e.element);
+                evalBlockStatement(statement.catchBlockStatement, catchCtx);
+            } else {
+                throw e; //未知异常，可能是程序bug了
+            }
+
+        }
     }
     // 其他语句暂时不处理返回个nil
     return nil;
@@ -420,12 +482,22 @@ function evalExpression(exp, ctx) {
         if (funcExpression instanceof IdentifierAstNode) {
             fname = funcExpression.toString();
         } else {
-            fname = "uname";
+            fname = "<anonymous>";
         }
         // 注入一个print函数，来辅助调试
         if (fname == 'print') {
             console.log(...(exp.args.map((arg) => evalExpression(arg, ctx).toNative())));
             return nil;
+        }
+        if (fname == 'error') {
+            if (exp.args.length == 0) {
+                throw new RuntimeError("error() takes at least 1 argument",`${exp.token.line}:${exp.token.pos}`);
+            }
+            var msg = evalExpression(exp.args[0], ctx);
+            if (!(msg instanceof StringElement)) {
+                throw new RuntimeError("msg should be a String",`${exp.token.line}:${exp.token.pos}`);
+            }
+            return new ErrorElement(msg.toNative());
         }
         var funcElement = evalExpression(funcExpression, ctx);
         if (funcElement instanceof FunctionElement) {
@@ -783,18 +855,33 @@ function assert(condition, msg, token) {
 // var ctx = new Context();
 // var tokens = lex(`
 //     var add = function(a, b) {
-//         throw {msg: "Invalid number"};
+//         throw error("haha");
 //     };
-//     print(add(1, 2));
+//     var add2 = function(a, b) {
+//         return add(a, b);
+//     };
+//     var add3 = function(a, b) {
+//         return add2(a, b);
+//     };
+//     print(add3(1, null));
 //     `);
 // var statements = new Parser(tokens).parse();
 // evalStatements(statements, ctx);
 
 var ctx = new Context();
 var tokens = lex(`
-    for(var i=0; i<10; i++) {
-        function() {break;}();
-    }
+    var test = function() {
+        try {
+            for(var i=0; i<10; i++) {
+                function() { 1 + 3 + 5 + null;}();
+            }
+        } catch(e) {
+            print(e); 
+            throw e; // throw语句的stack信息被清空了
+        }
+    };
+    test();
+    print(123);
     `);
 var statements = new Parser(tokens).parse();
 evalStatements(statements, ctx);
