@@ -92,7 +92,7 @@ const { options, args } = await new Command()
 const logic = args[0];
 const filename = args[1];
 
-let begin = () => {};
+let beginFunc = () => {};
 let endFunc = () => {};
 let processFunc = new Function('l', 'ctx', logic);
 
@@ -134,9 +134,81 @@ if (filename) {
   await processStream(Deno.stdin);
 }
 ```
-经过测试发现`deno`版本的确实慢很多，执行的过程中内存占用大概也是`100M`以内，但是执行速度确实是`deno`慢很多，看来和赋值语句的效率关系不大。上面我们基本也就用到了`readLines`读文件的库，这个库还是官方提供的版本。
+经过测试发现`deno`版本的确实慢很多，执行的过程中内存占用大概也是`100M`以内，但是执行速度确实是`deno`慢很多，看来和赋值语句的效率关系不大。上面我们基本也就用到了`readLines`读文件的库，这个库还是官方提供的，虽然gpt给出的是一个比较老的版本，新版本已经不提供了。
 
 ![img](https://i.imgur.com/cl0GRGG.png)
+
+因为都是v8理论上不会有这么大的差距，所以我感觉`readlines`这个函数有问题，也就是读文件这一步在IO擦欧洲哦上应该是有性能问题的，自己用原生的读文件实现一下：
+```js
+// 使用 URL 导入 Deno 版本的 commander 库
+import { Command } from "https://deno.land/x/cliffy@v0.25.7/command/mod.ts";
+// import { readLines } from "https://jsr.io/@std/io/0.225.2/mod.ts";
+
+// 定义命令行选项
+const { options, args } = await new Command()
+  .version('1.0.0')
+  .arguments('<logic:string> [filename:string]')
+  .option('-b, --begin <code:string>', '初始化的逻辑代码')
+  .option('-e, --end <code:string>', '结束后的逻辑代码')
+  .parse(Deno.args);
+
+const logic = args[0];
+const filename = args[1];
+
+let beginFunc = () => {};
+let endFunc = () => {};
+let processFunc = new Function('l', 'ctx', logic);
+
+if (options.begin) {
+  beginFunc = new Function('ctx', options.begin);
+}
+
+if (options.end) {
+  endFunc = new Function('ctx', options.end);
+}
+
+// 预定义全局变量
+let ctx = {
+  n1: 0, n2: 0, n3: 0, s: '', arr: []
+};
+
+const decoder = new TextDecoder();
+const buffer = new Uint8Array(1024*1024);
+// 处理文件或标准输入
+const processStream = async (reader) => {
+    beginFunc(ctx);
+  
+    let result = '';
+    while (true) {
+        const n = await reader.read(buffer);
+        if (n === null) break; // 文件读取完毕
+        result += decoder.decode(buffer.subarray(0, n));
+        // 处理每一行
+        const lines = result.split('\n');
+        for (let i = 0; i < lines.length - 1; i++) {
+            processFunc(lines[i], ctx);
+        }
+        result = lines[lines.length - 1];
+    }
+
+  // 执行结束逻辑
+  endFunc(ctx);
+};
+
+// 判断处理文件还是标准输入
+if (filename) {
+  const file = await Deno.open(filename, { read: true });
+  await processStream(file);
+  file.close();
+} else {
+  await processStream(Deno.stdin);
+}
+```
+这次好多了，deno耗时是35s，node是25s。
+
+![image](https://i.imgur.com/z7ScRYo.png)
+
+也就是`deno`比`node`稍微慢一些，但是整体差距不大，那之前出现较大性能差距的原因就找到了。是`var`语句导致的。
 
 # bun
 `bun`的包兼容`node-npm`，并且还同时支持Es和commonjs写法，所以直接运行node版本的代码即可。
@@ -145,7 +217,7 @@ if (filename) {
 
 ![img](https://i.imgur.com/meqSlv9.png)
 
-但是执行速度也是不到40s，与`nodejs`伯仲之间，所以最后竟然是`deno`运行时自身的问题导致的效率低，而`rust`中只有`deno_core`没有别的运行时，导致一开始就用错了。
+但是执行速度也是不到40s，与`nodejs`伯仲之间，当然因为使用的`gitpod`的虚拟环境，不同时间分别执行程序的耗时都会有波动，所以只能看个大概，目前来看三者的执行速度差不多，具体要细分的话`node`最快，然后是`bun`，最后是`deno`。
 
 ![img](https://i.imgur.com/QVepcDs.png)
 
