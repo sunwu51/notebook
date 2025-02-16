@@ -208,7 +208,7 @@ function(new A())
 
 配置启动参数`-Dgroovy.indy.logging=true`
 
-![img](https://i.imgur.com/gQ4oqdw.png)
+![img](https://i.imgur.com/rST8bE2.png)
 
 运行后，会打印动态的方法搜索的过程，`x.name`这里会搜索`name`的`get`方法，`function`运行2次，第一次走`BSM`会进行`name的get`搜索，第二次走缓存，不再搜索，所以只会搜到一次`name`的搜索。
 
