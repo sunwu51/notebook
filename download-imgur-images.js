@@ -66,8 +66,9 @@ async function scanAndDownloadImages() {
       console.log(`${outputPath} already exists skip`);
       continue;
     }
-    console.log(`Downloading ${link} to ${outputPath}`);
-    await downloadImage(link, outputPath);
+    var newLink = 'https://www.xiaogenban1993.com/api/imgur?filename='+imageName;
+    console.log(`Downloading ${newLink} to ${outputPath}`);
+    await downloadImage(newLink, outputPath);
   }
 }
 
