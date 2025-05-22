@@ -62,6 +62,10 @@ async function scanAndDownloadImages() {
   for (const link of imgurLinks) {
     const imageName = path.basename(link);
     const outputPath = path.join(imgurDir, imageName);
+    if (fs.existsSync(outputPath)) {
+      console.log(`${outputPath} already exists skip`);
+      continue;
+    }
     console.log(`Downloading ${link} to ${outputPath}`);
     await downloadImage(link, outputPath);
   }
