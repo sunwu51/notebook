@@ -24,7 +24,9 @@ jobs:
       run: npm install axios mkdirp markdown-link-extractor
 
     - name: Scan and download Imgur images
-      run: node download-imgur-images.js
+      run: |
+        git clone -b gh-pages https://github.com/sunwu51/notebook.git imgur
+        node download-imgur-images.js
 
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
