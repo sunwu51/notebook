@@ -62,8 +62,13 @@ async function scanAndDownloadImages() {
   for (const link of imgurLinks) {
     const imageName = path.basename(link);
     const outputPath = path.join(imgurDir, imageName);
-    console.log(`Downloading ${link} to ${outputPath}`);
-    await downloadImage(link, outputPath);
+    if (fs.existsSync(outputPath)) {
+      console.log(`${outputPath} already exists skip`);
+      continue;
+    }
+    var newLink = 'https://www.xiaogenban1993.com/api/imgur?filename='+imageName;
+    console.log(`Downloading ${newLink} to ${outputPath}`);
+    await downloadImage(newLink, outputPath);
   }
 }
 
