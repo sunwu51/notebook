@@ -198,6 +198,10 @@ or: and ('||' and)*;
 同样的在`js`中是类似的，我们也注意到了`=`运算符的右结合处理就是上面我们提到的解决方法。
 
 ![image](https://i.imgur.com/EBHXhDe.png)
+
+## Mocha
+在[mocha-java](https://github.com/sunwu51/mocha-java/blob/main/src/main/resources/Mocha.g4)项目中，我们也使用了经典的LL文法定义了我们的编程语言。因为整体结构简单，所以文件行数很少，可以拿来作为参考。
+
 # 如何利用抽象语法树
 上面我们已经学会了如何自己定义一个`g4`文件了，但是问题是我只有这个文件如何使用呢？我们可以用`antlr`指令来生成对应的代码文件，借助生成的代码，就可以识别一个字符串的代码输入，将其解析为抽象语法树了。后续我们就可以利用这个抽象语法树进行自己需要的操作了，例如直接解释求值，或者编译成字节码，或者是机器码等等。那么我们先来看如何生成代码吧。
 
@@ -259,8 +263,12 @@ ID:  [a-zA-Z_][a-zA-Z0-9]*;
 
 ![image](https://i.imgur.com/sUz82Dl.png)
 
-这样我们就可以针对每一种情况分别处理了。例如一个简单的加减法运算的求值，就这样完成了。乘除法类似，这里不在赘述。
+这样我们就可以针对每一种情况分别处理了。例如一个简单的四则法运算的求值，就这样完成了。
 
-![image](https://i.imgur.com/6yLibv2.png)
+![image](https://i.imgur.com/hhFizaO.png)
 
-`visitXX`方法的默认实现是对`ctx`中包含的其他子`ctx`节点进行`visit`，只有重写才能发挥作用，否则就是遍历一遍，不做任何事情。
+`visitXX`方法的默认实现是对`ctx`中包含的其他子`ctx`节点进行`visit`，只有重写才能发挥作用，否则就是遍历一遍，不做任何事情。然后我们写主程序来触发代码的解析与执行：
+
+![image](https://i.imgur.com/UaGE9OB.png)
+
+当然这个例子比较简单，更为完善的例子可以[参考](https://github.com/sunwu51/mocha-java/blob/main/src/main/java/com/xiaogenban1993/mocha/MochaInterpreter.java)。在这个代码中，我们定义了自己语言的数据类型`Element`。以及在这个项目中，我还尝试了不进行解释求值，而是编译成字节码，当然这里我没有再去定义一套字节码规范，而是把程序编译为`jvm`字节码，即`class`文件了。参考这个[目录](https://github.com/sunwu51/mocha-java/blob/main/src/main/java/com/xiaogenban1993/mocha/bytecode/ByteCodeGenerater.java)下的实现
