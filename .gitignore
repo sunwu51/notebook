@@ -10,3 +10,4 @@
 **/*.dll
 **/*.exe
 *.log
+**/media

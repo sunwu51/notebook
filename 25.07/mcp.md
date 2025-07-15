@@ -6,7 +6,7 @@ tags:
     - mcp
 ---
 # 1 mcp介绍
-`MCP`（model context protocal）是最近半年，在AI领域比较火的一个概念了，他是给大模型提供上下文的一种协议。
+`MCP`（model context protocol）是最近半年，在AI领域比较火的一个概念了，它是给大模型提供上下文的一种协议。
 
 什么是上下文呢？上下文本质就是传给大模型的`prompt`，`LLM`中很多技术概念都是围绕上下文出现的。用户自己`输入问题`就是上下文的主要部分。但是有时候用户的输入不够，这时候我们可能需要借助`RAG`和知识库来丰富上下文，知识库是用户自己准备的大量数据，通过可检索的方式在调用`LLM`前，搜索出相关的内容。再然后知识库还是不够，例如我们想要查询互联网，最新天气等，离线的知识库是肯定没有相关数据的，所以需要调用外部工具，所以有了`function calling`，这些都是来丰富上下文的。
 
@@ -19,7 +19,7 @@ tags:
 
 ![image](https://sunwu51.github.io/notebook/UCTMTkL.png)
 
-而`MCP`就是这样一个规范，他规定接口的出入参采用`jsonrpc2.0`格式规范，并且规定了传输协议有`stdio`和`httpstram`2种形式，[参考](https://modelcontextprotocol.io/docs/concepts/transports)，`MCP`就是在原有的链路调用中，在`ai应用`和RAG数据库查询之间加了一层适配层，这样`ai应用`就可以不用关心数据库调用部分的细节，如下图：
+而`MCP`就是这样一个规范，它规定接口的出入参采用`jsonrpc2.0`格式规范，并且规定了传输协议有`stdio`和`httpstream`2种形式，[参考](https://modelcontextprotocol.io/docs/concepts/transports)，`MCP`就是在原有的链路调用中，在`ai应用`和RAG数据库查询之间加了一层适配层，这样`ai应用`就可以不用关心数据库调用部分的细节，如下图：
 
 ![image](https://i.imgur.com/u8f90Et.png)
 
@@ -65,7 +65,7 @@ tags:
 
 ![image](https://i.imgur.com/jbzxs5Q.png)
 
-引入`MCP`后再函数调用者里套一层`MCP server`来标准化`AI app`的代码，但这其实还不够，因为`function calling`是部分模型支持的功能，有些模型可能不支持，为了让所有模型都能支持`MCP tool`，所以这里大多数支持`MCP client`的模型都采用定制化`System prompt`的形式。这里我们用`cherry studio`这个支持`MCP`的工具为例，先创建一个`demo`的`mcp server`他有个`add`函数运行加法，至于`MCP server`怎么写我们后面再说，这里我们先看流程。
+引入`MCP`后在函数调用者里套一层`MCP server`来标准化`AI app`的代码，但这其实还不够，因为`function calling`是部分模型支持的功能，有些模型可能不支持，为了让所有模型都能支持`MCP tool`，所以这里大多数支持`MCP client`的模型都采用定制化`System prompt`的形式。这里我们用`cherry studio`这个支持`MCP`的工具为例，先创建一个`demo`的`mcp server`它有个`add`函数运行加法，至于`MCP server`怎么写我们后面再说，这里我们先看流程。
 
 ![image](https://i.imgur.com/k1sCyTP.png)
 
@@ -91,7 +91,7 @@ tags:
 
 此时大模型应该总结下这个调用结果直接返回就好了，不过我这次调用的时候，大模型又尝试再次调用了`add`函数，所以这里有两次调用。所以我这个例子中调用了两次`add`，但是问题不大。
 ## 1.3 小结
-上面例子中可以看出`MCP`其实没有提供功能和内容上的本质变化，只是在索要更多上下文的`RAG` `function calling`等流程中加了一层中间层。单页带来了很多好处，让`RAG`和`tool`的接入更加规范化了。
+上面例子中可以看出`MCP`其实没有提供功能和内容上的本质变化，只是在索要更多上下文的`RAG` `function calling`等流程中加了一层中间层。但也带来了很多好处，让`RAG`和`tool`的接入更加规范化了。
 
 比如之前在`coze`中接入插件，要符合`coze`的插件标准，如果后续`agent`想切到别的平台，还需要对插件进行修改。但是如果各个平台都支持`MCP`标准的话，`ai app`的切换，就不影响插件的切换了。
 
@@ -100,7 +100,7 @@ tags:
 
 ![image](https://i.imgur.com/u8f90Et.png)
 
-其中需要低延迟和操作系统或本地软件权限的，都是第一种，例如：文件操作、控制浏览器、控制桌面等；需要远程服务接口支持的则是第二种为主，例如刚才提到的`github`的`mcp server`，他就是在本机运行一个代理，来接受`ai app`的请求，通过转换后发送到`remote endpoint`；最后如果想要灵活的控制`mcp server`的升级、收集用户数据等，也会采用第三种方案，用单独的服务器运行`mcp server`，不过这种比较少。
+其中需要低延迟和操作系统或本地软件权限的，都是第一种，例如：文件操作、控制浏览器、控制桌面等；需要远程服务接口支持的则是第二种为主，例如刚才提到的`github`的`mcp server`，它就是在本机运行一个代理，来接受`ai app`的请求，通过转换后发送到`remote endpoint`；最后如果想要灵活的控制`mcp server`的升级、收集用户数据等，也会采用第三种方案，用单独的服务器运行`mcp server`，不过这种比较少。
 
 ## 2.1 写一个
 ```bash
@@ -165,7 +165,7 @@ server.connect(transport);
 
 ![image](https://i.imgur.com/V5XsJy2.png)
 
-连接本质是`initailize`的过程，此时我们可以看到如下页面，通过`list xx`按钮可以展示有哪些资源和工具。
+连接本质是`initialize`的过程，此时我们可以看到如下页面，通过`list xx`按钮可以展示有哪些资源和工具。
 
 ![image](https://i.imgur.com/YCLcyxg.png)
 
