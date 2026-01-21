@@ -12,7 +12,7 @@
   "license": "ISC",
   "devDependencies": {
     "sass": "^1.51.0",
-    "vite": "^2.9.7"
+    "vite": "^2.9.13"
   },
   "dependencies": {
     "bootstrap": "^5.1.3",
