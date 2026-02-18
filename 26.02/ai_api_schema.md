@@ -249,7 +249,7 @@ tags:
 `responses`接口中的主要改动，是新加了一些字段：
 - `instructions`也是其实就是`developer`或者`system`类型的input，单独提出来放到这个字段中了，类似`messages`中`system`字段。
 - `background`(boolean)是否允许异步在后台运行，会返回一个id，之后用`/responses/id`去查询，注意！！`store`需要为true，[参考](https://developers.openai.com/api/docs/guides/background)，个人感觉这个是个应用层的功能，客户端完全可以自己用一个单独的后台线程来实现这个操作，而避免把数据让openai存储。
-- `context_management` {type, compact_threshold}，type目前只能为compaction，compact_threshold是压缩的阈值，如果超过这个阈值，就会对上下文进行压缩。个人感觉这也是个应用层的功能，客户端也可以自己实现这个操作，在context达到阈值之后，自己单独调用一次接口进行压缩。
+- `context_management` `{type, compact_threshold}`，type目前只能为compaction，compact_threshold是压缩的阈值，如果超过这个阈值，就会对上下文进行压缩。个人感觉这也是个应用层的功能，客户端也可以自己实现这个操作，在context达到阈值之后，自己单独调用一次接口进行压缩。
 - `conversation`会话id，这个和`openai`的`conversation`接口相关，可以让`openai`管理会话，后续还可以查询或者继续会话内容，但是个人感觉这样严重依赖了`openai`的服务，所以就不展开了。其他供应商暂时没有会话这个复杂的实现。
 - `previous_response_id`上一次响应的id，可以用来关联上一次的响应，这是一个很实用的字段，之前接口都是无状态的，每次需要把所有的历史记录放到`messages/input`中，而有了这个字段，每次只需要指定上一次响应的id，这样形成一个链式结构，每次只需要传当前的input就好了，历史都不需要传了。个人感觉这个功能非常实用，但是也有一些弊端，`store`必须为true，这对于大多数业务都不太能接受，另外其实只是让`openai`帮忙存储了上下文，实际的`token`消耗并不会变小，也导致接口成为有状态的，是一个看似很好用实际有坑的功能，在抓包`codex`的时候，也会发现他用的还是`input`数组的形式，而没有用这个字段。
 
@@ -284,3 +284,135 @@ tags:
 `anthropic`也提供了一些内建工具，如下，也有`web_search` `web_fetch`等，不过稍有不同的是`bash`工具的type不是`server_tool_use`，在真正使用的时候，请自行调研每一种工具是在客户端还是服务端触发，以及收费标准：
 
 ![image](https://i.imgur.com/pP00JiS.png)
+
+对于`responses`的响应格式如下：
+```json
+{
+  "id": "resp_67ccd7eca01881908ff0b5146584e408072912b2993db808",
+  "object": "response",
+  "created_at": 1741477868,
+  "status": "completed",
+  "completed_at": 1741477869,
+  "error": null,
+  "incomplete_details": null,
+  "instructions": null,
+  "max_output_tokens": null,
+  "model": "o1-2024-12-17",
+  "output": [
+    {
+      "type": "message",
+      "id": "msg_67ccd7f7b5848190a6f3e95d809f6b44072912b2993db808",
+      "status": "completed",
+      "role": "assistant",
+      "content": [
+        {
+          "type": "output_text",
+          "text": "The classic tongue twister...",
+          "annotations": []
+        }
+      ]
+    }
+  ],
+  "parallel_tool_calls": true,
+  "previous_response_id": null,
+  "reasoning": {
+    "effort": "high",
+    "summary": null
+  },
+  "store": true,
+  "temperature": 1.0,
+  "text": {
+    "format": {
+      "type": "text"
+    }
+  },
+  "tool_choice": "auto",
+  "tools": [],
+  "top_p": 1.0,
+  "truncation": "disabled",
+  "usage": {
+    "input_tokens": 81,
+    "input_tokens_details": {
+      "cached_tokens": 0
+    },
+    "output_tokens": 1035,
+    "output_tokens_details": {
+      "reasoning_tokens": 832
+    },
+    "total_tokens": 1116
+  },
+  "user": null,
+  "metadata": {}
+}
+```
+核心内容是`output`字段，是本次请求的大模型的回复内容。
+
+# 5 openrouter
+不同的供应商会对上述俩家ai领头羊公司提供的接口进行兼容，但是也如上述，很多参数是这俩公司自己上层提供的额外服务，其他供应商是不会有的。`openrouter`是一个对很多供应商提供的统一路由的服务商，所以他就需要抽象出更通用的参数格式。所以这里我们看一下`openrouter`的接口定义。
+
+## 5.1 openrouter的chat/completions接口
+为了能兼容多个下游的供应商，`openrouter`的`chat/completions`接口，入参格式如下：
+
+![image](https://i.imgur.com/hO5TKoi.png)
+
+大部分核心参数和`openai`是对齐的，另外有一些路由专用的参数，例如`provider`指定特定的供应商，`route`指定特定的路由规则，`plugins`指定`openrouter`提供的插件，例如网页搜索插件，前面我们提到`openai`和`anthropic`都支持这个web_search的功能，但很多其他供应商是不支持的，所以`openrouter`在网关层添加了插件的功能，也可以添加网页搜索插件，他的工作原理是如果添加了这个网页搜索插件在入参中，网关层会先进行搜索，将搜索后的信息和用户原始信息，一起送到下游的供应商。
+
+另外一些其他参数在`or`官方文档也给出了详细的解释，甚至还有视频解释，如果感兴趣，尤其是对模型采样、温度等参数的原理与效果感兴趣，可以去看看，[文档](https://openrouter.ai/docs/api/reference/parameters)。
+
+此外我们看到`openrouter`删掉了`openai`的很多参数，例如`prompt_cache`相关的，那如果想要用这个参数，其实是可以在入参中指定的，参数会被透传到下游供应商。
+
+## 5.2 openrouter的responses和messages兼容接口
+
+因为很多应用开发的时候可能用了`responses`或`messages`接口，例如`codex`目前已经不支持`completions`接口，只支持`responses`接口。`openrouter`也提供了这两种形式的接口，这两个接口的格式就与`openai`和`anthropic`的接口参数一致了。
+
+
+# 6 litellm
+开源的转发工具`litellm`做了和`openrouter`类似的转发工作，不过他是一个开源项目，可以在本地运行，配置自己的下游多个供应商。在他的官网列出了多种供应商支持的参数列表，作为用户可以传这些参数，会转发到下游，当然有些下游不支持某些参数，就会被自动忽略，他的官网还给出了，目前一些供应商支持的参数列表。
+
+<table><thead><tr><th>Provider</th><th>temperature</th><th>max_completion_tokens</th><th>max_tokens</th><th>top_p</th><th>stream</th><th>stream_options</th><th>stop</th><th>n</th><th>presence_penalty</th><th>frequency_penalty</th><th>functions</th><th>function_call</th><th>logit_bias</th><th>user</th><th>response_format</th><th>seed</th><th>tools</th><th>tool_choice</th><th>logprobs</th><th>top_logprobs</th><th>extra_headers</th></tr></thead><tbody><tr><td>Anthropic</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td>✅</td><td>✅</td><td></td><td>✅</td><td>✅</td><td></td><td></td><td>✅</td></tr><tr><td>OpenAI</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>Azure OpenAI</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr><tr><td>xAI</td><td>✅</td><td></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td></tr><tr><td>Replicate</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Anyscale</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Cohere</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Huggingface</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Openrouter</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td></tr><tr><td>AI21</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>VertexAI</td><td>✅</td><td>✅</td><td>✅</td><td></td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Bedrock</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>✅ (model dependent)</td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Sagemaker</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>TogetherAI</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td>✅</td><td></td><td></td><td></td><td>✅</td><td></td><td>✅</td><td>✅</td><td></td><td></td><td></td></tr><tr><td>Sambanova</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>✅</td><td></td><td>✅</td><td>✅</td><td></td><td></td><td></td></tr><tr><td>AlephAlpha</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>NLP Cloud</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Petals</td><td>✅</td><td>✅</td><td></td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Ollama</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td>✅</td><td></td><td></td><td></td><td></td><td>✅</td><td></td><td></td><td></td><td>✅</td><td></td><td></td><td></td><td></td></tr><tr><td>Databricks</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>ClarifAI</td><td>✅</td><td>✅</td><td>✅</td><td></td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Github</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td>✅</td><td>✅ (model dependent)</td><td>✅ (model dependent)</td><td></td><td></td><td></td><td></td></tr><tr><td>Novita AI</td><td>✅</td><td>✅</td><td></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>Bytez</td><td>✅</td><td>✅</td><td></td><td>✅</td><td>✅</td><td></td><td></td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr><tr><td>OVHCloud AI Endpoints</td><td>✅</td><td></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td></td></tr></tbody></table>
+
+
+## 6.1 litellm配置本地代理多个供应商
+
+如果你有多个llm供应商可能是会员，或者有买一些代理等，也可以在本地配置一个`litellm`作为统一的入口网关。
+
+他的用法比较简单，先安装
+```bash
+$ pip install litellm[proxy]
+```
+
+然后写一个配置文件：
+```yaml :config.yaml
+general_settings:
+  disable_database: true
+  disable_analytics: true
+  disable_sessions: true
+model_list:
+  - model_name: silicon/deepseek-v3.1
+    litellm_params:
+      model: openai/deepseek-ai/DeepSeek-V3.1
+      api_key: "your_api_key"
+      api_base: "https://api.siliconflow.cn/v1"
+  - model_name: silicon/deepseek-v3.2
+    litellm_params:
+      model: anthropic/deepseek-ai/DeepSeek-V3.2
+      api_key: "your_api_key"
+      api_base: "https://api.siliconflow.cn/v1"
+```
+
+`general_settings`是litellm的全局配置，我这里不需要复杂的管理所以把`db`和其他一些附加功能关闭了。然后`model_list`中是一些模型配置。
+
+`model_list`是支持的模型下游列表，`model_name`是`litellm`对外提供的模型的名字，可以自己随便叫。`litellm_params`是调用下游供应商的配置。其中`api_base`是你的供应商提供的`base_url`，供应商可以是上面介绍的三种形式的api接口的任意一种，`chat/completions`，`messages`，`responses`都可以。
+
+如果是`chat/completions`的话，`model`需要以`openai/`开头(并且不是`openai/responses`开头)。此时的原理是，转发的时候判断`openai/`开头，会将请求转换成`chat/completions`接口的请求格式，再转发给下游供应商。
+
+如果是`messages`的话，`model`需要以`anthropic/`开头。此时的原理是，转发的时候判断`anthropic/`开头，会将请求转换成`messages`接口的请求格式，再转发给下游供应商。
+
+如果是`responses`的话，`model`需要以`openai/responses`开头。此时的原理是，转发的时候判断`openai/responses`开头，会将请求转换成`responses`接口的请求格式，再转发给下游供应商。自己对外则同时提供`chat/completions`和`messages`两种接口。如果请求是`responses`接口的话，目前只能转发给支持`responses`的下游供应商。
+
+如下图：
+
+![image](https://i.imgur.com/PABnOfk.png)
+
+
+简言之，`litellm`可以代理多个供应商，对于主流接口`chat/completions`，`messages`的供应商都可以代理，并且可以同时对外暴露这两种接口，即使供应商是`chat/completions`接口，也会额外暴露`messages`接口类型。只需要在上面模型配置的时候，用合适的前缀即可，主流的供应商前缀就是`openai`，`anthropic`，`azure`等，可以参考官方文档介绍。而对于`responses`接口，`litellm`将其归为非主流接口，所以对他的支持是，主流接口的请求可以转换成`responses`接口请求，需要用`openai/responses/`开头的`model_name`，而非`openai`。并且也对外暴露`responses`接口，但是只用来转发，不能转换发到其他主流接口的供应商。
