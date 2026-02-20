@@ -1,0 +1,213 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="980" viewBox="0 0 1720 980" role="img" aria-labelledby="title desc">
+  <title id="title">Claude Code 天气查询流程图</title>
+  <desc id="desc">客户端、LLM Anthropic、安全校验与 weather.com 的 10 步交互流程，包含箭头动画。</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f7fbff" />
+      <stop offset="100%" stop-color="#eef7f2" />
+    </linearGradient>
+    <linearGradient id="nodeClient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1f6feb" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="nodeLLM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+    <linearGradient id="nodeSafe" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6d28d9" />
+      <stop offset="100%" stop-color="#8b5cf6" />
+    </linearGradient>
+    <linearGradient id="nodeWeb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#155e75" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#2563eb" />
+    </marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#0f766e" />
+    </marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#ea580c" />
+    </marker>
+    <marker id="arrowPurple" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#7c3aed" />
+    </marker>
+
+    <style>
+      text {
+        font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      }
+      .lane {
+        stroke: #d1d5db;
+        stroke-width: 2;
+        stroke-dasharray: 6 8;
+      }
+      .node {
+        rx: 20;
+        ry: 20;
+        filter: drop-shadow(0px 8px 14px rgba(15, 23, 42, 0.15));
+      }
+      .node-title {
+        fill: #ffffff;
+        font-size: 24px;
+        font-weight: 700;
+        text-anchor: middle;
+      }
+      .node-sub {
+        fill: #ffffff;
+        font-size: 16px;
+        font-weight: 500;
+        text-anchor: middle;
+        opacity: 0.92;
+      }
+      .legend {
+        fill: #334155;
+        font-size: 14px;
+      }
+      .step path {
+        fill: none;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 14 10;
+        animation: flow 1.6s linear infinite;
+      }
+      .step text {
+        font-size: 17px;
+        font-weight: 600;
+        fill: #0f172a;
+      }
+      .step-bg {
+        fill: #ffffff;
+        opacity: 0.86;
+        rx: 8;
+        ry: 8;
+      }
+      .step {
+        opacity: 0.2;
+        animation: reveal 20s linear infinite;
+      }
+      #s1 { animation-delay: 0s; }
+      #s2 { animation-delay: 2s; }
+      #s3 { animation-delay: 4s; }
+      #s4 { animation-delay: 6s; }
+      #s5 { animation-delay: 8s; }
+      #s6 { animation-delay: 10s; }
+      #s7 { animation-delay: 12s; }
+      #s8 { animation-delay: 14s; }
+      #s9 { animation-delay: 16s; }
+      #s10 { animation-delay: 18s; }
+
+      @keyframes flow {
+        to { stroke-dashoffset: -96; }
+      }
+      @keyframes reveal {
+        0% { opacity: 0.18; }
+        7% { opacity: 1; }
+        13% { opacity: 1; }
+        21% { opacity: 0.18; }
+        100% { opacity: 0.18; }
+      }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1720" height="980" fill="url(#bg)" />
+
+  <text x="860" y="52" font-size="36" font-weight="800" fill="#0f172a" text-anchor="middle">
+    Claude Code Search + Fetch 天气查询流程
+  </text>
+  <text x="860" y="84" font-size="18" font-weight="500" fill="#334155" text-anchor="middle">
+    子 Agent WebSearch → 安全校验 → WebFetch → LLM 汇总
+  </text>
+
+  <line class="lane" x1="220" y1="180" x2="220" y2="890" />
+  <line class="lane" x1="620" y1="180" x2="620" y2="890" />
+  <line class="lane" x1="1020" y1="180" x2="1020" y2="890" />
+  <line class="lane" x1="1420" y1="180" x2="1420" y2="890" />
+
+  <rect class="node" x="90" y="110" width="260" height="88" fill="url(#nodeClient)" />
+  <text class="node-title" x="220" y="147">客户端</text>
+  <text class="node-sub" x="220" y="176">claudecode</text>
+
+  <rect class="node" x="490" y="110" width="260" height="88" fill="url(#nodeLLM)" />
+  <text class="node-title" x="620" y="147">模型供应商</text>
+  <text class="node-sub" x="620" y="176">LLM Anthropic</text>
+
+  <rect class="node" x="890" y="110" width="260" height="88" fill="url(#nodeSafe)" />
+  <text class="node-title" x="1020" y="147">安全校验</text>
+  <text class="node-sub" x="1020" y="176">claude.ai</text>
+
+  <rect class="node" x="1290" y="110" width="260" height="88" fill="url(#nodeWeb)" />
+  <text class="node-title" x="1420" y="147">最终访问网站</text>
+  <text class="node-sub" x="1420" y="176">weather.com</text>
+
+  <g id="s1" class="step">
+    <path d="M236 230 C 340 230, 500 230, 604 230" stroke="#2563eb" marker-end="url(#arrowBlue)" />
+    <rect class="step-bg" x="318" y="204" width="300" height="30" />
+    <text x="468" y="225" text-anchor="middle">1) 客户端请求 LLM：询问天气</text>
+  </g>
+
+  <g id="s2" class="step">
+    <path d="M604 286 C 500 286, 340 286, 236 286" stroke="#0f766e" marker-end="url(#arrowGreen)" />
+    <rect class="step-bg" x="300" y="292" width="350" height="30" />
+    <text x="475" y="313" text-anchor="middle">2) LLM 返回：需要调用 WebSearch Tool</text>
+  </g>
+
+  <g id="s3" class="step">
+    <path d="M236 344 C 340 344, 500 344, 604 344" stroke="#2563eb" marker-end="url(#arrowBlue)" />
+    <rect class="step-bg" x="314" y="318" width="480" height="30" />
+    <text x="554" y="339" text-anchor="middle">3) 客户端新开子 Agent（指定 WebSearch 工具）访问 LLM</text>
+  </g>
+
+  <g id="s4" class="step">
+    <path d="M636 402 C 780 376, 1260 376, 1404 402" stroke="#ea580c" marker-end="url(#arrowOrange)" />
+    <path d="M1404 430 C 1260 456, 780 456, 636 430" stroke="#ea580c" marker-end="url(#arrowOrange)" />
+    <rect class="step-bg" x="692" y="404" width="640" height="30" />
+    <text x="1012" y="425" text-anchor="middle">4) Anthropic 内建 WebSearch 完成搜索，并返回需查询 weather.com</text>
+  </g>
+
+  <g id="s5" class="step">
+    <path d="M236 486 C 340 486, 500 486, 604 486" stroke="#2563eb" marker-end="url(#arrowBlue)" />
+    <rect class="step-bg" x="286" y="460" width="470" height="30" />
+    <text x="521" y="481" text-anchor="middle">5) 客户端父 Agent 将子 Agent 收集的信息传给 LLM</text>
+  </g>
+
+  <g id="s6" class="step">
+    <path d="M604 544 C 500 544, 340 544, 236 544" stroke="#0f766e" marker-end="url(#arrowGreen)" />
+    <rect class="step-bg" x="286" y="550" width="400" height="30" />
+    <text x="486" y="571" text-anchor="middle">6) LLM 返回：需要调用 WebFetch Tool</text>
+  </g>
+
+  <g id="s7" class="step">
+    <path d="M236 604 C 430 604, 810 604, 1004 604" stroke="#7c3aed" marker-end="url(#arrowPurple)" />
+    <rect class="step-bg" x="344" y="578" width="590" height="30" />
+    <text x="639" y="599" text-anchor="middle">7) 本地发起 WebFetch，先到 claude.ai 对待抓取 URL 做安全校验</text>
+  </g>
+
+  <g id="s8" class="step">
+    <path d="M236 664 C 520 664, 1120 664, 1404 664" stroke="#ea580c" marker-end="url(#arrowOrange)" />
+    <path d="M1404 706 C 1120 706, 520 706, 236 706" stroke="#ea580c" marker-end="url(#arrowOrange)" />
+    <rect class="step-bg" x="486" y="672" width="660" height="30" />
+    <text x="816" y="693" text-anchor="middle">8) 校验允许后，本地发起 HTTP 请求到 weather.com 并拿到天气结果</text>
+  </g>
+
+  <g id="s9" class="step">
+    <path d="M236 756 C 340 756, 500 756, 604 756" stroke="#2563eb" marker-end="url(#arrowBlue)" />
+    <rect class="step-bg" x="328" y="730" width="310" height="30" />
+    <text x="483" y="751" text-anchor="middle">9) 把天气结果交给 LLM</text>
+  </g>
+
+  <g id="s10" class="step">
+    <path d="M604 812 C 500 812, 340 812, 236 812" stroke="#0f766e" marker-end="url(#arrowGreen)" />
+    <rect class="step-bg" x="248" y="818" width="520" height="30" />
+    <text x="508" y="839" text-anchor="middle">10) LLM 汇总全部信息后返回最终天气结果</text>
+  </g>
+
+  <rect x="64" y="904" width="1592" height="48" rx="12" ry="12" fill="#ffffff" opacity="0.84" />
+  <text class="legend" x="88" y="934">
+    动画说明：箭头虚线持续流动；步骤按时间顺序循环高亮（1 → 10）。
+  </text>
+</svg>

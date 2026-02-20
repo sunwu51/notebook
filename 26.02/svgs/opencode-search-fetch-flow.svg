@@ -1,0 +1,202 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1720" height="980" viewBox="0 0 1720 980" role="img" aria-labelledby="title desc">
+  <title id="title">Opencode Search + Fetch 流程图</title>
+  <desc id="desc">客户端、LLM、MCP Server 与 weather.com 之间的 9 步天气查询流程，包含箭头动画。</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f7fbff" />
+      <stop offset="100%" stop-color="#eef7f2" />
+    </linearGradient>
+    <linearGradient id="nodeClient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1f6feb" />
+      <stop offset="100%" stop-color="#3b82f6" />
+    </linearGradient>
+    <linearGradient id="nodeLLM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="100%" stop-color="#14b8a6" />
+    </linearGradient>
+    <linearGradient id="nodeMCP" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#9a3412" />
+      <stop offset="100%" stop-color="#f97316" />
+    </linearGradient>
+    <linearGradient id="nodeWeb" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#155e75" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#2563eb" />
+    </marker>
+    <marker id="arrowGreen" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#0f766e" />
+    </marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#ea580c" />
+    </marker>
+
+    <style>
+      text {
+        font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif;
+      }
+      .lane {
+        stroke: #d1d5db;
+        stroke-width: 2;
+        stroke-dasharray: 6 8;
+      }
+      .node {
+        rx: 20;
+        ry: 20;
+        filter: drop-shadow(0px 8px 14px rgba(15, 23, 42, 0.15));
+      }
+      .node-title {
+        fill: #ffffff;
+        font-size: 24px;
+        font-weight: 700;
+        text-anchor: middle;
+      }
+      .node-sub {
+        fill: #ffffff;
+        font-size: 16px;
+        font-weight: 500;
+        text-anchor: middle;
+        opacity: 0.92;
+      }
+      .legend {
+        fill: #334155;
+        font-size: 14px;
+      }
+      .step path {
+        fill: none;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-dasharray: 14 10;
+        animation: flow 1.6s linear infinite;
+      }
+      .step text {
+        font-size: 17px;
+        font-weight: 600;
+        fill: #0f172a;
+      }
+      .step-bg {
+        fill: #ffffff;
+        opacity: 0.86;
+        rx: 8;
+        ry: 8;
+      }
+      .step {
+        opacity: 0.2;
+        animation: reveal 18s linear infinite;
+      }
+      #s1 { animation-delay: 0s; }
+      #s2 { animation-delay: 2s; }
+      #s3 { animation-delay: 4s; }
+      #s4 { animation-delay: 6s; }
+      #s5 { animation-delay: 8s; }
+      #s6 { animation-delay: 10s; }
+      #s7 { animation-delay: 12s; }
+      #s8 { animation-delay: 14s; }
+      #s9 { animation-delay: 16s; }
+
+      @keyframes flow {
+        to { stroke-dashoffset: -96; }
+      }
+      @keyframes reveal {
+        0% { opacity: 0.18; }
+        7% { opacity: 1; }
+        13% { opacity: 1; }
+        21% { opacity: 0.18; }
+        100% { opacity: 0.18; }
+      }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1720" height="980" fill="url(#bg)" />
+
+  <text x="860" y="52" font-size="36" font-weight="800" fill="#0f172a" text-anchor="middle">
+    Opencode Search + Fetch 天气查询流程
+  </text>
+  <text x="860" y="84" font-size="18" font-weight="500" fill="#334155" text-anchor="middle">
+    客户端 → WebSearch MCP → WebFetch → LLM 汇总
+  </text>
+
+  <line class="lane" x1="220" y1="180" x2="220" y2="890" />
+  <line class="lane" x1="620" y1="180" x2="620" y2="890" />
+  <line class="lane" x1="1020" y1="180" x2="1020" y2="890" />
+  <line class="lane" x1="1420" y1="180" x2="1420" y2="890" />
+
+  <rect class="node" x="90" y="110" width="260" height="88" fill="url(#nodeClient)" />
+  <text class="node-title" x="220" y="147">客户端</text>
+  <text class="node-sub" x="220" y="176">opencode + ohmyopencode</text>
+
+  <rect class="node" x="490" y="110" width="260" height="88" fill="url(#nodeLLM)" />
+  <text class="node-title" x="620" y="147">模型供应商</text>
+  <text class="node-sub" x="620" y="176">LLM</text>
+
+  <rect class="node" x="890" y="110" width="260" height="88" fill="url(#nodeMCP)" />
+  <text class="node-title" x="1020" y="147">MCP Server</text>
+  <text class="node-sub" x="1020" y="176">EXA MCP</text>
+
+  <rect class="node" x="1290" y="110" width="260" height="88" fill="url(#nodeWeb)" />
+  <text class="node-title" x="1420" y="147">目标网站</text>
+  <text class="node-sub" x="1420" y="176">weather.com</text>
+
+  <g id="s1" class="step">
+    <path d="M236 240 C 340 240, 500 240, 604 240" stroke="#2563eb" marker-end="url(#arrowBlue)" />
+    <rect class="step-bg" x="315" y="214" width="300" height="30" />
+    <text x="465" y="235" text-anchor="middle">1) 客户端请求 LLM：询问天气</text>
+  </g>
+
+  <g id="s2" class="step">
+    <path d="M604 292 C 500 292, 340 292, 236 292" stroke="#0f766e" marker-end="url(#arrowGreen)" />
+    <rect class="step-bg" x="300" y="298" width="360" height="30" />
+    <text x="480" y="319" text-anchor="middle">2) LLM 返回：需要调用 WebSearch MCP</text>
+  </g>
+
+  <g id="s3" class="step">
+    <path d="M236 352 C 430 352, 810 352, 1004 352" stroke="#ea580c" marker-end="url(#arrowOrange)" />
+    <rect class="step-bg" x="382" y="326" width="360" height="30" />
+    <text x="562" y="347" text-anchor="middle">3) 客户端访问 MCP Server：查询天气</text>
+  </g>
+
+  <g id="s4" class="step">
+    <path d="M1004 410 C 810 410, 430 410, 236 410" stroke="#ea580c" marker-end="url(#arrowOrange)" />
+    <rect class="step-bg" x="360" y="416" width="500" height="30" />
+    <text x="610" y="437" text-anchor="middle">4) MCP Server 返回：需访问具体 weather.com 网站查询</text>
+  </g>
+
+  <g id="s5" class="step">
+    <path d="M236 468 C 340 468, 500 468, 604 468" stroke="#2563eb" marker-end="url(#arrowBlue)" />
+    <rect class="step-bg" x="308" y="442" width="340" height="30" />
+    <text x="478" y="463" text-anchor="middle">5) 客户端把 MCP 返回结果交给 LLM</text>
+  </g>
+
+  <g id="s6" class="step">
+    <path d="M604 526 C 500 526, 340 526, 236 526" stroke="#0f766e" marker-end="url(#arrowGreen)" />
+    <rect class="step-bg" x="286" y="532" width="400" height="30" />
+    <text x="486" y="553" text-anchor="middle">6) LLM 返回：需要调用 WebFetch Tool</text>
+  </g>
+
+  <g id="s7" class="step">
+    <path d="M236 590 C 520 590, 1120 590, 1404 590" stroke="#ea580c" marker-end="url(#arrowOrange)" />
+    <path d="M1404 634 C 1120 634, 520 634, 236 634" stroke="#ea580c" marker-end="url(#arrowOrange)" />
+    <rect class="step-bg" x="552" y="598" width="560" height="30" />
+    <text x="832" y="619" text-anchor="middle">7) 本地发起 WebFetch HTTP 请求 weather.com，并拿到天气结果</text>
+  </g>
+
+  <g id="s8" class="step">
+    <path d="M236 746 C 340 746, 500 746, 604 746" stroke="#2563eb" marker-end="url(#arrowBlue)" />
+    <rect class="step-bg" x="332" y="720" width="300" height="30" />
+    <text x="482" y="741" text-anchor="middle">8) 把天气结果交给 LLM</text>
+  </g>
+
+  <g id="s9" class="step">
+    <path d="M604 804 C 500 804, 340 804, 236 804" stroke="#0f766e" marker-end="url(#arrowGreen)" />
+    <rect class="step-bg" x="274" y="810" width="500" height="30" />
+    <text x="524" y="831" text-anchor="middle">9) LLM 最终汇总并返回天气信息给客户端</text>
+  </g>
+
+  <rect x="64" y="904" width="1592" height="48" rx="12" ry="12" fill="#ffffff" opacity="0.84" />
+  <text class="legend" x="88" y="934">
+    动画说明：箭头虚线持续流动；步骤按时间顺序循环高亮（1 → 9）。
+  </text>
+</svg>
