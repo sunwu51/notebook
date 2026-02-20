@@ -95,6 +95,23 @@ tags:
 
 ![img](https://i.imgur.com/qOJ9Ux4.png)
 
+哦，对了这种抓包的方式，可以很好的观察工具和llm的行为。之前有视频和文章都讲过，这里额外提一句的是，如果默认的`OS proxy`开启，抓不到包，那可能需要你单独配置一下环境变量。
+```bash
+# 8888 charles proxy port
+$ export HTTPS_PROXY=http://127.0.0.1:8888
+# 这个pem是charles，help->SSL proxying->Save Charles Root Certificate保存的证书
+$ export NODE_EXTRA_CA_CERTS = "C:\Users\sunwu\Desktop\code.pem"
+# 启动claude就可以在charles上看到抓包数据了
+$ claude
+```
+如果要抓`litellm`的包，这是python程序，那么设置如下环境变量。
+```bash
+# 8888 charles proxy port
+$ export HTTPS_PROXY=http://127.0.0.1:8888
+$ export REQUESTS_CA_BUNDLE = "C:\Users\sunwu\Desktop\code.pem"
+$ export SSL_CERT_FILE = "C:\Users\sunwu\Desktop\code.pem"
+```
+
 # Codex
 `codex`是`openai`推出的与`claudecode`竞争的产品，`openai`的产品策略还不止是和`cc`对齐，在`openai`官网已经把`codex`列为专门的产品，看上去要更重视一些。甚至推出了新的模型`gpt-5.1-codex` `gpt-5.2-codex` 以及`gpt-5.3-codex`。甚至`gpt-5.3-codex`目前还没有开放`api`访问。我对`gpt`的态度一直都是比较通用，但是在编程上还是`claude`更强，但是`gpt-5.2-codex`让我改变了想法。
 
@@ -251,6 +268,20 @@ requires_openai_auth = true
 
 ![img](https://raw.githubusercontent.com/sunwu51/notebook/refs/heads/master/26.02/svgs/codex-search-fetch-flow.svg)
 
+对于`OMO`我的态度比较激进，是不太想配，因为我没有订阅很多的模型，而且我的模型渠道都很杂，搞不好就要换，所以需要经常该这些模型，而`OMO`的一堆子agent要分别配置各种模型。实在是有点麻烦，当然第一次配好了可以用一段时间，等新模型出来，或者渠道变了，我又得来挨个改配置。所以我目前是不怎么用`OMO`的，上面`OMO`添加的`WebSearch/Context7`等MCP可以自己手动添加的。
+
+# 自定义webfetch
+其实我们可以自定义一个webfetch的MCPserver，部署到`cloudflare`上，然后给`claude code`把这个mcp配置上，然后在`~/.claude/GLOBAL.md`里面加一句优先使用`MCP`中的`webfetch`来进行网页内容获取之类的话。
+
+不过`cf`部署完之后，有点小问题，就是无法访问谷歌，会报错429，因为谷歌给`cf`这些节点ip都拉黑了，另外`cf`需要域名才能访问，否则国内还是访问不了。那么还有什么其他候选吗？有的，兄弟，有的。条件是免费，`serverless`，那`render` `netlify` `vercel` `railway`都是可以的，但是这些要么基于容器技术，启动较慢，长时间没有请求后，第一个请求需要将近1分钟。要么有的还被墙。
+
+考虑到响应速度要快，要么就是常驻服务（基本得花钱），要么就是`V8`或`wasm`的运行时，`cf`就是自研的v8运行时。而除了`cf`之外，还有一个选择，就是非常冷门的`deno deploy`平台，我最近还发现他们竟然还发布了新版的系统，正好用上了。可以看这个项目:[deno-webfetch-mcp](https://github.com/sunwu51/deno-webfetch-mcp)，里面介绍了配置`CC`的方式，基本就是一行指令加个`mcp server`，然后修改`GLOBAL.md`优先使用`mcp WebSearch`就可以了，效果如下：
+
+![img](https://i.imgur.com/muVXg5p.png)
+
+![img](https://i.imgur.com/xa0L16f.png)
+
+当然你也可以把这个mcp加到`Opencode`中。
 # 供应商
 因为国内这个环境的问题，我们就不说`openai` `anthropic` `google`等这些条件苛刻的官方渠道了。
 
@@ -261,7 +292,6 @@ requires_openai_auth = true
 最后我将各个不同的供应商和他们支持的自己会用到的模型，配置到本地的`litellm`中，这样相当于自己做了一个网关汇总，就不需要每个应用里面再去单独配置各个供应商了。
 
 总之不差钱的富哥就用`openrouter`原价吧，如果是`vibecoding`的话，算上`prompt cache`我觉得一天也就两三刀，（我是指在家自己用的项目，工作要每天都用的话不止这个数）大概十几块钱，一个月的话估计也就用个10来天，算下来一百多，好像和开会员差不多了，但是突出一个随用随付，没有心理负担。如果是家境贫寒，那我建议直接用`opencode` + `zen`提供的免费模型，一条龙给你安排明白了，而且免费的模型还真不差`glm5` `minimax`都是国产巅峰了。如果心有不甘还想用`claude`这些模型的，那就搜一搜中转的平台，货比三家，少充点对比下价格倍率，和支持的功能（建议测下是否支持WebSearch）。然后咸鱼搜一搜有没有渠道，以及看看搭伙能不能几个人共用`plus`之类的。
-
 
 # 锐评
 三个`cli`工具的对比`CC`, `Codex`, `OpenCode`，从能力上我觉得差距是不大的。从页面美观上，`OpenCode`要更好一些，尤其是在`Windows`环境下。另外就是查询最新信息的`web`功能上，如果是国外用户，那这三个工具都没有问题，但是如果是国内用户，网页在哪里发起的访问，是否能访问就是一个绕不开的问题。（原谅我全篇都在关注`web`的扩展，因为我写很多东西真的需要依赖上网的功能）如果考虑到`websearch` `webfetch`的兼容性，那我觉得满血的`codex` + `gpt-codex转发`，在国内是最友好的，这也成为了我目前在家环境的主要开发方式。因为所有网页访问都是委托给`llm`供应商来完成的，供应商其实最终是转发到了`openai`，他是可以无墙访问`github` `google`等等各种技术网站的。当然如果你配置个`HTTPS_PROXY`环境变量，然后启动`CC`也没问题，只是如果是渠道代理的可能会有`chat`请求多绕几圈的问题。`codex`的坑在于，新版本只支持`responses`这个非主流接口了，除了`openai`很少有其他供应商做这个接口的兼容，所以如果你用的不是`gpt`模型，没有`responses`接口的话，那我建议放弃`codex`吧，不然还要找转换工具。
