@@ -245,11 +245,11 @@ requires_openai_auth = true
 
 下面是三种cli进行网页搜索和爬取的流程对比：
 
-![img](svgs/opencode-search-fetch-flow.svg)
+![img](https://raw.githubusercontent.com/sunwu51/notebook/refs/heads/master/26.02/svgs/opencode-search-fetch-flow.svg)
 
-![img](svgs/claudecode-search-fetch-flow.svg)
+![img](https://raw.githubusercontent.com/sunwu51/notebook/refs/heads/master/26.02/svgs/claudecode-search-fetch-flow.svg)
 
-![img](svgs/codex-search-fetch-flow.svg)
+![img](https://raw.githubusercontent.com/sunwu51/notebook/refs/heads/master/26.02/svgs/codex-search-fetch-flow.svg)
 
 # 供应商
 因为国内这个环境的问题，我们就不说`openai` `anthropic` `google`等这些条件苛刻的官方渠道了。
