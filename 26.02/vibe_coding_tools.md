@@ -44,7 +44,7 @@ tags:
 ```json:settings.json
 {
   "env": {
-    "ANTHROPIC_BASE_URL": "https://api.siliconflow.cn/v1",
+    "ANTHROPIC_BASE_URL": "https://api.siliconflow.cn",
     "ANTHROPIC_AUTH_TOKEN": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
     "ANTHROPIC_MODEL": "deepseek-ai/DeepSeek-V3.2",
     "ANTHROPIC_DEFAULT_HAIKU_MODEL": "deepseek-ai/DeepSeek-V3.2",
