@@ -275,13 +275,9 @@ requires_openai_auth = true
 
 不过`cf`部署完之后，有点小问题，就是无法访问谷歌，会报错429，因为谷歌给`cf`这些节点ip都拉黑了，另外`cf`需要域名才能访问，否则国内还是访问不了。那么还有什么其他候选吗？有的，兄弟，有的。条件是免费，`serverless`，那`render` `netlify` `vercel` `railway`都是可以的，但是这些要么基于容器技术，启动较慢，长时间没有请求后，第一个请求需要将近1分钟。要么有的还被墙。
 
-考虑到响应速度要快，要么就是常驻服务（基本得花钱），要么就是`V8`或`wasm`的运行时，`cf`就是自研的v8运行时。而除了`cf`之外，还有一个选择，就是非常冷门的`deno deploy`平台，我最近还发现他们竟然还发布了新版的系统，正好用上了。可以看这个项目:[deno-webfetch-mcp](https://github.com/sunwu51/deno-webfetch-mcp)，里面介绍了配置`CC`的方式，基本就是一行指令加个`mcp server`，然后修改`GLOBAL.md`优先使用`mcp WebSearch`就可以了，效果如下：
+考虑到响应速度要快，要么就是常驻服务（基本得花钱），要么就是`V8`或`wasm`的运行时，`cf`就是自研的v8运行时。而除了`cf`之外，还有一个选择，就是非常冷门的`deno deploy`平台，(deno也不行了，不允许网络转发类型的服务，我的应用已经被封了)，我最近还发现他们竟然还发布了新版的系统，正好用上了。可以看这个项目:[deno-webfetch-mcp](https://github.com/sunwu51/deno-webfetch-mcp)（这个项目已经被封了），里面介绍了配置`CC`的方式，基本就是一行指令加个`mcp server`，然后修改`GLOBAL.md`优先使用`mcp WebSearch`就可以了，
 
-![img](https://i.imgur.com/muVXg5p.png)
-
-![img](https://i.imgur.com/xa0L16f.png)
-
-当然你也可以把这个mcp加到`Opencode`中。
+上面的`deno-webfetch-mcp`项目已经被官方强制下线，因为deno的用户准则里明确不允许代理类型的服务，然后我发现`netlify`没有禁止。所以把这个mcp转到`netlify`平台了，同时增加了搜索的能力（通过brave search和duckduckgo），放到一个新的项目下了[orz-mcp](https://github.com/sunwu51/orz-mcp)，同时提供了`stdio`和`http`两种模式，任选一种即可。
 # 供应商
 因为国内这个环境的问题，我们就不说`openai` `anthropic` `google`等这些条件苛刻的官方渠道了。
 
