@@ -1,0 +1,113 @@
+name: opencode-proofread-notes
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**/*.md"
+
+jobs:
+  proofread:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      issues: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Collect changed Markdown files
+        id: files
+        shell: bash
+        run: |
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            FILES=$(git ls-files '*.md')
+          else
+            FILES=$(git diff --name-only "$BEFORE" "$AFTER" -- '*.md')
+          fi
+
+          {
+            echo 'list<<EOF'
+            printf '%s\n' "$FILES"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Build Markdown diff
+        id: diff
+        shell: bash
+        run: |
+          BEFORE="${{ github.event.before }}"
+          AFTER="${{ github.sha }}"
+
+          if [ "$BEFORE" = "0000000000000000000000000000000000000000" ]; then
+            DIFF=$(git show --format= -- '*.md' 2>/dev/null || true)
+          else
+            DIFF=$(git diff --unified=1 "$BEFORE" "$AFTER" -- '*.md')
+          fi
+
+          {
+            echo 'content<<EOF'
+            printf '%s\n' "$DIFF"
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Skip if no Markdown changes
+        if: steps.files.outputs.list == ''
+        run: echo "No Markdown changes in this push."
+
+      - name: Run OpenCode
+        if: steps.files.outputs.list != ''
+        uses: anomalyco/opencode/github@latest
+        env:
+          SILICONFLOW_API_KEY: ${{ secrets.SILICONFLOW_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: siliconflow-cn/deepseek-ai/DeepSeek-V3.2
+          use_github_token: true
+          prompt: |
+            You are proofreading a Markdown notes repository.
+
+            Review only the Markdown changes from this push.
+
+            Changed files:
+            ${{ steps.files.outputs.list }}
+
+            Diff:
+            ${{ steps.diff.outputs.content }}
+
+            Focus only on text proofreading, not Markdown syntax.
+
+            Check for:
+            - English spelling mistakes
+            - obvious Chinese typos or wrong characters
+            - duplicated or missing characters
+            - obvious wording mistakes in headings or paragraphs
+
+            Ignore:
+            - Markdown formatting issues
+            - code blocks
+            - URLs
+            - file paths
+            - command lines
+            - frontmatter
+            - technical terms, product names, and intentionally stylized words
+
+            Output behavior:
+            - If no obvious issues are found, leave a short summary only.
+            - If issues are found, create or update one GitHub issue titled:
+              [Proofread] Markdown typos from latest push
+            - Reuse that same open issue if it already exists.
+            - In the issue body, include:
+              - file path
+              - original snippet
+              - suggested correction
+            - Keep the report concise and practical.
