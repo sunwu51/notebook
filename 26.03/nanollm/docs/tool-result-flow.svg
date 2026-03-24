@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="420" viewBox="0 0 1100 420">
+  <rect width="1100" height="420" fill="#f6f3ea"/>
+  <text x="40" y="45" font-family="Segoe UI, Arial, sans-serif" font-size="28" fill="#22313f">Tool Result Message Shapes</text>
+  <text x="40" y="75" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#556270">Same semantic event: model asks for a tool, caller runs it, next request sends tool result back.</text>
+
+  <rect x="40" y="110" width="300" height="240" rx="16" fill="#fffdf8" stroke="#b68c3a" stroke-width="2"/>
+  <text x="60" y="145" font-family="Consolas, monospace" font-size="20" fill="#7a4d00">OpenAI Chat</text>
+  <text x="60" y="180" font-family="Consolas, monospace" font-size="14" fill="#22313f">assistant.tool_calls[]</text>
+  <text x="60" y="205" font-family="Consolas, monospace" font-size="14" fill="#22313f">then next message:</text>
+  <text x="60" y="230" font-family="Consolas, monospace" font-size="14" fill="#22313f">role: "tool"</text>
+  <text x="60" y="255" font-family="Consolas, monospace" font-size="14" fill="#22313f">tool_call_id: "call_1"</text>
+  <text x="60" y="280" font-family="Consolas, monospace" font-size="14" fill="#22313f">content: "tool output"</text>
+
+  <rect x="400" y="110" width="300" height="240" rx="16" fill="#fffdf8" stroke="#3d8f7a" stroke-width="2"/>
+  <text x="420" y="145" font-family="Consolas, monospace" font-size="20" fill="#165b4b">OpenAI Responses</text>
+  <text x="420" y="180" font-family="Consolas, monospace" font-size="14" fill="#22313f">output/input item:</text>
+  <text x="420" y="205" font-family="Consolas, monospace" font-size="14" fill="#22313f">type: "function_call"</text>
+  <text x="420" y="230" font-family="Consolas, monospace" font-size="14" fill="#22313f">then next input item:</text>
+  <text x="420" y="255" font-family="Consolas, monospace" font-size="14" fill="#22313f">type: "function_call_output"</text>
+  <text x="420" y="280" font-family="Consolas, monospace" font-size="14" fill="#22313f">call_id: "call_1"</text>
+  <text x="420" y="305" font-family="Consolas, monospace" font-size="14" fill="#22313f">output: "tool output"</text>
+
+  <rect x="760" y="110" width="300" height="240" rx="16" fill="#fffdf8" stroke="#6a5acd" stroke-width="2"/>
+  <text x="780" y="145" font-family="Consolas, monospace" font-size="20" fill="#4b3ea8">Anthropic Messages</text>
+  <text x="780" y="180" font-family="Consolas, monospace" font-size="14" fill="#22313f">assistant.content[]</text>
+  <text x="780" y="205" font-family="Consolas, monospace" font-size="14" fill="#22313f">type: "tool_use"</text>
+  <text x="780" y="230" font-family="Consolas, monospace" font-size="14" fill="#22313f">then next message:</text>
+  <text x="780" y="255" font-family="Consolas, monospace" font-size="14" fill="#22313f">role: "user"</text>
+  <text x="780" y="280" font-family="Consolas, monospace" font-size="14" fill="#22313f">content: [{</text>
+  <text x="780" y="305" font-family="Consolas, monospace" font-size="14" fill="#22313f">  type: "tool_result",</text>
+  <text x="780" y="330" font-family="Consolas, monospace" font-size="14" fill="#22313f">  tool_use_id: "call_1"</text>
+  <text x="780" y="355" font-family="Consolas, monospace" font-size="14" fill="#22313f">}]</text>
+
+  <path d="M340 230 L390 230" stroke="#6f7c85" stroke-width="3" marker-end="url(#arrow)"/>
+  <path d="M700 230 L750 230" stroke="#6f7c85" stroke-width="3" marker-end="url(#arrow)"/>
+
+  <defs>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M0,0 L12,6 L0,12 z" fill="#6f7c85"/>
+    </marker>
+  </defs>
+</svg>
