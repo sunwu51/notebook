@@ -4,8 +4,8 @@
   "description": "Express server that proxies chat requests through the OpenAI JS SDK",
   "main": "server.ts",
   "scripts": {
-    "start": "node --experimental-strip-types server.ts",
-    "dev": "node --watch --experimental-strip-types server.ts",
+    "start": "tsx server.ts",
+    "dev": "tsx --watch server.ts",
     "typecheck": "tsc --noEmit",
     "test": "tsc -p tsconfig.build.json && node .test-dist/tests/run.js",
     "converter:test": "tsc -p tsconfig.build.json && node .test-dist/src/converters/test.js"
@@ -18,7 +18,8 @@
     "@anthropic-ai/sdk": "^0.80.0",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "openai": "^6.32.0"
+    "openai": "^6.32.0",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

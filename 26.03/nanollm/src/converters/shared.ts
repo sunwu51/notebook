@@ -81,6 +81,7 @@ export interface NormalizedRequest {
     | { type: "text" }
     | { type: "json_object" }
     | { type: "json_schema"; name: string; schema?: Record<string, unknown>; description?: string; strict?: boolean | null };
+  cacheControl?: { type: string } | null;
 }
 
 export interface NormalizedResponse {

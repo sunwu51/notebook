@@ -1,0 +1,43 @@
+server:
+  port: 3000
+
+models:
+  # OpenAI Chat Completions
+  - name: gpt-5.4-nano
+    provider: openai-chat
+    base_url: https://openrouter.ai/api/v1
+    api_key: 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
+    model: openai/gpt-5.4-nano
+
+  - name: gpt-5.4-mini
+    provider: openai-responses
+    base_url: https://openrouter.ai/api/v1
+    api_key: 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
+    model: openai/gpt-5.4-mini
+
+  - name: claude-haiku-4.5
+    provider: anthropic
+    base_url: https://openrouter.ai/api/v1
+    api_key: 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
+    model: anthropic/claude-haiku-4.5
+  
+
+  # OpenAI Responses API
+  # - name: gpt-4o-responses
+  #   provider: openai-responses
+  #   base_url: https://api.openai.com/v1
+  #   api_key: ${OPENAI_API_KEY}
+  #   model: gpt-4o
+
+  # Anthropic Messages API
+  # - name: claude-sonnet
+  #   provider: anthropic
+  #   base_url: https://api.anthropic.com/v1   # Anthropic base_url 需要带 /v1
+  #   api_key: ${ANTHROPIC_API_KEY}
+  #   model: claude-sonnet-4-20250514
+
+  # - name: claude-haiku
+  #   provider: anthropic
+  #   base_url: https://api.anthropic.com/v1
+  #   api_key: ${ANTHROPIC_API_KEY}
+  #   model: claude-haiku-4-5-20251001

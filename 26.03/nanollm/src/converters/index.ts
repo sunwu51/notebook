@@ -70,3 +70,24 @@ export function responsesResponseToAnthropicMessage(response: OpenAIResponsesRes
 export function anthropicMessageToResponsesResponse(response: AnthropicMessagesResponse): OpenAIResponsesResponse {
   return denormalizeToOpenAIResponsesResponse(normalizeAnthropicResponse(response));
 }
+
+// ─── Streaming ──────────────────────────────────────────────────────────────
+
+export {
+  createStreamConverter,
+  createSSEConverter,
+  createSSETransformStream,
+  StreamConverter,
+  SSEStreamConverter,
+  SSEParser,
+  formatSSE,
+  formatDone,
+  OpenAIChatStreamParser,
+  OpenAIChatStreamEmitter,
+  ResponsesStreamParser,
+  ResponsesStreamEmitter,
+  AnthropicStreamParser,
+  AnthropicStreamEmitter,
+} from "./streams.js";
+
+export type { StreamFormat, NormalizedStreamEvent } from "./streams.js";

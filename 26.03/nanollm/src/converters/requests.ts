@@ -63,6 +63,7 @@ export function normalizeOpenAIChatRequest(request: OpenAIChatRequest): Normaliz
     safetyIdentifier: request.safety_identifier,
     reasoningEffort: request.reasoning_effort ?? null,
     responseFormat: normalizeOpenAIChatResponseFormat(request.response_format as any),
+    cacheControl: { type: "ephemeral" },
   };
 }
 
@@ -95,6 +96,7 @@ export function normalizeOpenAIResponsesRequest(request: OpenAIResponsesRequest)
     safetyIdentifier: request.safety_identifier,
     reasoningEffort: request.reasoning?.effort ?? null,
     responseFormat: normalizeOpenAIResponsesFormat(request.text?.format as any),
+    cacheControl: { type: "ephemeral" },
   };
 }
 
@@ -121,6 +123,7 @@ export function normalizeAnthropicRequest(request: AnthropicMessagesRequest): No
     stopSequences: request.stop_sequences,
     reasoningEffort: request.thinking?.type === "enabled" ? `budget:${request.thinking.budget_tokens}` : null,
     responseFormat: request.output_config?.format ? { type: "json_schema", name: "anthropic_output", schema: request.output_config.format.schema } : undefined,
+    cacheControl: { type: "ephemeral" },
   };
 }
 
@@ -147,6 +150,7 @@ export function denormalizeToOpenAIChatRequest(request: NormalizedRequest): Open
         : { type: "custom", custom: { name: tool.name, description: tool.description ?? undefined, format: tool.format as never } },
     ) as OpenAIChatRequest["tools"],
     tool_choice: denormalizeOpenAIChatToolChoice(request.toolChoice),
+    cache_control: request.cacheControl ?? undefined,
   };
 }
 
@@ -185,6 +189,7 @@ export function denormalizeToOpenAIResponsesRequest(request: NormalizedRequest):
         : { type: "custom", name: tool.name, description: tool.description ?? undefined, format: tool.format as never },
     ) as OpenAIResponsesRequest["tools"],
     tool_choice: denormalizeOpenAIResponsesToolChoice(request.toolChoice),
+    cache_control: request.cacheControl ?? undefined,
   };
 }
 
@@ -215,6 +220,7 @@ export function denormalizeToAnthropicRequest(request: NormalizedRequest): Messa
     tool_choice: denormalizeAnthropicToolChoice(request.toolChoice),
     output_config: request.responseFormat?.type === "json_schema" ? { format: { type: "json_schema", schema: request.responseFormat.schema ?? {} } } : undefined,
     thinking: denormalizeAnthropicThinking(request.reasoningEffort, request.maxOutputTokens),
+    cache_control: request.cacheControl ?? undefined,
   };
 }
 
@@ -285,6 +291,16 @@ function normalizeOpenAIChatResponseFormat(format: any): NormalizedRequest["resp
 
 function normalizeOpenAIResponsesInput(input: string | any[]): NormalizedMessage[] {
   if (typeof input === "string") return [{ role: "user", parts: [text(input)] }];
+
+  // Collect known tool call IDs from explicit function_call / custom_tool_call items
+  const knownCallIds = new Set<string>();
+  for (const item of input) {
+    const t = item.type ?? "message";
+    if (t === "function_call" || t === "custom_tool_call") {
+      if (item.call_id) knownCallIds.add(item.call_id);
+    }
+  }
+
   return input.flatMap((item) => {
     const itemType = item.type ?? "message";
     if (itemType === "message") return [normalizeOpenAIResponsesMessage(item)];
@@ -299,7 +315,12 @@ function normalizeOpenAIResponsesInput(input: string | any[]): NormalizedMessage
     }
     if (itemType === "function_call") return [{ role: "assistant", parts: [], toolCalls: [{ kind: "function", id: item.call_id, name: item.name, payload: item.arguments }] }];
     if (itemType === "custom_tool_call") return [{ role: "assistant", parts: [], toolCalls: [{ kind: "custom", id: item.call_id, name: item.name, payload: item.input }] }];
-    if (itemType === "function_call_output" || itemType === "custom_tool_call_output") return [{ role: "tool", toolCallId: item.call_id, parts: normalizeOpenAIResponsesToolOutput(item.output) }];
+    if (itemType === "function_call_output" || itemType === "custom_tool_call_output") {
+      // Skip orphaned outputs whose call_id came from a stripped item_reference
+      if (item.call_id && !knownCallIds.has(item.call_id)) return [];
+      return [{ role: "tool", toolCallId: item.call_id, parts: normalizeOpenAIResponsesToolOutput(item.output) }];
+    }
+    if (itemType === "item_reference") return [];
     fail(`Responses input item type "${itemType}" is not supported`);
   });
 }
