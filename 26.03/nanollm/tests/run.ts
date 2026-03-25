@@ -4,6 +4,7 @@ import {
   anthropicMessageRequestToChatParams,
   anthropicMessageRequestToResponsesRequest,
   anthropicMessageToChatCompletion,
+  anthropicMessageToResponsesResponse,
   chatCompletionToAnthropicMessage,
   chatParamsToAnthropicMessageRequest,
   chatParamsToResponsesRequest,
@@ -275,4 +276,69 @@ run("chat response round-trip through anthropic preserves tool call name", () =>
 
   const chat = anthropicMessageToChatCompletion(anthropic);
   assert.equal((chat.choices[0].message.tool_calls?.[0] as any).function.name, "lookup");
+});
+
+run("anthropic request thinking block is preserved in responses request", () => {
+  const responses = anthropicMessageRequestToResponsesRequest({
+    model: "claude-sonnet-4-5",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "thinking",
+            thinking: "I should call the weather tool.",
+            signature: "sig_1",
+          },
+          {
+            type: "text",
+            text: "Let me check.",
+          },
+        ],
+      },
+    ],
+  });
+
+  const input = responses.input as Array<{ type: string }>;
+  assert.equal(input[0].type, "reasoning");
+  assert.equal((input[0] as any).content[0].text, "I should call the weather tool.");
+  assert.equal(input[1].type, "message");
+});
+
+run("anthropic response thinking block is preserved in responses response", () => {
+  const responses = anthropicMessageToResponsesResponse({
+    id: "msg_thinking",
+    type: "message",
+    role: "assistant",
+    model: "claude-sonnet-4-5",
+    container: null,
+    stop_reason: "end_turn",
+    stop_sequence: null,
+    content: [
+      {
+        type: "thinking",
+        thinking: "Need to reason first.",
+        signature: "sig_resp",
+      },
+      {
+        type: "text",
+        text: "final answer",
+        citations: null,
+      },
+    ],
+    usage: {
+      input_tokens: 1,
+      output_tokens: 1,
+      cache_creation_input_tokens: null,
+      cache_read_input_tokens: null,
+      cache_creation: null,
+      inference_geo: null,
+      service_tier: null,
+      server_tool_use: null,
+    },
+  } as any);
+
+  assert.equal((responses.output[0] as any).type, "reasoning");
+  assert.equal((responses.output[1] as any).type, "message");
 });

@@ -41,6 +41,18 @@ export function normalizeOpenAIResponsesResponse(response) {
         }
         if (item.type === "custom_tool_call") {
             toolCalls.push({ kind: "custom", id: item.call_id, name: item.name, payload: item.input });
+            continue;
+        }
+        if (item.type === "reasoning") {
+            for (const part of item.content ?? []) {
+                parts.push({ type: "thinking", thinking: part.text });
+            }
+            for (const part of item.summary ?? []) {
+                parts.push({ type: "thinking", thinking: part.text });
+            }
+            if (item.encrypted_content) {
+                parts.push({ type: "redacted_thinking", data: item.encrypted_content });
+            }
         }
     }
     return {
@@ -62,6 +74,14 @@ export function normalizeAnthropicResponse(response) {
     for (const block of response.content) {
         if (block.type === "text") {
             parts.push(text(block.text));
+            continue;
+        }
+        if (block.type === "thinking") {
+            parts.push({ type: "thinking", thinking: block.thinking, signature: block.signature });
+            continue;
+        }
+        if (block.type === "redacted_thinking") {
+            parts.push({ type: "redacted_thinking", data: block.data });
             continue;
         }
         if (block.type === "tool_use" || block.type === "server_tool_use") {
@@ -116,12 +136,30 @@ export function denormalizeToOpenAIResponsesResponse(response) {
         object: "response",
         created_at: response.createdAt,
         model: response.model,
-        output_text: collapseText(response.message.parts),
+        output_text: collapseText(response.message.parts.filter((part) => part.type === "text" || part.type === "refusal")),
         error: null,
         incomplete_details: null,
         instructions: null,
         metadata: null,
         output: [
+            ...response.message.parts
+                .filter((part) => part.type === "thinking" || part.type === "redacted_thinking")
+                .map((part, index) => part.type === "thinking"
+                ? {
+                    id: `reasoning_${index}`,
+                    type: "reasoning",
+                    summary: [{ type: "summary_text", text: part.thinking }],
+                    content: [{ type: "reasoning_text", text: part.thinking }],
+                    encrypted_content: part.signature ?? null,
+                    status: "completed",
+                }
+                : {
+                    id: `reasoning_${index}`,
+                    type: "reasoning",
+                    summary: [],
+                    encrypted_content: part.data,
+                    status: "completed",
+                }),
             ...(response.message.parts.length > 0
                 ? [
                     {
@@ -129,7 +167,7 @@ export function denormalizeToOpenAIResponsesResponse(response) {
                         type: "message",
                         role: "assistant",
                         status: "completed",
-                        content: response.message.parts.map((part) => part.type === "text"
+                        content: response.message.parts.filter((part) => part.type !== "thinking" && part.type !== "redacted_thinking").map((part) => part.type === "text"
                             ? { type: "output_text", text: part.text, annotations: [] }
                             : { type: "refusal", refusal: part.text }),
                     },

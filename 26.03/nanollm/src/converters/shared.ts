@@ -18,12 +18,14 @@ export type AnthropicMessagesResponse = Message;
 export type NormalizedRole = "system" | "developer" | "user" | "assistant" | "tool" | "function";
 
 export type NormalizedPart =
-  | { type: "text"; text: string }
+  | { type: "text"; text: string; cacheControl?: { type: "ephemeral" } }
   | { type: "refusal"; text: string }
-  | { type: "image_url"; url: string; detail?: "auto" | "low" | "high" }
+  | { type: "thinking"; thinking: string; signature?: string }
+  | { type: "redacted_thinking"; data: string }
+  | { type: "image_url"; url: string; detail?: "auto" | "low" | "high"; cacheControl?: { type: "ephemeral" } }
   | { type: "input_audio"; data: string; format: "mp3" | "wav" }
-  | { type: "document_url"; url: string; title?: string | null }
-  | { type: "document_base64"; data: string; mediaType?: string; title?: string | null };
+  | { type: "document_url"; url: string; title?: string | null; cacheControl?: { type: "ephemeral" } }
+  | { type: "document_base64"; data: string; mediaType?: string; title?: string | null; cacheControl?: { type: "ephemeral" } };
 
 export type NormalizedTool =
   | {

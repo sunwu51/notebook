@@ -7,7 +7,8 @@
     "start": "node --experimental-strip-types server.ts",
     "dev": "node --watch --experimental-strip-types server.ts",
     "typecheck": "tsc --noEmit",
-    "test": "tsc -p tsconfig.build.json && node .test-dist/tests/run.js"
+    "test": "tsc -p tsconfig.build.json && node .test-dist/tests/run.js",
+    "converter:test": "tsc -p tsconfig.build.json && node .test-dist/src/converters/test.js"
   },
   "keywords": [],
   "author": "",

@@ -1,7 +1,7 @@
 import { collapseText, fail, makeDataUrl, parseDataUrl, parseJson, refusal, requireTextOnly, text, } from "./shared.js";
 const UNSUPPORTED_OPENAI_CHAT_FIELDS = ["audio", "frequency_penalty", "logit_bias", "logprobs", "modalities", "n", "prediction", "presence_penalty", "seed", "top_logprobs", "web_search_options"];
-const UNSUPPORTED_OPENAI_RESPONSES_FIELDS = ["background", "context_management", "conversation", "include", "previous_response_id", "prompt", "truncation"];
-const UNSUPPORTED_ANTHROPIC_FIELDS = ["cache_control", "container", "inference_geo", "top_k"];
+const UNSUPPORTED_OPENAI_RESPONSES_FIELDS = ["background", "context_management", "conversation", "previous_response_id", "prompt", "truncation"];
+const UNSUPPORTED_ANTHROPIC_FIELDS = ["container", "inference_geo", "top_k"];
 export function normalizeOpenAIChatRequest(request) {
     for (const key of UNSUPPORTED_OPENAI_CHAT_FIELDS) {
         if (request[key] !== undefined && request[key] !== null)
@@ -157,29 +157,28 @@ export function denormalizeToOpenAIResponsesRequest(request) {
 }
 export function denormalizeToAnthropicRequest(request) {
     const systemBlocks = [];
-    let index = 0;
-    while (index < request.messages.length) {
-        const message = request.messages[index];
+    const filteredMessages = [];
+    for (const message of request.messages) {
         if (message.role === "system" || message.role === "developer") {
-            for (const part of requireTextOnly(message.parts, "Anthropic system prompt"))
+            for (const part of requireTextOnly(message.parts, "Anthropic [REDACTED]"))
                 systemBlocks.push({ type: "text", text: part.text });
-            index += 1;
-            continue;
         }
-        break;
+        else {
+            filteredMessages.push(message);
+        }
     }
     return {
         model: request.model,
         max_tokens: request.maxOutputTokens ?? 1024,
         system: systemBlocks.length > 0 ? systemBlocks : undefined,
-        messages: mergeAnthropicMessages(request.messages.slice(index).flatMap((message) => denormalizeAnthropicMessage(message))),
+        messages: mergeAnthropicMessages(filteredMessages.flatMap((message) => denormalizeAnthropicMessage(message))),
         metadata: denormalizeAnthropicMetadata(request.metadata),
         service_tier: normalizeAnthropicServiceTier(request.serviceTier),
         stream: request.stream,
         stop_sequences: request.stopSequences,
         temperature: request.temperature ?? undefined,
         top_p: request.topP ?? undefined,
-        tools: request.tools?.map((tool) => denormalizeAnthropicTool(tool)),
+        tools: request.tools?.filter(tool => tool.kind === "function").map((tool) => denormalizeAnthropicTool(tool)),
         tool_choice: denormalizeAnthropicToolChoice(request.toolChoice),
         output_config: request.responseFormat?.type === "json_schema" ? { format: { type: "json_schema", schema: request.responseFormat.schema ?? {} } } : undefined,
         thinking: denormalizeAnthropicThinking(request.reasoningEffort, request.maxOutputTokens),
@@ -264,6 +263,15 @@ function normalizeOpenAIResponsesInput(input) {
         const itemType = item.type ?? "message";
         if (itemType === "message")
             return [normalizeOpenAIResponsesMessage(item)];
+        if (itemType === "reasoning") {
+            const thinkingFromSummary = item.summary?.map((part) => ({ type: "thinking", thinking: part.text, signature: item.encrypted_content || undefined })) ?? [];
+            const thinkingFromContent = item.content?.map((part) => ({ type: "thinking", thinking: part.text })) ?? [];
+            const redactedThinking = item.encrypted_content && !item.summary?.length && !item.content?.length ? [{ type: "redacted_thinking", data: item.encrypted_content }] : [];
+            return [{
+                    role: "assistant",
+                    parts: [...thinkingFromSummary, ...thinkingFromContent, ...redactedThinking],
+                }];
+        }
         if (itemType === "function_call")
             return [{ role: "assistant", parts: [], toolCalls: [{ kind: "function", id: item.call_id, name: item.name, payload: item.arguments }] }];
         if (itemType === "custom_tool_call")
@@ -347,53 +355,50 @@ function normalizeAnthropicMessage(message) {
         for (const block of message.content) {
             if (block.type === "text")
                 parts.push(text(block.text));
+            else if (block.type === "thinking")
+                parts.push({ type: "thinking", thinking: block.thinking, signature: block.signature });
+            else if (block.type === "redacted_thinking")
+                parts.push({ type: "redacted_thinking", data: block.data });
             else if (block.type === "tool_use" || block.type === "server_tool_use")
                 toolCalls.push({ kind: "function", id: block.id, name: block.name, payload: JSON.stringify(block.input) });
         }
         return [{ role: "assistant", parts, toolCalls }];
     }
     const normalized = [];
-    let currentParts = [];
-    const flush = () => {
-        if (currentParts.length > 0) {
-            normalized.push({ role: "user", parts: currentParts });
-            currentParts = [];
-        }
-    };
     for (const block of message.content) {
         if (block.type === "text") {
-            currentParts.push(text(block.text));
+            normalized.push({ role: "user", parts: [{ type: "text", text: block.text, cacheControl: block.cache_control }] });
             continue;
         }
         if (block.type === "image") {
-            flush();
-            normalized.push({ role: "user", parts: [{ type: "image_url", url: block.source.type === "url" ? block.source.url : makeDataUrl(block.source.media_type, block.source.data) }] });
+            normalized.push({ role: "user", parts: [{ type: "image_url", url: block.source.type === "url" ? block.source.url : makeDataUrl(block.source.media_type, block.source.data), cacheControl: block.cache_control }] });
             continue;
         }
         if (block.type === "document") {
-            flush();
             if (block.source.type === "url")
-                normalized.push({ role: "user", parts: [{ type: "document_url", url: block.source.url, title: block.title ?? null }] });
+                normalized.push({ role: "user", parts: [{ type: "document_url", url: block.source.url, title: block.title ?? null, cacheControl: block.cache_control }] });
             else if (block.source.type === "base64")
-                normalized.push({ role: "user", parts: [{ type: "document_base64", data: block.source.data, mediaType: block.source.media_type, title: block.title ?? null }] });
+                normalized.push({ role: "user", parts: [{ type: "document_base64", data: block.source.data, mediaType: block.source.media_type, title: block.title ?? null, cacheControl: block.cache_control }] });
             else if (block.source.type === "text")
-                currentParts.push(text(block.source.data));
-            else if (block.source.type === "content")
+                normalized.push({ role: "user", parts: [{ type: "text", text: block.source.data, cacheControl: block.cache_control }] });
+            else if (block.source.type === "content") {
+                const textParts = [];
                 for (const child of block.source.content) {
                     if (child.type !== "text")
                         fail(`Anthropic document content block "${child.type}" is not supported`);
-                    currentParts.push(text(child.text));
+                    textParts.push({ type: "text", text: child.text, cacheControl: block.cache_control });
                 }
+                if (textParts.length > 0)
+                    normalized.push({ role: "user", parts: textParts });
+            }
             continue;
         }
         if (block.type === "tool_result") {
-            flush();
-            normalized.push({ role: "tool", toolCallId: block.tool_use_id, parts: normalizeAnthropicToolResultParts(block.content) });
+            normalized.push({ role: "tool", toolCallId: block.tool_use_id, isError: block.is_error, parts: normalizeAnthropicToolResultParts(block.content) });
             continue;
         }
         fail(`Anthropic block "${block.type}" is not supported`);
     }
-    flush();
     return normalized;
 }
 function normalizeAnthropicToolResultParts(content) {
@@ -471,7 +476,10 @@ function denormalizeOpenAIChatUserParts(parts) {
 function denormalizeOpenAIChatAssistantParts(parts) {
     if (parts.length === 0)
         return null;
-    return parts.map((part) => (part.type === "text" ? { type: "text", text: part.text } : { type: "refusal", refusal: part.text }));
+    const chatParts = parts.filter(part => part.type === "text" || part.type === "refusal");
+    if (chatParts.length === 0)
+        return null;
+    return chatParts.map((part) => (part.type === "text" ? { type: "text", text: part.text } : { type: "refusal", refusal: part.text }));
 }
 function denormalizeOpenAIChatToolCall(toolCall) {
     return toolCall.kind === "function" ? { id: toolCall.id, type: "function", function: { name: toolCall.name, arguments: toolCall.payload } } : { id: toolCall.id, type: "custom", custom: { name: toolCall.name, input: toolCall.payload } };
@@ -482,9 +490,36 @@ function denormalizeOpenAIResponsesMessage(message) {
         case "developer":
         case "user":
         case "assistant":
-            return [{ type: "message", role: message.role, content: message.parts.map((part) => {
+            return [
+                ...(message.role === "assistant"
+                    ? message.parts
+                        .filter((part) => part.type === "thinking" || part.type === "redacted_thinking")
+                        .map((part, index) => part.type === "thinking"
+                        ? {
+                            id: `reasoning_${index}`,
+                            type: "reasoning",
+                            summary: [{ type: "summary_text", text: part.thinking }],
+                            content: [],
+                            encrypted_content: part.signature || null,
+                            status: "completed",
+                        }
+                        : {
+                            id: `reasoning_${index}`,
+                            type: "reasoning",
+                            summary: [],
+                            content: [],
+                            encrypted_content: part.data,
+                            status: "completed",
+                        })
+                    : []),
+                {
+                    type: "message",
+                    role: message.role,
+                    content: message.parts
+                        .filter((part) => part.type !== "thinking" && part.type !== "redacted_thinking")
+                        .map((part) => {
                         if (part.type === "text")
-                            return { type: "input_text", text: part.text };
+                            return message.role === "assistant" ? { type: "output_text", text: part.text, annotations: [] } : { type: "input_text", text: part.text };
                         if (part.type === "refusal")
                             return { type: "refusal", refusal: part.text };
                         if (part.type === "image_url")
@@ -494,7 +529,10 @@ function denormalizeOpenAIResponsesMessage(message) {
                         if (part.type === "document_url")
                             return { type: "input_file", file_url: part.url, filename: part.title ?? undefined };
                         return { type: "input_file", file_data: part.data, filename: part.title ?? undefined };
-                    }) }, ...(message.toolCalls?.map((toolCall) => toolCall.kind === "function" ? { type: "function_call", call_id: toolCall.id, name: toolCall.name, arguments: toolCall.payload } : { type: "custom_tool_call", call_id: toolCall.id, name: toolCall.name, input: toolCall.payload }) ?? [])];
+                    }),
+                },
+                ...(message.toolCalls?.map((toolCall) => toolCall.kind === "function" ? { type: "function_call", call_id: toolCall.id, name: toolCall.name, arguments: toolCall.payload } : { type: "custom_tool_call", call_id: toolCall.id, name: toolCall.name, input: toolCall.payload }) ?? []),
+            ];
         case "tool":
             return [{ type: "function_call_output", call_id: message.toolCallId ?? "", output: collapseText(requireTextOnly(message.parts, "Responses tool result")) }];
         case "function":
@@ -508,32 +546,40 @@ function denormalizeAnthropicMessage(message) {
         case "assistant":
             return [{ role: "assistant", content: denormalizeAnthropicAssistantParts(message) }];
         case "tool":
-            return [{ role: "user", content: [{ type: "tool_result", tool_use_id: message.toolCallId ?? "", content: denormalizeAnthropicToolResultParts(message.parts) }] }];
+            return [{ role: "user", content: [{ type: "tool_result", tool_use_id: message.toolCallId ?? "", is_error: message.isError ?? false, content: denormalizeAnthropicToolResultParts(message.parts) }] }];
         case "function":
-            return [{ role: "user", content: [{ type: "tool_result", tool_use_id: message.name ?? "function", content: collapseText(requireTextOnly(message.parts, "Anthropic function result")) }] }];
+            return [{ role: "user", content: [{ type: "tool_result", tool_use_id: message.name ?? "function", is_error: message.isError ?? false, content: collapseText(requireTextOnly(message.parts, "Anthropic function result")) }] }];
         default:
-            fail(`Anthropic Messages does not support role "${message.role}"`);
+            fail(`Anthropic Messages does not support role "${message.role}" in message array`);
     }
 }
 function denormalizeAnthropicUserParts(parts) {
-    if (parts.every((part) => part.type === "text"))
-        return collapseText(parts);
+    if (parts.length === 1 && parts[0].type === "text")
+        return parts[0].text;
     return parts.map((part) => {
         if (part.type === "text")
-            return { type: "text", text: part.text };
+            return { type: "text", text: part.text, cache_control: part.cacheControl };
         if (part.type === "image_url") {
             const dataUrl = parseDataUrl(part.url);
-            return dataUrl ? { type: "image", source: { type: "base64", media_type: dataUrl.mediaType, data: dataUrl.data } } : { type: "image", source: { type: "url", url: part.url } };
+            return dataUrl ? { type: "image", source: { type: "base64", media_type: dataUrl.mediaType, data: dataUrl.data }, cache_control: part.cacheControl } : { type: "image", source: { type: "url", url: part.url }, cache_control: part.cacheControl };
         }
         if (part.type === "document_url")
-            return { type: "document", title: part.title ?? undefined, source: { type: "url", url: part.url } };
+            return { type: "document", title: part.title ?? undefined, source: { type: "url", url: part.url }, cache_control: part.cacheControl };
         if (part.type === "document_base64")
-            return { type: "document", title: part.title ?? undefined, source: { type: "base64", media_type: part.mediaType ?? "application/pdf", data: part.data } };
+            return { type: "document", title: part.title ?? undefined, source: { type: "base64", media_type: part.mediaType ?? "application/pdf", data: part.data }, cache_control: part.cacheControl };
         fail(`Anthropic does not support user part "${part.type}"`);
     });
 }
 function denormalizeAnthropicAssistantParts(message) {
-    const blocks = message.parts.map((part) => ({ type: "text", text: part.type === "text" || part.type === "refusal" ? part.text : collapseText([part]), citations: null }));
+    const blocks = message.parts.map((part) => {
+        if (part.type === "text" || part.type === "refusal")
+            return { type: "text", text: part.text, citations: null };
+        if (part.type === "thinking")
+            return { type: "thinking", thinking: part.thinking, signature: part.signature ?? "" };
+        if (part.type === "redacted_thinking")
+            return { type: "redacted_thinking", data: part.data };
+        return { type: "text", text: collapseText([part]), citations: null };
+    });
     for (const toolCall of message.toolCalls ?? []) {
         if (toolCall.kind !== "function")
             fail("Anthropic assistant output only supports function-style tool calls");
@@ -605,11 +651,16 @@ function denormalizeAnthropicThinking(reasoningEffort, maxOutputTokens) {
     if (!reasoningEffort)
         return undefined;
     const match = reasoningEffort.match(/^budget:(\d+)$/);
-    if (!match)
-        fail(`Anthropic thinking only supports budget-based reasoning, got "${reasoningEffort}"`);
-    const budgetTokens = Number(match[1]);
+    if (match) {
+        const budgetTokens = Number(match[1]);
+        if (maxOutputTokens !== undefined && budgetTokens >= maxOutputTokens)
+            fail("Anthropic thinking budget must be less than max_tokens");
+        return { type: "enabled", budget_tokens: budgetTokens };
+    }
+    const effortMap = { low: 1000, medium: 5000, high: 10000 };
+    const budgetTokens = effortMap[reasoningEffort] ?? 5000;
     if (maxOutputTokens !== undefined && budgetTokens >= maxOutputTokens)
-        fail("Anthropic thinking budget must be less than max_tokens");
+        return undefined;
     return { type: "enabled", budget_tokens: budgetTokens };
 }
 function normalizeOpenAIServiceTier(tier) {
