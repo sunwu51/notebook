@@ -1,8 +1,0 @@
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "noEmit": false,
-    "outDir": ".test-dist"
-  },
-  "include": ["src/**/*.ts", "tests/**/*.ts"]
-}
