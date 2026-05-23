@@ -107,7 +107,7 @@ tags:
 对于`responses`和`messages`类型，也就是openai和anthropic官方的接口，原生是支持工具返回图片内容的，如果是国产模型的协议适配的话，大概率是不支持的。如果是两家官方模型则没问题，形式如下:
 
 openai请求中，`output`是个数组，可以放入`input_image`这个类型，并指定`image_url`放入base64编码，这种形式是可以被原生模型就能识别的。
-```json: openai.json
+```json:openai.json
 [
   {
     "type": "function_call_output",
@@ -124,7 +124,7 @@ openai请求中，`output`是个数组，可以放入`input_image`这个类型�
 ```
 
 anthropic请求中，`messages`是个数组，可以放入`image`这个类型，如下，同样也能被模型识别。
-```json: anthropic.json
+```json:anthropic.json
 {
   "type": "tool_result",
   "tool_use_id": "toolu_01XtLYBDStQzpAAwUgSSz2fS",
@@ -151,7 +151,7 @@ anthropic请求中，`messages`是个数组，可以放入`image`这个类型，
 生图是模型的能力，现在有2个主流的演进方向 
 
 一种是openai一直坚持的生成图片有专门的`/image/generation`和`/image/edit`接口，可以生成图片和编辑图片。
-```json: generate.json
+```json:generate.json
 {
   "model": "gpt-image-2",
   "prompt": "生成一张夜上海图片",
