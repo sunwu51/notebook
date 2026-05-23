@@ -1,6 +1,6 @@
 'use client'
 import { useRef } from 'react';
-import { useToggleButton, AriaButtonOptions } from '@react-aria/button';
+import { useToggleButton } from '@react-aria/button';
 import { useToggleState } from '@react-stately/toggle';
 import './Details.css'
 
