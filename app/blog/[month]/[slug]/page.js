@@ -9,7 +9,6 @@ import remarkCodeTitles from "remark-flexible-code-titles";
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeCodeCopyButton from '@/rehypePlugins/rehype-code-copy-button.mjs'
 import rehypeImageSrcModifier from '@/rehypePlugins/rehype-image-src-modifier.mjs'
-import rehypeMermaid from '@/rehypePlugins/rehype-mermaid.mjs'
 import rehypeTocExt from '@/rehypePlugins/rehype-toc-ext.mjs'
 import { bundleMDX } from 'mdx-bundler'
 import { getMDXComponent } from 'mdx-bundler/client'
@@ -43,7 +42,6 @@ export default async function Post({ params }) {
       options.remarkPlugins = [...(options.remarkPlugins ?? []), ...[remarkGfm, remarkCodeTitles]]
       options.rehypePlugins = [...(options.rehypePlugins ?? []), ...[
         rehypeSlug,
-        rehypeMermaid,
         [rehypeAutolinkHeadings, { behavior: 'wrap' }],
         [rehypePrismPlus, { ignoreMissing: true, showLineNumbers: true }],
         rehypeCodeCopyButton,
