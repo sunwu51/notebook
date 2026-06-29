@@ -715,11 +715,11 @@ echo '{"a":1}' | jq '.b.c?'
 
 ## 10. 参考资源
 
-- 官网：<https://jqlang.github.io/jq/>
-- GitHub 仓库：<https://github.com/jqlang/jq>
-- 在线试玩：<https://jqplay.org/>
-- 手册：<https://jqlang.github.io/jq/manual/>
-- 速查：<https://github.com/ioquatix/jq-cheatsheet>
+- 官网：https://jqlang.github.io/jq/
+- GitHub 仓库：https://github.com/jqlang/jq
+- 在线试玩：https://jqplay.org/
+- 手册：https://jqlang.github.io/jq/manual/
+- 速查：https://github.com/ioquatix/jq-cheatsheet
 
 ---
 
