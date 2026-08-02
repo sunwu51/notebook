@@ -1,0 +1,12 @@
+html, body { min-width: 300px; min-height: 100%; background: #ffffff; }
+.shell { width: 100%; min-height: 100vh; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+.topbar { padding: 16px 18px; }
+.topbar h1 { font-size: 19px; }
+section { padding: 16px 18px; }
+.target-strip { display: grid; gap: 5px; color: #687581; font-size: 11px; }
+.target-strip strong { color: #26333f; font-size: 12px; overflow-wrap: anywhere; }
+.section-heading { margin-bottom: 14px; }
+.description { min-height: 38px; max-height: 100px; margin: 10px 0 12px; padding: 8px 10px; overflow-y: auto; }
+textarea { min-height: 132px; }
+.actions { margin-top: 10px; }
+pre { min-height: 100px; max-height: 320px; }

@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CDP WebSocket Workbench</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div><p class="eyebrow">Chrome DevTools Protocol</p><h1>WebSocket Workbench</h1></div>
+        <span id="connectionBadge" class="badge" data-state="idle">未连接</span>
+      </header>
+
+      <section class="connection-panel" aria-labelledby="connectionTitle">
+        <h2 id="connectionTitle">连接</h2>
+        <div class="connection-row">
+          <label class="field grow">
+            <span>WebSocket URL 或 Version URL</span>
+            <input id="endpointInput" type="url" value="http://127.0.0.1:9223/json/version" spellcheck="false" autocomplete="off" />
+          </label>
+          <button id="connectButton" class="primary" type="button">连接</button>
+        </div>
+        <p id="connectionDetail" class="detail" aria-live="polite"></p>
+      </section>
+
+      <section id="targetPanel" aria-labelledby="targetTitle" hidden>
+        <div class="section-heading">
+          <h2 id="targetTitle">选择 Target URL</h2>
+          <span id="targetCount" class="count"></span>
+        </div>
+        <div class="target-row">
+          <label class="field grow">
+            <span>Page Target</span>
+            <select id="targetSelect"><option value="">请选择一个页面 Target</option></select>
+          </label>
+          <button id="refreshTargetsButton" class="icon-button target-refresh" type="button" title="刷新 Target 列表" aria-label="刷新 Target 列表">↻</button>
+        </div>
+        <p id="targetDetail" class="detail" aria-live="polite"></p>
+      </section>
+
+      <section id="commandPanel" class="command-panel" aria-labelledby="commandTitle" hidden>
+        <div class="section-heading"><h2 id="commandTitle">调用命令</h2><span id="methodCount" class="count"></span></div>
+        <form id="commandForm">
+          <div class="combobox field">
+            <label for="methodInput">Method</label>
+            <input id="methodInput" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="methodList" placeholder="输入并筛选，例如 Page.navigate" spellcheck="false" autocomplete="off" />
+            <div id="methodList" class="method-list" role="listbox" hidden></div>
+          </div>
+          <p id="methodDescription" class="description">请选择一个 CDP method。</p>
+          <label class="field"><span>Params（JSON）</span><textarea id="paramsInput" rows="9" spellcheck="false">{}</textarea></label>
+          <div class="actions"><button id="submitButton" class="primary" type="submit">发送命令</button></div>
+        </form>
+      </section>
+
+      <section class="result-panel" aria-labelledby="resultTitle">
+        <div class="section-heading"><h2 id="resultTitle">调用结果</h2><button id="clearButton" class="icon-button" type="button" title="清空结果" aria-label="清空结果">×</button></div>
+        <pre id="resultOutput" data-state="empty">尚未调用</pre>
+      </section>
+      <section class="event-panel" aria-labelledby="eventTitle">
+        <div class="section-heading"><h2 id="eventTitle">最新 10 个事件</h2><button id="clearEventButton" class="icon-button" type="button" title="清空事件" aria-label="清空事件">×</button></div>
+        <pre id="eventOutput" data-state="empty">尚未收到事件</pre>
+      </section>
+    </main>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

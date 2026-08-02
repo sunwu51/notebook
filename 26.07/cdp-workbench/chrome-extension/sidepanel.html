@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CDP Side Panel</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="sidepanel.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div><p class="eyebrow">chrome.debugger</p><h1>CDP Side Panel</h1></div>
+        <span id="connectionBadge" class="badge" data-state="idle">就绪</span>
+      </header>
+      <section class="target-strip">
+        <span>当前活动标签页</span>
+        <strong id="targetLabel">正在读取…</strong>
+      </section>
+      <section class="command-panel" aria-labelledby="commandTitle">
+        <div class="section-heading"><h2 id="commandTitle">调用命令</h2><span id="methodCount" class="count"></span></div>
+        <form id="commandForm">
+          <div class="combobox field">
+            <label for="methodInput">Method</label>
+            <input id="methodInput" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="methodList" placeholder="输入并筛选 method" spellcheck="false" autocomplete="off" />
+            <div id="methodList" class="method-list" role="listbox" hidden></div>
+          </div>
+          <p id="methodDescription" class="description">请选择一个 CDP method。</p>
+          <label class="field"><span>Params（JSON）</span><textarea id="paramsInput" rows="8" spellcheck="false">{}</textarea></label>
+          <div class="actions"><button id="submitButton" class="primary" type="submit">发送命令</button></div>
+        </form>
+      </section>
+      <section class="result-panel" aria-labelledby="resultTitle">
+        <div class="section-heading"><h2 id="resultTitle">调用结果</h2><button id="clearButton" class="icon-button" type="button" title="清空结果" aria-label="清空结果">×</button></div>
+        <pre id="resultOutput" data-state="empty">尚未调用</pre>
+      </section>
+      <section class="event-panel" aria-labelledby="eventTitle">
+        <div class="section-heading"><h2 id="eventTitle">最新 10 个事件</h2><button id="clearEventButton" class="icon-button" type="button" title="清空事件" aria-label="清空事件">×</button></div>
+        <pre id="eventOutput" data-state="empty">尚未收到事件</pre>
+      </section>
+    </main>
+    <script type="module" src="sidepanel.js"></script>
+  </body>
+</html>

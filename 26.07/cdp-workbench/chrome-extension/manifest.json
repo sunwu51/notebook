@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "CDP Side Panel Workbench",
+  "version": "1.1.0",
+  "description": "Call Chrome DevTools Protocol methods on the active tab from a side panel.",
+  "permissions": ["activeTab", "debugger", "sidePanel"],
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "action": {
+    "default_title": "打开 CDP Side Panel"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  }
+}
