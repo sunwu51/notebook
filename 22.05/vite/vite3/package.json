@@ -11,7 +11,7 @@
   "license": "ISC",
   "devDependencies": {
     "@vitejs/plugin-vue": "^2.3.1",
-    "vite": "^2.9.7"
+    "vite": "^2.9.13"
   },
   "dependencies": {
     "vue": "^3.2.33"
