@@ -1,0 +1,6 @@
+mixed-port: 7890                 
+mode: rule                       # rule / global / direct
+log-level: info                  # silent / error / warning / info / debug
+allow-lan: true
+external-controller: 0.0.0.0:9090 
+external-ui: ./ui
