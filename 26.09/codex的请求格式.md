@@ -181,13 +181,21 @@ context_size = "high" # 修改可占用的上下文大小
 而对于`lite`模式的话，不再`addtional_tools`中声明这个`web_search`工具，而是声明一个`web`的namespace，工具名则是`run`，而如果同时又开启了`code_mode_only`的话，则需要配置为`standalone`如下：
 
 ```toml
-[model_providers.OpenAI]
+[model_providers.my_provider]
 # ...
 supports_standalone_web_search = true
 ```
+
+或者你是官方订阅的话，不用配置走的就是新的`standalone`的接口了，读的是`provider.name==OpenAI`或者`provider.supports_statndalone_web_search==true`。
+
 此时`web__run`则会内置到`exec`的`tools`中，`web__run`不再是内嵌在原来的请求中完成web搜索，而是单独的endpoint，搞得更复杂了，目前还是`alpha`阶段，除了openai其他供应商都还不支持。（这个工具触发后，是客户端调用的是专门的`POST {base_url}/alpha/search`）
 
 ![image](https://i.imgur.com/VvrlT1s.png)
+
+但是这个feature其实很坑，他引入了一个新的endpoint，对于其他供应商是非常不友好的，但是其他供应商想要在`codex`被使用的话，还需要支持`websearch`以便有更好的体验。
+
+目前有些订阅转换的工具，会附加一个`websearh`工具，来降级到老的方式进行网络搜索。
+
 
 # 7 supports_search_tool
 是否支持懒加载 + 搜索合适工具的能力，这个能力本身是为了解决，当引入了太多mcpserver之后，导致工具太多，一方面是openai
