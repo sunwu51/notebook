@@ -18,11 +18,12 @@ tags:
 一般来说，你到各种住宅ip的平台购买住宅ip的时候，会有两种大的类型，一种是动态住宅ip，一种是静态住宅ip。顾名思义，动态ip就是会动态切换这个住宅ip的地址，而静态ip则是固定的一个ip出口。两种类型的计费方式不太一样，一般动态ip使用的是流量计费，一般是1美元到2美元每GB，永久有效；静态ip则是按照时间，每个月大概3美元到5美元，如果是独享的可能会贵一些。
 
 
-## 2.1 住宅ip怎么连
+## 2.1 购买
 这里推荐一个平台吧[1024proxy](https://api.1024proxy.com/share/rfv6hsw1p)，主
 
 购买后一般会给`username:password:server:port`四组信息，可以直接作为`http`或`socks5`类型配置到`mihomo`中，参考上一篇文章的配置方式，但这仅限国外，如果是在国内，你的电脑的mihomo直接配置这个信息，一般是不会连上的，因为这些住宅ip的provider都是合规的，你直接配置就能用，那是机场，是违法行为，所以他们都对国内ip进行了直连的屏蔽，所以你还需要用之前文章提到的`dialer-proxy`的配置，用机场作为第一跳，跳出去之后再连接静态/动态的住宅ip。
 
+## 2.2 cloudflare/机场作为第一跳
 当然了，机场的配置会是比较脆弱的环节，为啥呢？因为机场有可能会跑路，那节点都失效了，第一跳就没了，或者机场订阅链接要更新，机场节点不稳定，等等。这里直接推荐一种不用机场，直接用cloudflare的worker节点作为第一跳的方式。你需要注册一个cloudflare账号，并购买一个域名（我个人觉得域名这东西，每个开发者都应该有一个，他真的不贵一个com或org的域名，一年才10刀左右，相比你一个月的openai会员就至少20刀了）
 
 准备好cloudflare账号和域名之后，你要到cloudflare中创建一个worker，代码如下，这样这个worker节点就是一个`vless`协议的节点了，他的作用是转发到你的住宅ip节点上。
@@ -173,7 +174,10 @@ function parseVless(buf, uuid) {
 - 住宅ip的`username:password:server:port`
 - cloudflare的`server:UUID` (server就是域名)
 
-接下来到你的`mihomo`中可以添加配置了，如果你的mihomo只是为了用这一组住宅ip，你就直接这样配置：
+## 2.3 mihomo配置
+接下来到你的`mihomo`中可以添加配置了。
+
+方式一：如果你的mihomo只是为了用这一组住宅ip，你就直接这样配置：
 ```yaml :config.yaml
 # 其他基础配置略过
 # ...
@@ -208,6 +212,7 @@ proxy-groups:
       - 住宅ip
 
 rules:
+  - AND,((NETWORK,UDP),(DST-PORT,443)),REJECT
   # 简单示例，将openai，claude的域名配置为走住宅ip
   - DOMAIN-SUFFIX,ipinfo.io,US-RESI
   - DOMAIN-KEYWORD,openai,US-RESI
@@ -220,7 +225,7 @@ rules:
   - MATCH,DIRECT
 ```
 
-如果你是已经有了机场的订阅，没法直接改配置文件的话，可以添加全局扩展脚本，如下：
+方式二：如果你是已经有了机场的订阅，没法直接改配置文件的话，可以添加全局扩展脚本，如下：
 
 ![image](https://i.imgur.com/t8cIckr.png)
 
@@ -261,6 +266,7 @@ function main(config, profileName) {
   ];
 
   config.rules = [
+    'AND,((NETWORK,UDP),(DST-PORT,443)),REJECT', // 拒绝http3协议udp包，worker只支持tcp
     'DOMAIN-SUFFIX,ipinfo.io,US-RESI',
     'DOMAIN-KEYWORD,openai,US-RESI',
     'DOMAIN-KEYWORD,chatgpt,US-RESI',
@@ -274,5 +280,10 @@ function main(config, profileName) {
   return config;
 }
 ```
-效果就是其他域名都还按照机场订阅的规则来匹配，而openai，claude的域名就走住宅ip了，哦对，需要时规则模式，而不是直连或全局模式。
+效果就是其他域名都还按照机场订阅的规则来匹配，而openai，claude的域名就走住宅ip了，哦对，需要规则模式，而不是直连或全局模式。
+
+配置好之后，因为将ipinfo配置为了走住宅，你可以调用`curl ipinfo.io`看下返回的地址是否是符合预期的国家/ip。
+
+# 3 住宅ip带宽怎么样
+不咋样，一般是5Mb的带宽，大概500KB下载速度吧。看高清视频是不用考虑，主要还是调用接口和普通网页浏览的业务。
 
