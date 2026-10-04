@@ -3,8 +3,8 @@ const cors = require('cors');
 const axios = require('axios');
 
 const app = express();
-const SPEECH_REGION = 'japaneast'
-const SPEECH_KEY = '32a7078c166e48ffa881cbb166d719cf'
+const SPEECH_REGION = process.env.SPEECH_REGION
+const SPEECH_KEY = process.env.SPEECH_KEY
 
 app.use(cors());
 
