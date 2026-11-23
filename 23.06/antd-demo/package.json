@@ -11,7 +11,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "vite": "^4.3.9"
+    "vite": "^8.3.5"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.0.2",
