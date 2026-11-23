@@ -1,27 +1,11 @@
 import fs from 'fs';
 import path from 'path';
 import { notFound } from 'next/dist/client/components/not-found';
-import remarkGfm from 'remark-gfm';
-import rehypeSlug from 'rehype-slug';
-import rehypePrismPlus from 'rehype-prism-plus';
-import toc from "@jsdevtools/rehype-toc";
-import remarkCodeTitles from "remark-flexible-code-titles";
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
-import rehypeCodeCopyButton from '@/rehypePlugins/rehype-code-copy-button.mjs'
-import rehypeImageSrcModifier from '@/rehypePlugins/rehype-image-src-modifier.mjs'
-import rehypeTocExt from '@/rehypePlugins/rehype-toc-ext.mjs'
-import { bundleMDX } from 'mdx-bundler'
-import { getMDXComponent } from 'mdx-bundler/client'
 import readingTime from 'reading-time';
-import moment from 'moment-timezone';
 import querystring from 'querystring';
 import Discussion from '@/app/components/Discussion';
-import { Button, Card, Tooltip, DirectoryTree } from '@/app/components/Antd';
-import { Tabs, Item } from '@/app/components/Tabs';
-import AsciinemaPlayer from '@/app/components/AsciinemaPlayer';
-import Slider from "@/app/components/Slider";
-import Reveal from '@/app/components/Reveal'
-import WrapperComponent from '@/app/components/WrapperComponent';
+import PostView from '@/app/components/PostView';
+import { compilePost, parseTags } from '@/lib/compile-post.mjs';
 
 export default async function Post({ params }) {
   let { month, slug } = params;
@@ -29,75 +13,22 @@ export default async function Post({ params }) {
   var mdxPath = path.join(process.cwd(), month, `${slug}.mdx`);
   var mdPath = path.join(process.cwd(), month, `${slug}.md`);
   let mdxSource;
-  try { 
-    mdxSource = fs.existsSync(mdxPath) ? fs.readFileSync(mdxPath, 'utf8') : fs.readFileSync(mdPath, 'utf8'); 
+  try {
+    mdxSource = fs.existsSync(mdxPath) ? fs.readFileSync(mdxPath, 'utf8') : fs.readFileSync(mdPath, 'utf8');
   } catch (e) {
     notFound();
   }
   const { text: readingTimeText } = readingTime(mdxSource);
-  const result = await bundleMDX({
-    source: mdxSource + '\n\n# ' + month,
-    cwd: path.join(process.cwd(), 'app', 'components'),
-    mdxOptions: (options, frontmatter) => {
-      options.remarkPlugins = [...(options.remarkPlugins ?? []), ...[remarkGfm, remarkCodeTitles]]
-      options.rehypePlugins = [...(options.rehypePlugins ?? []), ...[
-        rehypeSlug,
-        [rehypeAutolinkHeadings, { behavior: 'wrap' }],
-        [rehypePrismPlus, { ignoreMissing: true, showLineNumbers: true }],
-        rehypeCodeCopyButton,
-        rehypeImageSrcModifier,
-        toc,
-        rehypeTocExt,
-      ]]
-      return options;
-    },
-    esbuildOptions: options => {
-      options.outdir = path.join(process.cwd(), 'public')
-      options.write = true
-      return options
-    }
-  })
-  const { code, frontmatter } = result
-  let tags = []
-  if (frontmatter.tags) {
-    if (typeof(frontmatter.tags) === 'string') {
-      tags = frontmatter.tags.split(',').map(it=>it.trim()).filter(it=>it.length)
-    }
-    if (Array.isArray(frontmatter.tags)) {
-      tags = frontmatter.tags
-    }
-  }
-  const Component = getMDXComponent(code)
+  const { code, frontmatter } = await compilePost(mdxSource, month, { write: true });
   return (
     <>
-      <header>
-        <h1>{frontmatter.title || slug}</h1>
-        {frontmatter.description && <p>{frontmatter.description}</p>}
-        <div className='flex gap-4'>
-          <span>{readingTimeText  + (frontmatter.date ? (",created at " + moment(frontmatter.date).format('YYYY-MM-DD')):  "")}</span>
-          <div>
-            {tags.length>0 && tags.map((tag, i) => 
-              <span key={i} className=' bg-[var(--w-green-dark)] text-white px-2 py-1 rounded-md mr-1 text-sm'>
-                {tag.trim()}
-              </span>)}
-          </div>
-        </div>
-        <hr></hr>
-      </header>
-      <main>
-        <Component components={{
-          Button,
-          Card,
-          Tooltip,
-          DirectoryTree,
-          Tabs,
-          Item,
-          AsciinemaPlayer,
-          Slider,
-          Reveal,
-          WrapperComponent
-        }} />
-      </main>
+      <PostView
+        code={code}
+        frontmatter={frontmatter}
+        readingTimeText={readingTimeText}
+        tags={parseTags(frontmatter)}
+        fallbackTitle={slug}
+      />
       <div className='container mx-auto max-w-[1200px] py-12 px-0'>
         <Discussion />
       </div>
@@ -121,8 +52,6 @@ export async function generateStaticParams() {
       });
     return posts;
   })
-
-  return postsList;
 }
 
 export async function generateMetadata({params}) {

@@ -11,3 +11,5 @@
 **/*.exe
 *.log
 **/media
+.env*.local
+.env.example

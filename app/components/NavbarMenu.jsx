@@ -116,17 +116,19 @@ export default function Navbar({ className }) {
     const [active, setActive] = React.useState(null);
     return (
         <div
-            className={cn("inset-x-0 max-w-[25rem] mx-auto z-50", className)}
+            className={cn("inset-x-0 max-w-[34rem] mx-auto z-50", className)}
         >
             <Menu setActive={setActive}>
-                <Link href="/" className="text-white flex items-center">
+                <Link href="/" className="text-white flex items-center whitespace-nowrap">
                     <Image alt="notebook" src="/logo.png" width={24} height={24} />
                     首页
                 </Link>
-                <Link href="https://github.com/sunwu51/notebook" className="text-white flex items-center gap-1">
+                <Link href="https://github.com/sunwu51/notebook" className="text-white flex items-center gap-1 whitespace-nowrap">
                     <Image alt="github" src="/github-mark-white.png" width={16} height={16} />
                     github
                 </Link>
+                {/* 用原生 a 标签：避免 Link 预取触发登录跳转 */}
+                <a href="/write" className="text-white flex items-center whitespace-nowrap" title="写博客（需要 GitHub 登录）">✍️ 写</a>
                 <DocSearch />
             </Menu>
         </div >
